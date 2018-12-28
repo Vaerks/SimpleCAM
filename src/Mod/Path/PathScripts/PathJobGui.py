@@ -140,6 +140,8 @@ class ViewProvider:
                 return self.openTaskPanel('Base')
             if obj == self.obj.Stock:
                 return self.openTaskPanel('Stock')
+            if obj == self.obj.Fixture:
+                return self.openTaskPanel('Stock')
             PathLog.info("Expected a specific object to edit - %s not recognized" % obj.Label)
         return self.openTaskPanel()
 
@@ -156,8 +158,8 @@ class ViewProvider:
             children.append(self.obj.Base)
         if self.obj.Stock:
             children.append(self.obj.Stock)
-        if self.obj.Mount:
-            children.append(self.obj.Mount)
+        if self.obj.Fixture:
+            children.append(self.obj.Fixture)
         if hasattr(self.obj, 'SetupSheet'):
             # when loading a job that didn't have a setup sheet they might not've been created yet
             children.append(self.obj.SetupSheet)
@@ -455,7 +457,7 @@ class stockFromPredefinedEdit(StockEdit):
         return self.form.stockFromPredefined
 
 
-    def getFields(self, obj, fields = ['length', 'widht', 'height']):
+    def getFields(self, obj, fields = ['length', 'width', 'height']):
         try:
             if self.IsStock(obj):
                 if 'length' in fields:
@@ -511,9 +513,9 @@ class stockFromPredefinedEdit(StockEdit):
 
     def setupUi(self, obj):
         self.setFields(obj)
-        self.form.stockPredefinedX.currentIndexChanged.connect(lambda: self.getFields(obj))
-        self.form.stockPredefinedY.currentIndexChanged.connect(lambda: self.getFields(obj))
-        self.form.stockPredefinedZ.currentIndexChanged.connect(lambda: self.getFields(obj))
+        self.form.stockPredefinedX.currentIndexChanged.connect(lambda: self.getFields(obj, ['length']))
+        self.form.stockPredefinedY.currentIndexChanged.connect(lambda: self.getFields(obj, ['width']))
+        self.form.stockPredefinedZ.currentIndexChanged.connect(lambda: self.getFields(obj, ['height']))
 
 class TaskPanel:
     DataObject = QtCore.Qt.ItemDataRole.UserRole

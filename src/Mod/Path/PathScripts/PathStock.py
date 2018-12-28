@@ -201,7 +201,7 @@ class StockFromPredefined:
         if prop in ['Length', 'Width', 'Height'] and not 'Restore' in obj.State:
             self.execute(obj)
 
-class MountImportStep:
+class FixtureImportStep:
     MinExtent = 0.001
 
     def __init__(self, obj):
@@ -285,13 +285,13 @@ def SetupStockObject(obj, stockType):
         obj.ViewObject.Selectable = False
         obj.ViewObject.Visibility = True
 
-def SetupStockObject2(obj, clampingType):
+def SetupStockObject2(obj, fixtureType):
     if FreeCAD.GuiUp and obj.ViewObject:
-        obj.addProperty('App::PropertyString', 'ClampingType', 'Mount', QtCore.QT_TRANSLATE_NOOP("PathClamping", "Internal representation of clamping type"))
-        obj.ClampingType = clampingType
-        obj.setEditorMode('ClampingType', 2) # hide
+        obj.addProperty('App::PropertyString', 'FixtureType', 'Fixture', QtCore.QT_TRANSLATE_NOOP("PathFixture", "Internal representation of fixture type"))
+        obj.FixtureType = fixtureType
+        obj.setEditorMode('FixtureType', 2) # hide
 
-        PathIconViewProvider.ViewProvider(obj.ViewObject, 'Mount')
+        PathIconViewProvider.ViewProvider(obj.ViewObject, 'Fixture')
         obj.ViewObject.Transparency = 0
         obj.ViewObject.DisplayMode = 'Flat Lines'
         obj.ViewObject.Selectable = False
@@ -321,9 +321,9 @@ def CreateFromBase(job, neg=None, pos=None, placement=None):
 def CreateBox(job, extent=None, placement=None):
     base = job.Base if job and hasattr(job, 'Base') else None
     obj = FreeCAD.ActiveDocument.addObject('Part::FeaturePython', 'Stock')
-    obj2 = FreeCAD.ActiveDocument.addObject('Part::FeaturePython', 'Mount')
+    obj2 = FreeCAD.ActiveDocument.addObject('Part::FeaturePython', 'Fixture')
     proxy = StockCreateBox(obj)
-    MountImportStep(obj2)
+    FixtureImportStep(obj2)
     if extent:
         obj.Length = extent.x
         obj.Width  = extent.y
@@ -355,9 +355,9 @@ def CreateBox(job, extent=None, placement=None):
 def CreateFromPredefined(job, extent=None, placement=None):
     base = job.Base if job and hasattr(job, 'Base') else None
     obj = FreeCAD.ActiveDocument.addObject('Part::FeaturePython', 'Stock')
-    obj2 = FreeCAD.ActiveDocument.addObject('Part::FeaturePython', 'Mount')
+    obj2 = FreeCAD.ActiveDocument.addObject('Part::FeaturePython', 'Fixture')
     proxy = StockCreateBox(obj)
-    MountImportStep(obj2)
+    FixtureImportStep(obj2)
     if extent:
         obj.Length = extent.x
         obj.Width  = extent.y
