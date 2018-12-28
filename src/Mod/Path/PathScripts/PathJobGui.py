@@ -156,6 +156,8 @@ class ViewProvider:
             children.append(self.obj.Base)
         if self.obj.Stock:
             children.append(self.obj.Stock)
+        if self.obj.Mount:
+            children.append(self.obj.Mount)
         if hasattr(self.obj, 'SetupSheet'):
             # when loading a job that didn't have a setup sheet they might not've been created yet
             children.append(self.obj.SetupSheet)
@@ -198,7 +200,7 @@ class ViewProvider:
             self.baseVisibility = obj.Base.ViewObject.Visibility
             self.baseObjectSaveVisibility(obj)
 
-        self.stockVisibility = False
+        self.stockVisibility = True
         if obj.Stock and obj.Stock.ViewObject:
             self.stockVisibility = obj.Stock.ViewObject.Visibility
             self.obj.Stock.ViewObject.Visibility = True
@@ -230,6 +232,7 @@ class StockEdit(object):
                 widget.show()
             else:
                 widget.hide()
+
         if select:
             self.form.stock.setCurrentIndex(self.Index)
         editor = self.editorFrame()
@@ -237,6 +240,7 @@ class StockEdit(object):
         showHide(self.form.stockFromBase, editor)
         showHide(self.form.stockCreateBox, editor)
         showHide(self.form.stockCreateCylinder, editor)
+        showHide(self.form.stockFromPredefined, editor)
         self.setFields(obj)
 
     def setStock(self, obj, stock):
@@ -443,6 +447,74 @@ class StockFromExistingEdit(StockEdit):
         self.setFields(obj)
         self.form.stockExisting.currentIndexChanged.connect(lambda: self.getFields(obj))
 
+class stockFromPredefinedEdit(StockEdit):
+    Index = 4
+    StockType = PathStock.StockType.FromPredefined
+
+    def editorFrame(self):
+        return self.form.stockFromPredefined
+
+
+    def getFields(self, obj, fields = ['length', 'widht', 'height']):
+        try:
+            if self.IsStock(obj):
+                if 'length' in fields:
+                    obj.Stock.Length = self.form.stockPredefinedX.itemData(self.form.stockPredefinedX.currentIndex())
+                if 'width' in fields:
+                    obj.Stock.Width  = self.form.stockPredefinedY.itemData(self.form.stockPredefinedY.currentIndex())
+                if 'height' in fields:
+                    obj.Stock.Height = self.form.stockPredefinedZ.itemData(self.form.stockPredefinedZ.currentIndex())
+            else:
+                PathLog.error(translate('PathJob', 'Stock not a predefined!'))
+        except:
+            pass
+
+    def candidatesX(self, obj):
+        return [100, 200, 400, 800]
+
+    def candidatesY(self, obj):
+        return [50, 100, 200, 400]
+
+    def candidatesZ(self, obj):
+        return [1, 2, 5, 10]
+
+    def setFields(self, obj):
+        if not self.IsStock(obj):
+            self.setStock(obj, PathStock.CreateFromPredefined(obj))
+
+        self.form.stockPredefinedX.clear()
+        stockLength = obj.Stock.Length if obj.Stock.Length else None
+        index = -1
+        for i, candidateX in enumerate(self.candidatesX(obj)):
+            self.form.stockPredefinedX.addItem(FreeCAD.Units.Quantity(candidateX, FreeCAD.Units.Length).UserString, candidateX)
+            if candidateX == stockLength:
+                index = i
+        self.form.stockPredefinedX.setCurrentIndex(index if index != -1 else 0)
+
+        self.form.stockPredefinedY.clear()
+        stockWidth = obj.Stock.Width if obj.Stock.Width else None
+        index = -1
+        for i, candidateY in enumerate(self.candidatesY(obj)):
+            self.form.stockPredefinedY.addItem(FreeCAD.Units.Quantity(candidateY, FreeCAD.Units.Length).UserString, candidateY)
+            if candidateY == stockWidth:
+                index = i
+        self.form.stockPredefinedY.setCurrentIndex(index if index != -1 else 0)
+
+        self.form.stockPredefinedZ.clear()
+        stockHeight = obj.Stock.Height if obj.Stock.Height else None
+        index = -1
+        for i, candidateZ in enumerate(self.candidatesZ(obj)):
+            self.form.stockPredefinedZ.addItem(FreeCAD.Units.Quantity(candidateZ, FreeCAD.Units.Length).UserString, candidateZ)
+            if candidateZ == stockHeight:
+                index = i
+        self.form.stockPredefinedZ.setCurrentIndex(index if index != -1 else 0)
+
+    def setupUi(self, obj):
+        self.setFields(obj)
+        self.form.stockPredefinedX.currentIndexChanged.connect(lambda: self.getFields(obj))
+        self.form.stockPredefinedY.currentIndexChanged.connect(lambda: self.getFields(obj))
+        self.form.stockPredefinedZ.currentIndexChanged.connect(lambda: self.getFields(obj))
+
 class TaskPanel:
     DataObject = QtCore.Qt.ItemDataRole.UserRole
     DataProperty = QtCore.Qt.ItemDataRole.UserRole + 1
@@ -484,6 +556,7 @@ class TaskPanel:
 
         self.stockFromBase = None
         self.stockFromExisting = None
+        self.stockFromPredefined = None
         self.stockCreateBox = None
         self.stockCreateCylinder = None
         self.stockEdit = None
@@ -873,6 +946,10 @@ class TaskPanel:
                 self.stockEdit = self.stockFromExisting
                 return True
             return False
+        def setupFromPredefinedEdit():
+            if not self.stockFromPredefined:
+                self.stockFromPredefined = stockFromPredefinedEdit(self.obj, self.form)
+            self.stockEdit = self.stockFromPredefined
 
         if index == -1:
             if self.obj.Stock is None or StockFromBaseBoundBoxEdit.IsStock(self.obj):
@@ -883,6 +960,8 @@ class TaskPanel:
                 setupCreateCylinderEdit()
             elif StockFromExistingEdit.IsStock(self.obj):
                 setupFromExisting()
+            elif stockFromPredefinedEdit.IsStock(self.obj):
+                setupFromPredefinedEdit()
             else:
                 PathLog.error(translate('PathJob', "Unsupported stock object %s") % self.obj.Stock.Label)
         else:
@@ -896,6 +975,8 @@ class TaskPanel:
                 if not setupFromExisting():
                     setupFromBaseEdit()
                     index = -1
+            elif index == stockFromPredefinedEdit.Index:
+                setupFromPredefinedEdit()
             else:
                 PathLog.error(translate('PathJob', "Unsupported stock type %s (%d)") % (self.form.stock.currentText(), index))
         self.stockEdit.activate(self.obj, index == -1)

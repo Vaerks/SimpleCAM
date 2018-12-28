@@ -30,7 +30,6 @@ import math
 
 from PySide import QtCore
 
-
 if False:
     PathLog.setLevel(PathLog.Level.DEBUG, PathLog.thisModule())
     PathLog.trackModule(PathLog.thisModule())
@@ -44,6 +43,7 @@ class StockType:
     FromBase       = 'FromBase'
     CreateBox      = 'CreateBox'
     CreateCylinder = 'CreateCylinder'
+    FromPredefined = 'FromPredefined'
     Unknown        = 'Unknown'
 
     @classmethod
@@ -166,6 +166,82 @@ class StockCreateBox:
         if prop in ['Length', 'Width', 'Height'] and not 'Restore' in obj.State:
             self.execute(obj)
 
+class StockFromPredefined:
+    MinExtent = 0.001
+
+    def __init__(self, obj):
+        obj.addProperty('App::PropertyLength', 'Length', 'Stock', QtCore.QT_TRANSLATE_NOOP("PathStock", "Length of this stock box"))
+        obj.addProperty('App::PropertyLength', 'Width', 'Stock', QtCore.QT_TRANSLATE_NOOP("PathStock", "Width of this stock box"))
+        obj.addProperty('App::PropertyLength', 'Height', 'Stock', QtCore.QT_TRANSLATE_NOOP("PathStock", "Height of this stock box"))
+
+        obj.Length = 10
+        obj.Width  = 10
+        obj.Height = 10
+
+        obj.Proxy = self
+
+    def __getstate__(self):
+        return None
+    def __setstate__(self, state):
+        return None
+
+    def execute(self, obj):
+        if obj.Length < self.MinExtent:
+            obj.Length = self.MinExtent
+        if obj.Width < self.MinExtent:
+            obj.Width = self.MinExtent
+        if obj.Height < self.MinExtent:
+            obj.Height = self.MinExtent
+
+        shape = Part.makeBox(obj.Length, obj.Width, obj.Height)
+        shape.Placement = obj.Placement
+        obj.Shape = shape
+
+    def onChanged(self, obj, prop):
+        if prop in ['Length', 'Width', 'Height'] and not 'Restore' in obj.State:
+            self.execute(obj)
+
+class MountImportStep:
+    MinExtent = 0.001
+
+    def __init__(self, obj):
+        obj.addProperty('App::PropertyLength', 'Length', 'Stock', QtCore.QT_TRANSLATE_NOOP("PathStock", "Length of this stock box"))
+        obj.addProperty('App::PropertyLength', 'Width', 'Stock', QtCore.QT_TRANSLATE_NOOP("PathStock", "Width of this stock box"))
+        obj.addProperty('App::PropertyLength', 'Height', 'Stock', QtCore.QT_TRANSLATE_NOOP("PathStock", "Height of this stock box"))
+
+        obj.Length = 10
+        obj.Width  = 10
+        obj.Height = 10
+
+        obj.Proxy = self
+
+    def __getstate__(self):
+        return None
+    def __setstate__(self, state):
+        return None
+
+    def execute(self, obj):
+        if obj.Length < self.MinExtent:
+            obj.Length = self.MinExtent
+        if obj.Width < self.MinExtent:
+            obj.Width = self.MinExtent
+        if obj.Height < self.MinExtent:
+            obj.Height = self.MinExtent
+
+        shape = Part.read("C:\\repos\\MHTech\\trunk\\SimpleCAM\\VakuumplanXY.step")
+        shape.Placement.Base = FreeCAD.Vector(-20.0, 20.0, 0.0)
+        shape.Placement.Rotation = FreeCAD.Rotation(0.0, 0.0, 0.0)
+        shape2 = Part.makeBox(100, 50, 20)
+        shape2.Placement.Base = FreeCAD.Vector(20.0, -20.0, 20.0)
+        shape2.Placement.Rotation = FreeCAD.Rotation(0.0, 0.0, 0.0)
+        shape3 = shape.fuse(shape2)
+
+        obj.Shape = shape3
+        
+    def onChanged(self, obj, prop):
+        if prop in ['Length', 'Width', 'Height'] and not 'Restore' in obj.State:
+            self.execute(obj)
+
 class StockCreateCylinder:
     MinExtent = 0.001
 
@@ -204,8 +280,22 @@ def SetupStockObject(obj, stockType):
         obj.setEditorMode('StockType', 2) # hide
 
         PathIconViewProvider.ViewProvider(obj.ViewObject, 'Stock')
-        obj.ViewObject.Transparency = 90
+        obj.ViewObject.Transparency = 80
         obj.ViewObject.DisplayMode = 'Wireframe'
+        obj.ViewObject.Selectable = False
+        obj.ViewObject.Visibility = True
+
+def SetupStockObject2(obj, clampingType):
+    if FreeCAD.GuiUp and obj.ViewObject:
+        obj.addProperty('App::PropertyString', 'ClampingType', 'Mount', QtCore.QT_TRANSLATE_NOOP("PathClamping", "Internal representation of clamping type"))
+        obj.ClampingType = clampingType
+        obj.setEditorMode('ClampingType', 2) # hide
+
+        PathIconViewProvider.ViewProvider(obj.ViewObject, 'Mount')
+        obj.ViewObject.Transparency = 0
+        obj.ViewObject.DisplayMode = 'Flat Lines'
+        obj.ViewObject.Selectable = False
+        obj.ViewObject.Visibility = True
 
 def CreateFromBase(job, neg=None, pos=None, placement=None):
     obj = FreeCAD.ActiveDocument.addObject('Part::FeaturePython', 'Stock')
@@ -227,26 +317,73 @@ def CreateFromBase(job, neg=None, pos=None, placement=None):
     obj.purgeTouched()
     return obj
 
+
 def CreateBox(job, extent=None, placement=None):
     base = job.Base if job and hasattr(job, 'Base') else None
     obj = FreeCAD.ActiveDocument.addObject('Part::FeaturePython', 'Stock')
+    obj2 = FreeCAD.ActiveDocument.addObject('Part::FeaturePython', 'Mount')
     proxy = StockCreateBox(obj)
+    MountImportStep(obj2)
     if extent:
         obj.Length = extent.x
         obj.Width  = extent.y
         obj.Height = extent.z
+        obj2.Length = extent.x-10
+        obj2.Width  = extent.y-10
+        obj2.Height = extent.z-10
     elif base:
         bb = shapeBoundBox(base)
         obj.Length = max(bb.XLength, 1)
         obj.Width  = max(bb.YLength, 1)
         obj.Height = max(bb.ZLength, 1)
+        obj2.Length = max(bb.XLength-10, 1)
+        obj2.Width  = max(bb.YLength-10, 1)
+        obj2.Height = max(bb.ZLength-10, 1)
+    
     if placement:
         obj.Placement = placement
+        #obj2.Placement = placement
     elif base:
         bb = shapeBoundBox(base)
         origin = FreeCAD.Vector(bb.XMin, bb.YMin, bb.ZMin)
         obj.Placement = FreeCAD.Placement(origin, FreeCAD.Vector(), 0)
+        #obj2.Placement = FreeCAD.Placement(origin, FreeCAD.Vector(), 0)
     SetupStockObject(obj, StockType.CreateBox)
+    SetupStockObject2(obj2, StockType.CreateBox)
+    return obj
+
+def CreateFromPredefined(job, extent=None, placement=None):
+    base = job.Base if job and hasattr(job, 'Base') else None
+    obj = FreeCAD.ActiveDocument.addObject('Part::FeaturePython', 'Stock')
+    obj2 = FreeCAD.ActiveDocument.addObject('Part::FeaturePython', 'Mount')
+    proxy = StockCreateBox(obj)
+    MountImportStep(obj2)
+    if extent:
+        obj.Length = extent.x
+        obj.Width  = extent.y
+        obj.Height = extent.z
+        obj2.Length = extent.x-10
+        obj2.Width  = extent.y-10
+        obj2.Height = extent.z-10
+    elif base:
+        bb = shapeBoundBox(base)
+        obj.Length = max(bb.XLength, 1)
+        obj.Width  = max(bb.YLength, 1)
+        obj.Height = max(bb.ZLength, 1)
+        obj2.Length = max(bb.XLength-10, 1)
+        obj2.Width  = max(bb.YLength-10, 1)
+        obj2.Height = max(bb.ZLength-10, 1)
+    
+    if placement:
+        obj.Placement = placement
+        #obj2.Placement = placement
+    elif base:
+        bb = shapeBoundBox(base)
+        origin = FreeCAD.Vector(bb.XMin, bb.YMin, bb.ZMin)
+        obj.Placement = FreeCAD.Placement(origin, FreeCAD.Vector(), 0)
+        #obj2.Placement = FreeCAD.Placement(origin, FreeCAD.Vector(), 0)
+    SetupStockObject(obj, StockType.FromPredefined)
+    SetupStockObject2(obj2, StockType.FromPredefined)
     return obj
 
 def CreateCylinder(job, radius=None, height=None, placement=None):

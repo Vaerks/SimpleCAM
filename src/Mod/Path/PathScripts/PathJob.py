@@ -59,6 +59,7 @@ class JobTemplate:
     PostProcessorOutputFile = 'Output'
     SetupSheet = 'SetupSheet'
     Stock = 'Stock'
+    Mount = 'Mount'
     ToolController = 'ToolController'
     Version = 'Version'
 
@@ -101,6 +102,7 @@ class ObjectJob:
 
         obj.addProperty("App::PropertyLink", "Base", "Base", QtCore.QT_TRANSLATE_NOOP("PathJob", "The base object for all operations"))
         obj.addProperty("App::PropertyLink", "Stock", "Base", QtCore.QT_TRANSLATE_NOOP("PathJob", "Solid object to be used as stock."))
+        obj.addProperty("App::PropertyLink", "Mount", "Base", QtCore.QT_TRANSLATE_NOOP("PathJob", "Solid object to be used as mount."))
         obj.addProperty("App::PropertyLink", "Operations", "Base", QtCore.QT_TRANSLATE_NOOP("PathJob", "Compound path of all operations in the order they are processed."))
         obj.addProperty("App::PropertyLinkList", "ToolController", "Base", QtCore.QT_TRANSLATE_NOOP("PathJob", "Collection of tool controllers available for this job."))
 
@@ -134,7 +136,16 @@ class ObjectJob:
             if not obj.Stock:
                 obj.Stock = PathStock.CreateFromBase(obj)
         if obj.Stock.ViewObject:
-            obj.Stock.ViewObject.Visibility = False
+            obj.Stock.ViewObject.Visibility = True
+        
+        #if not obj.Mount:
+        #    mountTemplate = PathPreferences.defaultMountTemplate()
+        #    if mountTemplate:
+        #        obj.Mount = PathMount.CreateFromTemplate(obj, json.loads(mountTemplate))
+        #    if not obj.Mount:
+        #        obj.Mount = PathMount.CreateFromBase(obj)
+        #if obj.Mount.ViewObject:
+        #    obj.Mount.ViewObject.Visibility = True
 
     def setupSetupSheet(self, obj):
         if not hasattr(obj, 'SetupSheet'):
@@ -164,6 +175,12 @@ class ObjectJob:
             PathUtil.clearExpressionEngine(obj.Stock)
             doc.removeObject(obj.Stock.Name)
             obj.Stock = None
+        # mount
+        if obj.Mount:
+            PathLog.debug('taking down mount')
+            PathUtil.clearExpressionEngine(obj.Mount)
+            doc.removeObject(obj.Mount.Name)
+            obj.Mount = None
         # base doesn't depend on anything inside job
         if obj.Base:
             PathLog.debug('taking down base')

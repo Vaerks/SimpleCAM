@@ -7,14 +7,14 @@
     <x>0</x>
     <y>0</y>
     <width>400</width>
-    <height>673</height>
+    <height>784</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Job Edit</string>
   </property>
   <property name="currentIndex">
-   <number>0</number>
+   <number>2</number>
   </property>
   <widget class="QWidget" name="tabGeneral">
    <attribute name="title">
@@ -148,7 +148,7 @@
        <item>
         <widget class="QComboBox" name="stock">
          <property name="currentIndex">
-          <number>2</number>
+          <number>0</number>
          </property>
          <item>
           <property name="text">
@@ -168,6 +168,11 @@
          <item>
           <property name="text">
            <string>Use Existing Solid</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Use Predefined Stock</string>
           </property>
          </item>
         </widget>
@@ -190,6 +195,42 @@
          <layout class="QGridLayout" name="gridLayout_8">
           <item row="0" column="1">
            <widget class="QComboBox" name="stockExisting"/>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QFrame" name="stockFromPredefined">
+         <layout class="QGridLayout" name="gridLayout_12">
+          <item row="0" column="1">
+           <widget class="QLabel" name="stockPredefinedXLabel">
+            <property name="text">
+             <string>Length</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="2">
+           <widget class="QComboBox" name="stockPredefinedX"/>
+          </item>
+          <item row="1" column="1">
+           <widget class="QLabel" name="stockPredefinedYLabel">
+            <property name="text">
+             <string>Width</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="2">
+           <widget class="QComboBox" name="stockPredefinedY"/>
+          </item>
+          <item row="2" column="1">
+           <widget class="QLabel" name="stockPredefinedZLabel">
+            <property name="text">
+             <string>Height</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="2">
+           <widget class="QComboBox" name="stockPredefinedZ"/>
           </item>
          </layout>
         </widget>
@@ -275,12 +316,8 @@
        <item>
         <widget class="QFrame" name="stockCreateBox">
          <layout class="QGridLayout" name="gridLayout_11">
-          <item row="0" column="1">
-           <widget class="QLabel" name="stockBoxLengthLabel">
-            <property name="text">
-             <string>Length</string>
-            </property>
-           </widget>
+          <item row="2" column="2">
+           <widget class="Gui::InputField" name="stockBoxHeight"/>
           </item>
           <item row="1" column="1">
            <widget class="QLabel" name="stockBoxWidthLabel">
@@ -289,21 +326,25 @@
             </property>
            </widget>
           </item>
-          <item row="0" column="2">
-           <widget class="Gui::InputField" name="stockBoxLength"/>
-          </item>
-          <item row="2" column="2">
-           <widget class="Gui::InputField" name="stockBoxHeight"/>
-          </item>
-          <item row="1" column="2">
-           <widget class="Gui::InputField" name="stockBoxWidth"/>
-          </item>
           <item row="2" column="1">
            <widget class="QLabel" name="stockBoxHeightLabel">
             <property name="text">
              <string>Height</string>
             </property>
            </widget>
+          </item>
+          <item row="1" column="2">
+           <widget class="Gui::InputField" name="stockBoxWidth"/>
+          </item>
+          <item row="0" column="1">
+           <widget class="QLabel" name="stockBoxLengthLabel">
+            <property name="text">
+             <string>Length</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="2">
+           <widget class="Gui::InputField" name="stockBoxLength"/>
           </item>
          </layout>
         </widget>
@@ -379,6 +420,128 @@
      </widget>
     </item>
     <item>
+     <widget class="QGroupBox" name="fixtureGroup">
+      <property name="title">
+       <string>Fixture</string>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout_7">
+       <property name="spacing">
+        <number>0</number>
+       </property>
+       <item>
+        <widget class="QComboBox" name="fixture">
+         <property name="currentIndex">
+          <number>0</number>
+         </property>
+         <item>
+          <property name="text">
+           <string>Vacuum</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Vice</string>
+          </property>
+         </item>
+        </widget>
+       </item>
+       <item>
+        <widget class="QFrame" name="fixtureVice">
+         <layout class="QGridLayout" name="gridLayout_13">
+          <item row="0" column="1">
+           <widget class="QLabel" name="fixtureVicePosXLabel">
+            <property name="text">
+             <string>X Position</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="2">
+           <widget class="QComboBox" name="fixtureVicePosX">
+            <property name="currentIndex">
+             <number>0</number>
+            </property>
+            <item>
+             <property name="text">
+              <string>100mm</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>200mm</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>400mm</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>800mm</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QLabel" name="fixtureVicePosYLabel">
+            <property name="text">
+             <string>Y Position</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="2">
+           <widget class="QComboBox" name="fixtureVicePosY">
+            <property name="currentIndex">
+             <number>0</number>
+            </property>
+            <item>
+             <property name="text">
+              <string>100mm</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>200mm</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>400mm</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QLabel" name="fixtureViceOrientLabel">
+            <property name="text">
+             <string>Orientation</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="2">
+           <widget class="QComboBox" name="fixtureViceOrient">
+            <property name="currentIndex">
+             <number>0</number>
+            </property>
+            <item>
+             <property name="text">
+              <string>X-Axis</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Y-Axis</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <item>
      <spacer name="verticalSpacer_2">
       <property name="orientation">
        <enum>Qt::Vertical</enum>
@@ -428,8 +591,7 @@
           </property>
           <property name="icon">
            <iconset theme="object-flip-horizontal">
-            <normaloff/>
-           </iconset>
+            <normaloff>.</normaloff>.</iconset>
           </property>
          </column>
          <column>
@@ -438,8 +600,7 @@
           </property>
           <property name="icon">
            <iconset theme="object-flip-vertical">
-            <normaloff/>
-           </iconset>
+            <normaloff>.</normaloff>.</iconset>
           </property>
          </column>
          <column>
@@ -524,7 +685,16 @@
        <item>
         <widget class="QWidget" name="operationMove" native="true">
          <layout class="QVBoxLayout" name="verticalLayout_2">
-          <property name="margin">
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
            <number>0</number>
           </property>
           <item>
