@@ -30,13 +30,266 @@ import math
 
 from PySide import QtCore
 
-if False:
+if True:
     PathLog.setLevel(PathLog.Level.DEBUG, PathLog.thisModule())
     PathLog.trackModule(PathLog.thisModule())
 
 # Qt tanslation handling
 def translate(context, text, disambig=None):
     return QtCore.QCoreApplication.translate(context, text, disambig)
+
+class FixtureType:
+    NoFixture      = 'None'
+    VacuumTable    = 'VacuumTable'
+    Vice           = 'Vice'
+    Unknown        = 'Unknown'
+
+    @classmethod
+    def FromFixture(cls, fixture):
+        '''FromFixture(fixture) ... Answer a string representing the type of fixture.'''
+        if not fixture:
+            return cls.Unknown
+        if hasattr(fixture, 'FixtureType'):
+            return fixture.FixtureType
+
+        # fallback in case somebody messed with internals
+        if hasattr(fixture, 'VacuumTableModelPath'):
+            return cls.VacuumTable
+        if hasattr(fixture, 'ViceModelPath'):
+            return cls.Vice
+        return cls.Unknown
+
+
+def shapeBoundBox(obj):
+    if hasattr(obj, 'Shape'):
+        return obj.Shape.BoundBox
+    if obj and 'App::Part' == obj.TypeId:
+        bounds = [shapeBoundBox(o) for o in obj.Group]
+        if bounds:
+            bb = bounds[0]
+            for b in bounds[1:]:
+                bb = bb.united(b)
+            return bb
+    if obj:
+        PathLog.error(translate('PathStock', "Invalid base object %s - no shape found") % obj.Name)
+    return None
+
+
+class FixtureVice:
+
+    def __init__(self, obj):
+        # Make fixture
+        obj.addProperty("App::PropertyPath", "ViceModelPath", "Fixture", QtCore.QT_TRANSLATE_NOOP("PathFixture", "Vice model path (.step / .stp)"))
+        obj.addProperty("App::PropertyLength", "XPos", "Fixture", QtCore.QT_TRANSLATE_NOOP("PathFixture", "Vice X Position"))
+        obj.addProperty("App::PropertyLength", "YPos", "Fixture", QtCore.QT_TRANSLATE_NOOP("PathFixture", "Vice Y Position"))
+        obj.addProperty("App::PropertyAngle", "Orientation", "Fixture", QtCore.QT_TRANSLATE_NOOP("PathFixture", "Vice Orientation"))
+
+        obj.ViceModelPath = ""
+        obj.XPos = 0.0
+        obj.YPos = 0.0
+        obj.Orientation = 0.0
+
+        obj.Proxy = self
+
+    def __getstate__(self):
+        return None
+    def __setstate__(self, state):
+        return None
+
+    def execute(self, obj):
+        # Load workplane model
+        WorkplaneModelPath = "C:\\repos\\MHTech\\trunk\\SimpleCAM\\VakuumplanXY.step" # Should load from setup sheet
+        workplaneShape = None
+        try:
+            workplaneShape = Part.read(WorkplaneModelPath)
+        except:
+            pass
+        if workplaneShape:
+            workplaneShape.Placement.Base = FreeCAD.Vector(0.0, 0.0, 0.0)
+            workplaneShape.Placement.Rotation = FreeCAD.Rotation(0.0, 0.0, 0.0)
+
+        # Load Vice Model
+        viceShape = None
+        try:
+            viceShape = Part.read(obj.ViceModelPath)
+        except:
+            pass
+        if viceShape:
+            viceShape.Placement.Base = FreeCAD.Vector(obj.XPos, obj.YPos, 0.0)
+            viceShape.Placement.Rotation = FreeCAD.Rotation(obj.Orientation, 0.0, 0.0)
+        
+        # Combine workplane and vice models
+        if viceShape and workplaneShape:
+            obj.Shape = workplaneShape.fuse(viceShape)
+            obj.Placement = workplaneShape.Placement
+        elif workplaneShape:
+            obj.Shape = workplaneShape
+            obj.Placement = workplaneShape.Placement
+        
+        #PathLog.debug("%s - %s: %s" % (placement, base.Placement, dPlacement))
+
+    def onChanged(self, obj, prop):
+        if prop in ['ViceModel', 'XPos', 'YPos', 'Orientation'] and not 'Restore' in obj.State:
+            self.execute(obj)
+
+
+class FixtureVacuumTable:
+    
+    def __init__(self, obj):
+        obj.addProperty("App::PropertyPath", "VacuumTableModelPath", "Fixture", QtCore.QT_TRANSLATE_NOOP("PathFixture", "Vacuum table model path (.step / .stp)"))
+        obj.addProperty("App::PropertyLength", "XPos", "Fixture", QtCore.QT_TRANSLATE_NOOP("PathFixture", "Vacuum Table X Position"))
+        obj.addProperty("App::PropertyLength", "YPos", "Fixture", QtCore.QT_TRANSLATE_NOOP("PathFixture", "Vacuum Table Y Position"))
+        obj.addProperty("App::PropertyAngle", "Orientation", "Fixture", QtCore.QT_TRANSLATE_NOOP("PathFixture", "Vacuum Table Orientation"))
+
+        obj.VacuumTableModelPath = "" # Should load from setup sheet
+        obj.XPos = 0.0
+        obj.YPos = 0.0
+        obj.Orientation = 0.0
+        
+        obj.Proxy = self
+
+    def __getstate__(self):
+        return None
+    def __setstate__(self, state):
+        return None
+
+    def execute(self, obj):
+         # Load workplane model
+        WorkplaneModelPath = "C:\\repos\\MHTech\\trunk\\SimpleCAM\\VakuumplanXY.step" # Should load from setup sheet
+        workplaneShape = None
+        try:
+            workplaneShape = Part.read(WorkplaneModelPath)
+        except:
+            pass
+        if workplaneShape:
+            workplaneShape.Placement.Base = FreeCAD.Vector(0.0, 0.0, 0.0)
+            workplaneShape.Placement.Rotation = FreeCAD.Rotation(0.0, 0.0, 0.0)
+
+        # Load Vice Model
+        vacuumTableShape = None
+        try:
+            vacuumTableShape = Part.read(obj.VacuumTableModelPath)
+        except:
+            pass
+        if vacuumTableShape:
+            vacuumTableShape.Placement.Base = FreeCAD.Vector(obj.XPos, obj.YPos, 0.0)
+            vacuumTableShape.Placement.Rotation = FreeCAD.Rotation(obj.Orientation, 0.0, 0.0)
+        
+        # Combine workplane and vice models
+        if vacuumTableShape and workplaneShape:
+            obj.Shape = workplaneShape.fuse(vacuumTableShape)
+            obj.Placement = workplaneShape.Placement
+        elif workplaneShape:
+            obj.Shape = workplaneShape
+            obj.Placement = workplaneShape.Placement
+
+    def onChanged(self, obj, prop):
+        if prop in ['VacuumTableModel'] and not 'Restore' in obj.State:
+            self.execute(obj)
+
+class FixtureNoFixture:
+    
+    def __init__(self, obj):
+        obj.Proxy = self
+
+    def __getstate__(self):
+        return None
+    def __setstate__(self, state):
+        return None
+
+    def execute(self, obj):
+         # Load workplane model
+        WorkplaneModelPath = "C:\\repos\\MHTech\\trunk\\SimpleCAM\\VakuumplanXY.step" # Should load from setup sheet
+        workplaneShape = None
+        try:
+            workplaneShape = Part.read(WorkplaneModelPath)
+        except:
+            pass
+        if workplaneShape:
+            workplaneShape.Placement.Base = FreeCAD.Vector(0.0, 0.0, 0.0)
+            workplaneShape.Placement.Rotation = FreeCAD.Rotation(0.0, 0.0, 0.0)
+
+        # Set fixture object shape
+        if workplaneShape:
+            obj.Shape = workplaneShape
+            obj.Placement = workplaneShape.Placement
+
+    def onChanged(self, obj, prop):
+        pass
+
+
+def SetupFixtureObject(obj, fixtureType):
+    if FreeCAD.GuiUp and obj.ViewObject:
+        obj.addProperty('App::PropertyString', 'FixtureType', 'Fixture', QtCore.QT_TRANSLATE_NOOP("PathFixture", "Internal representation of fixture type"))
+        obj.FixtureType = fixtureType
+        obj.setEditorMode('FixtureType', 2) # hide
+
+        PathIconViewProvider.ViewProvider(obj.ViewObject, 'Fixture')
+        obj.ViewObject.Transparency = 0
+        obj.ViewObject.DisplayMode = 'Flat Lines'
+        obj.ViewObject.Selectable = False
+        obj.ViewObject.Visibility = True
+
+
+def CreateVice(job, modelPath=None, xpos=None, ypos=None, orientation=None):
+    stock = job.Stock if job and hasattr(job, 'Stock') else None
+    obj = FreeCAD.ActiveDocument.addObject('Part::FeaturePython', 'Fixture')
+    FixtureVice(obj)
+    
+    # Set model path if provided
+    if modelPath:
+        obj.ViceModelPath = modelPath
+
+        # Set additional options if available
+        if xpos and ypos and orientation:
+            obj.XPos = xpos
+            obj.YPos = ypos
+            obj.Orientation = orientation
+        # Otherwise use stock
+        elif stock:
+            bb = shapeBoundBox(stock)
+            obj.XPos = bb.XMax
+            obj.YPos = (bb.YMin + bb.YMax)/2
+            obj.Orientation = 0
+
+    SetupFixtureObject(obj, FixtureType.Vice)
+    return obj
+
+
+def CreateVacuumTable(job, modelPath=None, xpos=None, ypos=None, orientation=None):
+    
+    obj = FreeCAD.ActiveDocument.addObject('Part::FeaturePython', 'Fixture')
+    FixtureVacuumTable(obj)
+    
+    # Set model path if provided
+    if modelPath:
+        obj.VacuumTableModelPath = modelPath
+
+        # Set additional options if available
+        if xpos and ypos and orientation:
+            obj.XPos = xpos
+            obj.YPos = ypos
+            obj.Orientation = orientation
+        # Otherwise use stock
+        elif job and hasattr(job, 'Stock'):
+            bb = shapeBoundBox(job.Stock)
+            obj.XPos = bb.XMin
+            obj.YPos = bb.YMin
+            obj.Orientation = 0
+
+    SetupFixtureObject(obj, FixtureType.VacuumTable)
+    return obj
+
+def CreateNoFixture(job):
+    
+    obj = FreeCAD.ActiveDocument.addObject('Part::FeaturePython', 'Fixture')
+    FixtureNoFixture(obj)
+
+    SetupFixtureObject(obj, FixtureType.NoFixture)
+    return obj
+
+
+
 
 class StockType:
     NoStock        = 'None'
@@ -63,19 +316,6 @@ class StockType:
             return cls.CreateCylinder
         return cls.Unknown
 
-def shapeBoundBox(obj):
-    if hasattr(obj, 'Shape'):
-        return obj.Shape.BoundBox
-    if obj and 'App::Part' == obj.TypeId:
-        bounds = [shapeBoundBox(o) for o in obj.Group]
-        if bounds:
-            bb = bounds[0]
-            for b in bounds[1:]:
-                bb = bb.united(b)
-            return bb
-    if obj:
-        PathLog.error(translate('PathStock', "Invalid base object %s - no shape found") % obj.Name)
-    return None
 
 class StockFromBase:
 
@@ -201,46 +441,6 @@ class StockFromPredefined:
         if prop in ['Length', 'Width', 'Height'] and not 'Restore' in obj.State:
             self.execute(obj)
 
-class FixtureImportStep:
-    MinExtent = 0.001
-
-    def __init__(self, obj):
-        obj.addProperty('App::PropertyLength', 'Length', 'Stock', QtCore.QT_TRANSLATE_NOOP("PathStock", "Length of this stock box"))
-        obj.addProperty('App::PropertyLength', 'Width', 'Stock', QtCore.QT_TRANSLATE_NOOP("PathStock", "Width of this stock box"))
-        obj.addProperty('App::PropertyLength', 'Height', 'Stock', QtCore.QT_TRANSLATE_NOOP("PathStock", "Height of this stock box"))
-
-        obj.Length = 10
-        obj.Width  = 10
-        obj.Height = 10
-
-        obj.Proxy = self
-
-    def __getstate__(self):
-        return None
-    def __setstate__(self, state):
-        return None
-
-    def execute(self, obj):
-        if obj.Length < self.MinExtent:
-            obj.Length = self.MinExtent
-        if obj.Width < self.MinExtent:
-            obj.Width = self.MinExtent
-        if obj.Height < self.MinExtent:
-            obj.Height = self.MinExtent
-
-        shape = Part.read("C:\\repos\\MHTech\\trunk\\SimpleCAM\\VakuumplanXY.step")
-        shape.Placement.Base = FreeCAD.Vector(-20.0, 20.0, 0.0)
-        shape.Placement.Rotation = FreeCAD.Rotation(0.0, 0.0, 0.0)
-        shape2 = Part.makeBox(100, 50, 20)
-        shape2.Placement.Base = FreeCAD.Vector(20.0, -20.0, 20.0)
-        shape2.Placement.Rotation = FreeCAD.Rotation(0.0, 0.0, 0.0)
-        shape3 = shape.fuse(shape2)
-
-        obj.Shape = shape3
-        
-    def onChanged(self, obj, prop):
-        if prop in ['Length', 'Width', 'Height'] and not 'Restore' in obj.State:
-            self.execute(obj)
 
 class StockCreateCylinder:
     MinExtent = 0.001
@@ -273,6 +473,8 @@ class StockCreateCylinder:
         if prop in ['Radius', 'Height'] and not 'Restore' in obj.State:
             self.execute(obj)
 
+
+
 def SetupStockObject(obj, stockType):
     if FreeCAD.GuiUp and obj.ViewObject:
         obj.addProperty('App::PropertyString', 'StockType', 'Stock', QtCore.QT_TRANSLATE_NOOP("PathStock", "Internal representation of stock type"))
@@ -282,18 +484,6 @@ def SetupStockObject(obj, stockType):
         PathIconViewProvider.ViewProvider(obj.ViewObject, 'Stock')
         obj.ViewObject.Transparency = 80
         obj.ViewObject.DisplayMode = 'Wireframe'
-        obj.ViewObject.Selectable = False
-        obj.ViewObject.Visibility = True
-
-def SetupStockObject2(obj, fixtureType):
-    if FreeCAD.GuiUp and obj.ViewObject:
-        obj.addProperty('App::PropertyString', 'FixtureType', 'Fixture', QtCore.QT_TRANSLATE_NOOP("PathFixture", "Internal representation of fixture type"))
-        obj.FixtureType = fixtureType
-        obj.setEditorMode('FixtureType', 2) # hide
-
-        PathIconViewProvider.ViewProvider(obj.ViewObject, 'Fixture')
-        obj.ViewObject.Transparency = 0
-        obj.ViewObject.DisplayMode = 'Flat Lines'
         obj.ViewObject.Selectable = False
         obj.ViewObject.Visibility = True
 
@@ -321,69 +511,47 @@ def CreateFromBase(job, neg=None, pos=None, placement=None):
 def CreateBox(job, extent=None, placement=None):
     base = job.Base if job and hasattr(job, 'Base') else None
     obj = FreeCAD.ActiveDocument.addObject('Part::FeaturePython', 'Stock')
-    obj2 = FreeCAD.ActiveDocument.addObject('Part::FeaturePython', 'Fixture')
     proxy = StockCreateBox(obj)
-    FixtureImportStep(obj2)
     if extent:
         obj.Length = extent.x
         obj.Width  = extent.y
         obj.Height = extent.z
-        obj2.Length = extent.x-10
-        obj2.Width  = extent.y-10
-        obj2.Height = extent.z-10
     elif base:
         bb = shapeBoundBox(base)
         obj.Length = max(bb.XLength, 1)
         obj.Width  = max(bb.YLength, 1)
         obj.Height = max(bb.ZLength, 1)
-        obj2.Length = max(bb.XLength-10, 1)
-        obj2.Width  = max(bb.YLength-10, 1)
-        obj2.Height = max(bb.ZLength-10, 1)
     
     if placement:
         obj.Placement = placement
-        #obj2.Placement = placement
     elif base:
         bb = shapeBoundBox(base)
         origin = FreeCAD.Vector(bb.XMin, bb.YMin, bb.ZMin)
         obj.Placement = FreeCAD.Placement(origin, FreeCAD.Vector(), 0)
-        #obj2.Placement = FreeCAD.Placement(origin, FreeCAD.Vector(), 0)
     SetupStockObject(obj, StockType.CreateBox)
-    SetupStockObject2(obj2, StockType.CreateBox)
     return obj
 
 def CreateFromPredefined(job, extent=None, placement=None):
     base = job.Base if job and hasattr(job, 'Base') else None
     obj = FreeCAD.ActiveDocument.addObject('Part::FeaturePython', 'Stock')
-    obj2 = FreeCAD.ActiveDocument.addObject('Part::FeaturePython', 'Fixture')
     proxy = StockCreateBox(obj)
-    FixtureImportStep(obj2)
     if extent:
         obj.Length = extent.x
         obj.Width  = extent.y
         obj.Height = extent.z
-        obj2.Length = extent.x-10
-        obj2.Width  = extent.y-10
-        obj2.Height = extent.z-10
     elif base:
         bb = shapeBoundBox(base)
         obj.Length = max(bb.XLength, 1)
         obj.Width  = max(bb.YLength, 1)
         obj.Height = max(bb.ZLength, 1)
-        obj2.Length = max(bb.XLength-10, 1)
-        obj2.Width  = max(bb.YLength-10, 1)
-        obj2.Height = max(bb.ZLength-10, 1)
     
     if placement:
         obj.Placement = placement
-        #obj2.Placement = placement
     elif base:
         bb = shapeBoundBox(base)
         origin = FreeCAD.Vector(bb.XMin, bb.YMin, bb.ZMin)
         obj.Placement = FreeCAD.Placement(origin, FreeCAD.Vector(), 0)
-        #obj2.Placement = FreeCAD.Placement(origin, FreeCAD.Vector(), 0)
     SetupStockObject(obj, StockType.FromPredefined)
-    SetupStockObject2(obj2, StockType.FromPredefined)
     return obj
 
 def CreateCylinder(job, radius=None, height=None, placement=None):

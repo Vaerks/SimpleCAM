@@ -46,7 +46,7 @@ from pivy import coin
 def translate(context, text, disambig=None):
     return QtCore.QCoreApplication.translate(context, text, disambig)
 
-if False:
+if True:
     PathLog.setLevel(PathLog.Level.DEBUG, PathLog.thisModule())
     PathLog.trackModule(PathLog.thisModule())
 else:
@@ -59,6 +59,13 @@ def _OpenCloseResourceEditor(obj, vobj, edit):
             job.ViewObject.Proxy.editObject(obj)
         else:
             job.ViewObject.Proxy.uneditObject(obj)
+
+def selectComboBoxText(widget, text):
+        index = widget.findText(text, QtCore.Qt.MatchFixedString)
+        if index >= 0:
+            widget.blockSignals(True)
+            widget.setCurrentIndex(index)
+            widget.blockSignals(False)
 
 class ViewProvider:
 
@@ -207,12 +214,158 @@ class ViewProvider:
             self.stockVisibility = obj.Stock.ViewObject.Visibility
             self.obj.Stock.ViewObject.Visibility = True
 
+        self.fixtureVisibility = True
+        if obj.Fixture and obj.Fixture.ViewObject:
+            self.fixtureVisibility = obj.Fixture.ViewObject.Visibility
+            self.obj.Fixture.ViewObject.Visibility = True
+
     def resetEditVisibility(self, obj):
         if obj.Base and obj.Base.ViewObject:
             obj.Base.ViewObject.Visibility = self.baseVisibility
         self.baseObjectRestoreVisibility(obj)
         if obj.Stock and obj.Stock.ViewObject:
             obj.Stock.ViewObject.Visibility = self.stockVisibility
+        if obj.Fixture and obj.Fixture.ViewObject:
+            obj.Fixture.ViewObject.Visibility = self.fixtureVisibility
+
+class FixtureEdit(object):
+    Index = -1
+    FixtureType = PathStock.FixtureType.Unknown
+
+    def __init__(self, obj, form):
+        self.obj = obj
+        self.form = form
+        self.setupUi(obj)
+
+    @classmethod
+    def IsFixture(cls, obj):
+        return PathStock.FixtureType.FromFixture(obj.Fixture) == cls.FixtureType
+
+    def activate(self, obj, select = False):
+        PathLog.track(obj.Label, select)
+        def showHide(widget, activeWidget):
+            if widget == activeWidget:
+                widget.show()
+            else:
+                widget.hide()
+
+        if select:
+            self.form.fixture.setCurrentIndex(self.Index)
+        editor = self.editorFrame()
+        showHide(self.form.fixtureVacuumTable, editor)
+        showHide(self.form.fixtureVice, editor)
+        self.setFields(obj)
+        
+    def setFixture(self, obj, fixture):
+        if obj.Fixture:
+            obj.Document.removeObject(self.obj.Fixture.Name)
+        obj.Fixture = fixture
+        if fixture.ViewObject and fixture.ViewObject.Proxy:
+            fixture.ViewObject.Proxy.onEdit(_OpenCloseResourceEditor)
+
+    # the following members must be overwritten by subclasses
+    def editorFrame(self):
+        return None
+    def setFields(self, obj):
+        pass
+    def setupUi(self, obj):
+        pass
+
+class FixtureNoFixtureEdit(FixtureEdit):
+    Index = 0
+    FixtureType = PathStock.FixtureType.NoFixture
+
+    def editorFrame(self):
+        return None
+
+    def getFields(self, obj, fields = None):
+        pass
+        
+    def setFields(self, obj):
+        if not self.IsFixture(obj):
+            self.setFixture(obj, PathStock.CreateNoFixture(obj))
+
+    def setupUi(self, obj):
+        self.setFields(obj)
+    
+class FixtureVacuumTableEdit(FixtureEdit):
+    Index = 1
+    FixtureType = PathStock.FixtureType.VacuumTable
+
+    def editorFrame(self):
+        return self.form.fixtureVacuumTable
+
+    def getFields(self, obj, fields = ['modelPath', 'xpos', 'ypos', 'orientation']):
+        if self.IsFixture(obj):
+            try:
+                if 'modelPath' in fields:
+                    obj.Fixture.VacuumTableModelPath = self.form.fixtureVacuumTableModelPath.text()
+                if 'xpos' in fields:
+                    obj.Fixture.XPos  = FreeCAD.Units.Quantity(self.form.fixtureXPos.text())
+                if 'ypos' in fields:
+                    obj.Fixture.YPos  = FreeCAD.Units.Quantity(self.form.fixtureYPos.text())
+                if 'orientation' in fields:
+                    obj.Fixture.Orientation = FreeCAD.Units.Quantity(self.form.fixtureOrientation.text())
+            except:
+                pass
+        else:
+            PathLog.error(translate('PathJob', 'Fixture not Vacuum Table!'))
+        
+
+    def setFields(self, obj):
+        if not self.IsFixture(obj):
+            self.setFixture(obj, PathStock.CreateVacuumTable(obj))
+        self.form.fixtureVacuumTableModelPath.setText(obj.Fixture.VacuumTableModelPath)
+        selectComboBoxText(self.form.fixtureVacuumTableXPos, FreeCAD.Units.Quantity(obj.Fixture.XPos.Value, FreeCAD.Units.Length).UserString)
+        selectComboBoxText(self.form.fixtureVacuumTableYPos, FreeCAD.Units.Quantity(obj.Fixture.YPos.Value, FreeCAD.Units.Length).UserString)
+        selectComboBoxText(self.form.fixtureVacuumTableOrientation, FreeCAD.Units.Quantity(obj.Fixture.Orientation.Value, FreeCAD.Units.Angle).UserString)
+
+    def setupUi(self, obj):
+        self.setFields(obj)
+        self.form.fixtureVacuumTableModelPath.textChanged.connect(lambda: self.getFields(obj, ['modelPath']))
+        self.form.fixtureVacuumTableXPos.currentIndexChanged.connect(lambda:  self.getFields(obj, ['xpos']))
+        self.form.fixtureVacuumTableYPos.currentIndexChanged.connect(lambda:  self.getFields(obj, ['ypos']))
+        self.form.fixtureVacuumTableOrientation.currentIndexChanged.connect(lambda: self.getFields(obj, ['orientation']))
+
+class FixtureViceEdit(FixtureEdit):
+    Index = 2
+    FixtureType = PathStock.FixtureType.Vice
+
+    def editorFrame(self):
+        return self.form.fixtureVice
+
+    def getFields(self, obj, fields = ['modelPath', 'xpos', 'ypos', 'orientation']):
+        if self.IsFixture(obj):
+            try:
+                if 'modelPath' in fields:
+                    obj.Fixture.ViceModelPath = self.form.fixtureViceModelPath.text()
+                if 'xpos' in fields:
+                    obj.Fixture.XPos  = FreeCAD.Units.Quantity(self.form.fixtureXPos.text())
+                if 'ypos' in fields:
+                    obj.Fixture.YPos  = FreeCAD.Units.Quantity(self.form.fixtureYPos.text())
+                if 'orientation' in fields:
+                    obj.Fixture.Orientation = FreeCAD.Units.Quantity(self.form.fixtureOrientation.text())
+            except:
+                pass
+
+            else:
+                PathLog.error(translate('PathJob', 'Fixture not Vacuum Table!'))
+        
+    def setFields(self, obj):
+        if not self.IsFixture(obj):
+            self.setFixture(obj, PathStock.CreateVice(obj))
+        self.form.fixtureViceModelPath.setText(obj.Fixture.ViceModelPath)
+        selectComboBoxText(self.form.fixtureViceXPos, FreeCAD.Units.Quantity(obj.Fixture.XPos.Value, FreeCAD.Units.Length).UserString)
+        selectComboBoxText(self.form.fixtureViceYPos, FreeCAD.Units.Quantity(obj.Fixture.YPos.Value, FreeCAD.Units.Length).UserString)
+        selectComboBoxText(self.form.fixtureViceOrientation, FreeCAD.Units.Quantity(obj.Fixture.Orientation.Value, FreeCAD.Units.Angle).UserString)
+        
+
+    def setupUi(self, obj):
+        self.setFields(obj)
+        self.form.fixtureViceModelPath.textChanged.connect(lambda: self.getFields(obj, ['modelPath']))
+        self.form.fixtureViceXPos.currentIndexChanged.connect(lambda:  self.getFields(obj, ['xpos']))
+        self.form.fixtureViceYPos.currentIndexChanged.connect(lambda:  self.getFields(obj, ['ypos']))
+        self.form.fixtureViceOrientation.currentIndexChanged.connect(lambda: self.getFields(obj, ['orientation']))
 
 class StockEdit(object):
     Index = -1
@@ -449,7 +602,7 @@ class StockFromExistingEdit(StockEdit):
         self.setFields(obj)
         self.form.stockExisting.currentIndexChanged.connect(lambda: self.getFields(obj))
 
-class stockFromPredefinedEdit(StockEdit):
+class StockFromPredefinedEdit(StockEdit):
     Index = 4
     StockType = PathStock.StockType.FromPredefined
 
@@ -549,7 +702,7 @@ class TaskPanel:
         for o in PathJob.ObjectJob.baseCandidates():
             if o != base and o != stock:
                 self.form.jobModel.addItem(o.Label, o)
-        self.selectComboBoxText(self.form.jobModel, self.obj.Proxy.baseObject(self.obj).Label)
+        selectComboBoxText(self.form.jobModel, self.obj.Proxy.baseObject(self.obj).Label)
 
         self.postProcessorDefaultTooltip = self.form.postProcessor.toolTip()
         self.postProcessorArgsDefaultTooltip = self.form.postProcessorArguments.toolTip()
@@ -562,6 +715,10 @@ class TaskPanel:
         self.stockCreateBox = None
         self.stockCreateCylinder = None
         self.stockEdit = None
+        self.fixtureNoFixture = None
+        self.fixtureVacuumTable = None
+        self.fixtureVice = None
+        self.fixtureEdit = None
 
     def preCleanup(self):
         PathLog.track()
@@ -628,15 +785,9 @@ class TaskPanel:
 
             self.updateTooltips()
             self.stockEdit.getFields(self.obj)
+            self.fixtureEdit.getFields(self.obj)
 
             self.obj.Proxy.execute(self.obj)
-
-    def selectComboBoxText(self, widget, text):
-        index = widget.findText(text, QtCore.Qt.MatchFixedString)
-        if index >= 0:
-            widget.blockSignals(True)
-            widget.setCurrentIndex(index)
-            widget.blockSignals(False)
 
     def updateToolController(self):
         tcRow = self.form.toolControllerList.currentRow()
@@ -704,7 +855,7 @@ class TaskPanel:
         self.form.jobDescription.setPlainText(self.obj.Description)
 
         self.form.postProcessorOutputFile.setText(self.obj.PostProcessorOutputFile)
-        self.selectComboBoxText(self.form.postProcessor, self.obj.PostProcessor)
+        selectComboBoxText(self.form.postProcessor, self.obj.PostProcessor)
         self.form.postProcessorArguments.setText(self.obj.PostProcessorArgs)
         #self.obj.Proxy.onChanged(self.obj, "PostProcessor")
         self.updateTooltips()
@@ -726,6 +877,7 @@ class TaskPanel:
 
         self.updateToolController()
         self.stockEdit.setFields(self.obj)
+        self.fixtureEdit.setFields(self.obj)
 
     def setPostProcessorOutputFile(self):
         filename = QtGui.QFileDialog.getSaveFileName(self.form, translate("Path_Job", "Select Output File"), None, translate("Path_Job", "All Files (*.*)"))
@@ -928,6 +1080,40 @@ class TaskPanel:
             FreeCADGui.Selection.addSelection(selObject, selFeature)
         return (selObject, p)
 
+    def updateFixtureEditor(self, index):
+        def setupNoFixtureEdit():
+            if not self.fixtureNoFixture:
+                self.fixtureNoFixture = FixtureNoFixtureEdit(self.obj, self.form)
+            self.fixtureEdit = self.fixtureNoFixture
+        def setupVacuumTableEdit():
+            if not self.fixtureVacuumTable:
+                self.fixtureVacuumTable = FixtureVacuumTableEdit(self.obj, self.form)
+            self.fixtureEdit = self.fixtureVacuumTable
+        def setupViceEdit():
+            if not self.fixtureVice:
+                self.fixtureVice = FixtureViceEdit(self.obj, self.form)
+            self.fixtureEdit = self.fixtureVice
+        
+        if index == -1:
+            if self.obj.Fixture is None or FixtureNoFixtureEdit.IsFixture(self.obj):
+                setupNoFixtureEdit()
+            elif FixtureVacuumTableEdit.IsFixture(self.obj):
+                setupVacuumTableEdit()
+            elif FixtureViceEdit.IsFixture(self.obj):
+                setupViceEdit()
+            else:
+                PathLog.error(translate('PathJob', "Unsupported fixture object %s") % self.obj.Fixture.Label)
+        else:
+            if index == FixtureNoFixtureEdit.Index:
+                setupNoFixtureEdit()
+            elif index == FixtureVacuumTableEdit.Index:
+                setupVacuumTableEdit()
+            elif index == FixtureViceEdit.Index:
+                setupViceEdit()
+            else:
+                PathLog.error(translate('PathJob', "Unsupported fixture type %s (%d)") % (self.form.fixture.currentText(), index))
+        self.fixtureEdit.activate(self.obj, index == -1)
+
     def updateStockEditor(self, index):
         def setupFromBaseEdit():
             if not self.stockFromBase:
@@ -1028,6 +1214,7 @@ class TaskPanel:
 
     def setupUi(self, activate):
         self.updateStockEditor(-1)
+        self.updateFixtureEditor(-1)
         self.setFields()
 
         # Info
@@ -1065,6 +1252,7 @@ class TaskPanel:
         self.form.centerInStockXY.clicked.connect(self.centerInStockXY)
 
         self.form.stock.currentIndexChanged.connect(self.updateStockEditor)
+        self.form.fixture.currentIndexChanged.connect(self.updateFixtureEditor)
 
         self.form.orientXAxis.clicked.connect(lambda: self.orientSelected(FreeCAD.Vector(1, 0, 0)))
         self.form.orientYAxis.clicked.connect(lambda: self.orientSelected(FreeCAD.Vector(0, 1, 0)))
@@ -1110,6 +1298,7 @@ def Create(base, template=None):
         FreeCAD.ActiveDocument.commitTransaction()
         obj.Document.recompute()
         obj.ViewObject.Proxy.editObject(obj.Stock)
+        obj.ViewObject.Proxy.editObject(obj.Fixture)
         return obj
     except:
         PathLog.error(sys.exc_info())
