@@ -301,24 +301,80 @@ class FixtureVacuumTableEdit(FixtureEdit):
                 if 'modelPath' in fields:
                     obj.Fixture.VacuumTableModelPath = self.form.fixtureVacuumTableModelPath.text()
                 if 'xpos' in fields:
-                    obj.Fixture.XPos  = FreeCAD.Units.Quantity(self.form.fixtureXPos.text())
+                    obj.Fixture.XPos = self.form.fixtureVacuumTableXPos.itemData(self.form.fixtureVacuumTableXPos.currentIndex())
                 if 'ypos' in fields:
-                    obj.Fixture.YPos  = FreeCAD.Units.Quantity(self.form.fixtureYPos.text())
+                    obj.Fixture.YPos = self.form.fixtureVacuumTableYPos.itemData(self.form.fixtureVacuumTableYPos.currentIndex())
                 if 'orientation' in fields:
-                    obj.Fixture.Orientation = FreeCAD.Units.Quantity(self.form.fixtureOrientation.text())
+                    obj.Fixture.Orientation = self.form.fixtureVacuumTableOrientation.itemData(self.form.fixtureVacuumTableOrientation.currentIndex())
             except:
                 pass
         else:
             PathLog.error(translate('PathJob', 'Fixture not Vacuum Table!'))
-        
+
+    def setVacuumTableModelFile(self, obj):
+        filename = QtGui.QFileDialog.getOpenFileName(self.form, translate("Path_Job", "Select Vacuum Table Model File"), None, translate("Path_Job", "Step Files (*.step *.stp)"))
+        if filename and filename[0]:
+            obj.Fixture.VacuumTableModelPath = str(filename[0])
+            self.setFields(obj)
+    
+    def candidatesX(self, obj):
+        return [100, 200, 400, 800]
+
+    def candidatesY(self, obj):
+        return [50, 100, 200, 400]        
+
+    def candidatesAngle(self, obj):
+        return [0, 90]        
 
     def setFields(self, obj):
         if not self.IsFixture(obj):
             self.setFixture(obj, PathStock.CreateVacuumTable(obj))
         self.form.fixtureVacuumTableModelPath.setText(obj.Fixture.VacuumTableModelPath)
-        selectComboBoxText(self.form.fixtureVacuumTableXPos, FreeCAD.Units.Quantity(obj.Fixture.XPos.Value, FreeCAD.Units.Length).UserString)
-        selectComboBoxText(self.form.fixtureVacuumTableYPos, FreeCAD.Units.Quantity(obj.Fixture.YPos.Value, FreeCAD.Units.Length).UserString)
-        selectComboBoxText(self.form.fixtureVacuumTableOrientation, FreeCAD.Units.Quantity(obj.Fixture.Orientation.Value, FreeCAD.Units.Angle).UserString)
+
+        # Fill Position X combobox with predefined values
+        self.form.fixtureVacuumTableXPos.clear()
+        XPos = obj.Fixture.XPos if obj.Fixture.XPos else None
+        index = -1
+        for i, candidateX in enumerate(self.candidatesX(obj)):
+            self.form.fixtureVacuumTableXPos.addItem(FreeCAD.Units.Quantity(candidateX, FreeCAD.Units.Length).UserString, candidateX)
+            if candidateX == XPos:
+                index = i
+        # Add current item if it doesn't exist
+        if index == -1 and XPos:
+            self.form.fixtureVacuumTableXPos.addItem(FreeCAD.Units.Quantity(XPos, FreeCAD.Units.Length).UserString, XPos)
+            index = len(self.candidatesX(obj))
+        # Set combobox index
+        self.form.fixtureVacuumTableXPos.setCurrentIndex(index if index != -1 else 0)
+
+        # Fill Position Y combobox with predefined values
+        self.form.fixtureVacuumTableYPos.clear()
+        YPos = obj.Fixture.YPos if obj.Fixture.YPos else None
+        index = -1
+        for i, candidateY in enumerate(self.candidatesY(obj)):
+            self.form.fixtureVacuumTableYPos.addItem(FreeCAD.Units.Quantity(candidateY, FreeCAD.Units.Length).UserString, candidateY)
+            if candidateY == YPos:
+                index = i
+        # Add current item if it doesn't exist
+        if index == -1 and YPos:
+            self.form.fixtureVacuumTableYPos.addItem(FreeCAD.Units.Quantity(YPos, FreeCAD.Units.Length).UserString, YPos)
+            index = len(self.candidatesY(obj))
+        # Set combobox index
+        self.form.fixtureVacuumTableYPos.setCurrentIndex(index if index != -1 else 0)
+
+        # Fill Orientation combobox with predefined values
+        self.form.fixtureVacuumTableOrientation.clear()
+        Orientation = obj.Fixture.Orientation if obj.Fixture.Orientation else None
+        index = -1
+        for i, candidateAngle in enumerate(self.candidatesAngle(obj)):
+            self.form.fixtureVacuumTableOrientation.addItem(FreeCAD.Units.Quantity(candidateAngle, FreeCAD.Units.Angle).UserString, candidateAngle)
+            if candidateAngle == Orientation:
+                index = i
+        # Add current item if it doesn't exist
+        if index == -1 and Orientation:
+            self.form.fixtureVacuumTableOrientation.addItem(FreeCAD.Units.Quantity(Orientation, FreeCAD.Units.Angle).UserString, Orientation)
+            index = len(self.candidatesAngle(obj))
+        # Set combobox index
+        self.form.fixtureVacuumTableOrientation.setCurrentIndex(index if index != -1 else 0)
 
     def setupUi(self, obj):
         self.setFields(obj)
@@ -326,6 +382,7 @@ class FixtureVacuumTableEdit(FixtureEdit):
         self.form.fixtureVacuumTableXPos.currentIndexChanged.connect(lambda:  self.getFields(obj, ['xpos']))
         self.form.fixtureVacuumTableYPos.currentIndexChanged.connect(lambda:  self.getFields(obj, ['ypos']))
         self.form.fixtureVacuumTableOrientation.currentIndexChanged.connect(lambda: self.getFields(obj, ['orientation']))
+        self.form.setVacuumTableModelButton.clicked.connect(lambda: self.setVacuumTableModelFile(obj))
 
 class FixtureViceEdit(FixtureEdit):
     Index = 2
@@ -340,25 +397,81 @@ class FixtureViceEdit(FixtureEdit):
                 if 'modelPath' in fields:
                     obj.Fixture.ViceModelPath = self.form.fixtureViceModelPath.text()
                 if 'xpos' in fields:
-                    obj.Fixture.XPos  = FreeCAD.Units.Quantity(self.form.fixtureXPos.text())
+                    obj.Fixture.XPos  = self.form.fixtureViceXPos.itemData(self.form.fixtureViceXPos.currentIndex())
                 if 'ypos' in fields:
-                    obj.Fixture.YPos  = FreeCAD.Units.Quantity(self.form.fixtureYPos.text())
+                    obj.Fixture.YPos  = self.form.fixtureViceYPos.itemData(self.form.fixtureViceYPos.currentIndex())
                 if 'orientation' in fields:
-                    obj.Fixture.Orientation = FreeCAD.Units.Quantity(self.form.fixtureOrientation.text())
+                    obj.Fixture.Orientation = self.form.fixtureViceOrientation.itemData(self.form.fixtureViceOrientation.currentIndex())
             except:
                 pass
 
-            else:
-                PathLog.error(translate('PathJob', 'Fixture not Vacuum Table!'))
+        else:
+            PathLog.error(translate('PathJob', 'Fixture not Vacuum Table!'))
         
+    def setViceModelFile(self, obj):
+        filename = QtGui.QFileDialog.getOpenFileName(self.form, translate("Path_Job", "Select Vice Model File"), None, translate("Path_Job", "Step Files (*.step *.stp)"))
+        if filename and filename[0]:
+            obj.Fixture.ViceModelPath = str(filename[0])
+            self.setFields(obj)
+            
+    def candidatesX(self, obj):
+        return [100, 200, 400, 800]
+
+    def candidatesY(self, obj):
+        return [50, 100, 200, 400]        
+
+    def candidatesAngle(self, obj):
+        return [0, 90]        
+
     def setFields(self, obj):
         if not self.IsFixture(obj):
             self.setFixture(obj, PathStock.CreateVice(obj))
         self.form.fixtureViceModelPath.setText(obj.Fixture.ViceModelPath)
-        selectComboBoxText(self.form.fixtureViceXPos, FreeCAD.Units.Quantity(obj.Fixture.XPos.Value, FreeCAD.Units.Length).UserString)
-        selectComboBoxText(self.form.fixtureViceYPos, FreeCAD.Units.Quantity(obj.Fixture.YPos.Value, FreeCAD.Units.Length).UserString)
-        selectComboBoxText(self.form.fixtureViceOrientation, FreeCAD.Units.Quantity(obj.Fixture.Orientation.Value, FreeCAD.Units.Angle).UserString)
-        
+
+        # Fill Position X combobox with predefined values
+        self.form.fixtureViceXPos.clear()
+        XPos = obj.Fixture.XPos if obj.Fixture.XPos else None
+        index = -1
+        for i, candidateX in enumerate(self.candidatesX(obj)):
+            self.form.fixtureViceXPos.addItem(FreeCAD.Units.Quantity(candidateX, FreeCAD.Units.Length).UserString, candidateX)
+            if candidateX == XPos:
+                index = i
+        # Add current item if it doesn't exist
+        if index == -1 and XPos:
+            self.form.fixtureViceXPos.addItem(FreeCAD.Units.Quantity(XPos, FreeCAD.Units.Length).UserString, XPos)
+            index = len(self.candidatesX(obj))
+        # Set combobox index
+        self.form.fixtureViceXPos.setCurrentIndex(index if index != -1 else 0)
+
+        # Fill Position Y combobox with predefined values
+        self.form.fixtureViceYPos.clear()
+        YPos = obj.Fixture.YPos if obj.Fixture.YPos else None
+        index = -1
+        for i, candidateY in enumerate(self.candidatesY(obj)):
+            self.form.fixtureViceYPos.addItem(FreeCAD.Units.Quantity(candidateY, FreeCAD.Units.Length).UserString, candidateY)
+            if candidateY == YPos:
+                index = i
+        # Add current item if it doesn't exist
+        if index == -1 and YPos:
+            self.form.fixtureViceYPos.addItem(FreeCAD.Units.Quantity(YPos, FreeCAD.Units.Length).UserString, YPos)
+            index = len(self.candidatesY(obj))
+        # Set combobox index
+        self.form.fixtureViceYPos.setCurrentIndex(index if index != -1 else 0)
+
+        # Fill Orientation combobox with predefined values
+        self.form.fixtureViceOrientation.clear()
+        Orientation = obj.Fixture.Orientation if obj.Fixture.Orientation else None
+        index = -1
+        for i, candidateAngle in enumerate(self.candidatesAngle(obj)):
+            self.form.fixtureViceOrientation.addItem(FreeCAD.Units.Quantity(candidateAngle, FreeCAD.Units.Angle).UserString, candidateAngle)
+            if candidateAngle == Orientation:
+                index = i
+        # Add current item if it doesn't exist
+        if index == -1 and Orientation:
+            self.form.fixtureViceOrientation.addItem(FreeCAD.Units.Quantity(Orientation, FreeCAD.Units.Angle).UserString, Orientation)
+            index = len(self.candidatesAngle(obj))
+        # Set combobox index
+        self.form.fixtureViceOrientation.setCurrentIndex(index if index != -1 else 0)    
 
     def setupUi(self, obj):
         self.setFields(obj)
@@ -366,6 +479,7 @@ class FixtureViceEdit(FixtureEdit):
         self.form.fixtureViceXPos.currentIndexChanged.connect(lambda:  self.getFields(obj, ['xpos']))
         self.form.fixtureViceYPos.currentIndexChanged.connect(lambda:  self.getFields(obj, ['ypos']))
         self.form.fixtureViceOrientation.currentIndexChanged.connect(lambda: self.getFields(obj, ['orientation']))
+        self.form.setViceModelButton.clicked.connect(lambda: self.setViceModelFile(obj))
 
 class StockEdit(object):
     Index = -1
@@ -502,7 +616,7 @@ class StockCreateBoxEdit(StockEdit):
     def editorFrame(self):
         return self.form.stockCreateBox
 
-    def getFields(self, obj, fields = ['length', 'widht', 'height']):
+    def getFields(self, obj, fields = ['length', 'width', 'height']):
         try:
             if self.IsStock(obj):
                 if 'length' in fields:
@@ -1136,7 +1250,7 @@ class TaskPanel:
             return False
         def setupFromPredefinedEdit():
             if not self.stockFromPredefined:
-                self.stockFromPredefined = stockFromPredefinedEdit(self.obj, self.form)
+                self.stockFromPredefined = StockFromPredefinedEdit(self.obj, self.form)
             self.stockEdit = self.stockFromPredefined
 
         if index == -1:
@@ -1148,7 +1262,7 @@ class TaskPanel:
                 setupCreateCylinderEdit()
             elif StockFromExistingEdit.IsStock(self.obj):
                 setupFromExisting()
-            elif stockFromPredefinedEdit.IsStock(self.obj):
+            elif StockFromPredefinedEdit.IsStock(self.obj):
                 setupFromPredefinedEdit()
             else:
                 PathLog.error(translate('PathJob', "Unsupported stock object %s") % self.obj.Stock.Label)
@@ -1163,7 +1277,7 @@ class TaskPanel:
                 if not setupFromExisting():
                     setupFromBaseEdit()
                     index = -1
-            elif index == stockFromPredefinedEdit.Index:
+            elif index == StockFromPredefinedEdit.Index:
                 setupFromPredefinedEdit()
             else:
                 PathLog.error(translate('PathJob', "Unsupported stock type %s (%d)") % (self.form.stock.currentText(), index))
@@ -1298,7 +1412,6 @@ def Create(base, template=None):
         FreeCAD.ActiveDocument.commitTransaction()
         obj.Document.recompute()
         obj.ViewObject.Proxy.editObject(obj.Stock)
-        obj.ViewObject.Proxy.editObject(obj.Fixture)
         return obj
     except:
         PathLog.error(sys.exc_info())

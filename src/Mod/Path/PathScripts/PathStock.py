@@ -165,7 +165,7 @@ class FixtureVacuumTable:
             workplaneShape.Placement.Base = FreeCAD.Vector(0.0, 0.0, 0.0)
             workplaneShape.Placement.Rotation = FreeCAD.Rotation(0.0, 0.0, 0.0)
 
-        # Load Vice Model
+        # Load VacuumTable Model
         vacuumTableShape = None
         try:
             vacuumTableShape = Part.read(obj.VacuumTableModelPath)
@@ -175,7 +175,7 @@ class FixtureVacuumTable:
             vacuumTableShape.Placement.Base = FreeCAD.Vector(obj.XPos, obj.YPos, 0.0)
             vacuumTableShape.Placement.Rotation = FreeCAD.Rotation(obj.Orientation, 0.0, 0.0)
         
-        # Combine workplane and vice models
+        # Combine workplane and VacuumTable models
         if vacuumTableShape and workplaneShape:
             obj.Shape = workplaneShape.fuse(vacuumTableShape)
             obj.Placement = workplaneShape.Placement

@@ -453,6 +453,13 @@
        <item>
         <widget class="QFrame" name="fixtureVacuumTable">
          <layout class="QGridLayout" name="gridLayout_13">
+          <item row="0" column="1">
+           <widget class="QLabel" name="fixtureVacuumTableModelLabel">
+            <property name="text">
+             <string>Model</string>
+            </property>
+           </widget>
+          </item>
           <item row="0" column="2">
            <widget class="QLineEdit" name="fixtureVacuumTableModelPath">
             <property name="toolTip">
@@ -461,96 +468,9 @@
            </widget>
           </item>
           <item row="0" column="3">
-           <widget class="QToolButton" name="setVacuumTableModelFile">
+           <widget class="QToolButton" name="setVacuumTableModelButton">
             <property name="text">
              <string>...</string>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="1">
-           <widget class="QLabel" name="fixtureVacuumTableLabel">
-            <property name="text">
-             <string>Orientation</string>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="2" colspan="2">
-           <widget class="QComboBox" name="fixtureVacuumTableYPos">
-            <property name="currentIndex">
-             <number>0</number>
-            </property>
-            <item>
-             <property name="text">
-              <string>100 mm</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>200 mm</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>400 mm</string>
-             </property>
-            </item>
-           </widget>
-          </item>
-          <item row="3" column="2" colspan="2">
-           <widget class="QComboBox" name="fixtureVacuumTableOrientation">
-            <property name="currentIndex">
-             <number>0</number>
-            </property>
-            <item>
-             <property name="text">
-              <string>0</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>90</string>
-             </property>
-            </item>
-           </widget>
-          </item>
-          <item row="2" column="1">
-           <widget class="QLabel" name="fixtureVacuumTableYPosLabel">
-            <property name="text">
-             <string>Y Position</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="2" colspan="2">
-           <widget class="QComboBox" name="fixtureVacuumTableXPos">
-            <property name="currentIndex">
-             <number>0</number>
-            </property>
-            <item>
-             <property name="text">
-              <string>100 mm</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>200 mm</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>400 mm</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>800 mm</string>
-             </property>
-            </item>
-           </widget>
-          </item>
-          <item row="0" column="1">
-           <widget class="QLabel" name="fixtureVacuumTableModelLabel">
-            <property name="text">
-             <string>Model</string>
             </property>
            </widget>
           </item>
@@ -561,12 +481,54 @@
             </property>
            </widget>
           </item>
-         </layout>
+          <item row="1" column="2" colspan="2">
+           <widget class="QComboBox" name="fixtureVacuumTableXPos">
+            <property name="currentIndex">
+             <number>0</number>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QLabel" name="fixtureVacuumTableYPosLabel">
+            <property name="text">
+             <string>Y Position</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="2" colspan="2">
+           <widget class="QComboBox" name="fixtureVacuumTableYPos">
+            <property name="currentIndex">
+             <number>0</number>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="1">
+           <widget class="QLabel" name="fixtureVacuumTableOrientationLabel">
+            <property name="text">
+             <string>Orientation</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="2" colspan="2">
+           <widget class="QComboBox" name="fixtureVacuumTableOrientation">
+            <property name="currentIndex">
+             <number>0</number>
+            </property>
+           </widget>
+          </item>
+          </layout>
         </widget>
        </item>
        <item>
         <widget class="QFrame" name="fixtureVice">
-         <layout class="QGridLayout" name="gridLayout_13">
+         <layout class="QGridLayout" name="gridLayout_14">
+          <item row="0" column="1">
+           <widget class="QLabel" name="fixtureViceModelLabel">
+            <property name="text">
+             <string>Model</string>
+            </property>
+           </widget>
+          </item>
           <item row="0" column="2">
            <widget class="QLineEdit" name="fixtureViceModelPath">
             <property name="toolTip">
@@ -575,9 +537,37 @@
            </widget>
           </item>
           <item row="0" column="3">
-           <widget class="QToolButton" name="setViceModelFile">
+           <widget class="QToolButton" name="setViceModelButton">
             <property name="text">
              <string>...</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QLabel" name="fixtureViceXPosLabel">
+            <property name="text">
+             <string>X Position</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="2" colspan="2">
+           <widget class="QComboBox" name="fixtureViceXPos">
+            <property name="currentIndex">
+             <number>0</number>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QLabel" name="fixtureViceYPosLabel">
+            <property name="text">
+             <string>Y Position</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="2" colspan="2">
+           <widget class="QComboBox" name="fixtureViceYPos">
+            <property name="currentIndex">
+             <number>0</number>
             </property>
            </widget>
           </item>
@@ -588,90 +578,10 @@
             </property>
            </widget>
           </item>
-          <item row="2" column="2" colspan="2">
-           <widget class="QComboBox" name="fixtureViceYPos">
-            <property name="currentIndex">
-             <number>0</number>
-            </property>
-            <item>
-             <property name="text">
-              <string>100 mm</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>200 mm</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>400 mm</string>
-             </property>
-            </item>
-           </widget>
-          </item>
           <item row="3" column="2" colspan="2">
            <widget class="QComboBox" name="fixtureViceOrientation">
             <property name="currentIndex">
              <number>0</number>
-            </property>
-            <item>
-             <property name="text">
-              <string>0</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>90</string>
-             </property>
-            </item>
-           </widget>
-          </item>
-          <item row="2" column="1">
-           <widget class="QLabel" name="fixtureViceYPosLabel">
-            <property name="text">
-             <string>Y Position</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="2" colspan="2">
-           <widget class="QComboBox" name="fixtureViceXPos">
-            <property name="currentIndex">
-             <number>0</number>
-            </property>
-            <item>
-             <property name="text">
-              <string>100 mm</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>200 mm</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>400 mm</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>800 mm</string>
-             </property>
-            </item>
-           </widget>
-          </item>
-          <item row="0" column="1">
-           <widget class="QLabel" name="fixtureViceModelLabel">
-            <property name="text">
-             <string>Model</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="1">
-           <widget class="QLabel" name="fixtureViceXPosLabel">
-            <property name="text">
-             <string>X Position</string>
             </property>
            </widget>
           </item>
