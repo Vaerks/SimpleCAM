@@ -106,6 +106,10 @@ class ObjectJob:
         obj.addProperty("App::PropertyLink", "Operations", "Base", QtCore.QT_TRANSLATE_NOOP("PathJob", "Compound path of all operations in the order they are processed."))
         obj.addProperty("App::PropertyLinkList", "ToolController", "Base", QtCore.QT_TRANSLATE_NOOP("PathJob", "Collection of tool controllers available for this job."))
 
+        # MH Tech
+        obj.addProperty("App::PropertyInteger", "Version", "Path", QtCore.QT_TRANSLATE_NOOP("PathJob", "Version of the selected Job."))
+        obj.Version = 1
+
         obj.PostProcessorOutputFile = PathPreferences.defaultOutputFile()
         #obj.setEditorMode("PostProcessorOutputFile", 0)  # set to default mode
         obj.PostProcessor = postProcessors = PathPreferences.allEnabledPostProcessors()
