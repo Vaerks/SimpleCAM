@@ -132,6 +132,7 @@ class ViewProvider:
         self.taskPanel.setupUi(activate)
         self.deleteOnReject = False
         self.showOriginAxis(True)
+        FreeCADGui.ActiveDocument.ActiveView.fitAll()
 
     def resetTaskPanel(self):
         self.showOriginAxis(False)
@@ -159,7 +160,9 @@ class ViewProvider:
         return ":/icons/Path-Job.svg"
 
     def claimChildren(self):
-        children = self.obj.ToolController
+        PathLog.track()
+        children = []
+        children.append(self.obj.ToolControllers)
         children.append(self.obj.Operations)
         if self.obj.Base:
             children.append(self.obj.Base)
@@ -813,8 +816,9 @@ class TaskPanel:
 
         base = self.obj.Base if PathJob.isResourceClone(self.obj, 'Base') else None
         stock = self.obj.Stock
+        fixture = self.obj.Fixture
         for o in PathJob.ObjectJob.baseCandidates():
-            if o != base and o != stock:
+            if o != base and o != stock and o != fixture:
                 self.form.jobModel.addItem(o.Label, o)
         selectComboBoxText(self.form.jobModel, self.obj.Proxy.baseObject(self.obj).Label)
 
@@ -904,6 +908,7 @@ class TaskPanel:
             self.obj.Proxy.execute(self.obj)
 
     def updateToolController(self):
+        PathLog.track()
         tcRow = self.form.toolControllerList.currentRow()
         tcCol = self.form.toolControllerList.currentColumn()
 
@@ -918,7 +923,7 @@ class TaskPanel:
 
         vUnit = FreeCAD.Units.Quantity(1, FreeCAD.Units.Velocity).getUserPreferred()[2]
 
-        for row,tc in enumerate(sorted(self.obj.ToolController, key=lambda tc: tc.Label)):
+        for row,tc in enumerate(sorted(self.obj.ToolController.Group, key=lambda tc: tc.Label)):
             self.form.activeToolController.addItem(tc.Label, tc)
             if tc == select:
                 index = row
@@ -1038,6 +1043,8 @@ class TaskPanel:
             self.getFields()
 
     def toolControllerSelect(self):
+        PathLog.track()
+
         def canDeleteTC(tc):
             # if the TC is referenced anywhere but the job we don't want to delete it
             return len(tc.InList) == 1
@@ -1049,7 +1056,7 @@ class TaskPanel:
         # can only delete what is selected
         delete = edit
         # ... but we want to make sure there's at least one TC left
-        if len(self.obj.ToolController) == len(self.form.toolControllerList.selectedItems()):
+        if len(self.obj.ToolControllers.Group) == len(self.form.toolControllerList.selectedItems()):
             delete = False
         # ... also don't want to delete any TCs that are already used
         if delete:

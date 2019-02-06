@@ -37,7 +37,7 @@ from PathScripts.PathPreferences import PathPreferences
 from PathScripts.PathPostProcessor import PostProcessor
 from PySide import QtCore
 
-if False:
+if True:
     PathLog.setLevel(PathLog.Level.DEBUG, PathLog.thisModule())
     PathLog.trackModule(PathLog.thisModule())
 else:
@@ -60,7 +60,7 @@ class JobTemplate:
     SetupSheet = 'SetupSheet'
     Stock = 'Stock'
     Fixture = 'Fixture'
-    ToolController = 'ToolController'
+    ToolControllers = 'ToolControllers'
     Version = 'Version'
 
 def isArchPanelSheet(obj):
@@ -83,9 +83,13 @@ def createResourceClone(obj, orig, name, icon):
     clone.Label = "%s-%s" % (name, orig.Label)
     clone.addProperty('App::PropertyString', 'PathResource')
     clone.PathResource = name
+
+    # Move clone to "positive" position
+    bb = clone.Shape.BoundBox
+    Draft.move(clone, FreeCAD.Vector(-bb.XMin + 2, -bb.YMin + 2, -bb.ZMin))
     if clone.ViewObject:
         PathIconViewProvider.ViewProvider(clone.ViewObject, icon)
-        clone.ViewObject.Visibility = False
+        clone.ViewObject.Visibility = True
     obj.Document.recompute() # necessary to create the clone shape
     return clone
 
@@ -104,7 +108,7 @@ class ObjectJob:
         obj.addProperty("App::PropertyLink", "Stock", "Base", QtCore.QT_TRANSLATE_NOOP("PathJob", "Solid object to be used as stock."))
         obj.addProperty("App::PropertyLink", "Fixture", "Base", QtCore.QT_TRANSLATE_NOOP("PathJob", "Solid object to be used as Fixture."))
         obj.addProperty("App::PropertyLink", "Operations", "Base", QtCore.QT_TRANSLATE_NOOP("PathJob", "Compound path of all operations in the order they are processed."))
-        obj.addProperty("App::PropertyLinkList", "ToolController", "Base", QtCore.QT_TRANSLATE_NOOP("PathJob", "Collection of tool controllers available for this job."))
+        obj.addProperty("App::PropertyLink", "ToolControllers", "Base", QtCore.QT_TRANSLATE_NOOP("PathJob", "Collection of tool controllers available for this job."))
 
         obj.PostProcessorOutputFile = PathPreferences.defaultOutputFile()
         #obj.setEditorMode("PostProcessorOutputFile", 0)  # set to default mode
@@ -120,13 +124,17 @@ class ObjectJob:
 
         ops = FreeCAD.ActiveDocument.addObject("Path::FeatureCompoundPython", "Operations")
         obj.Operations = ops
+        tcs = FreeCAD.ActiveDocument.addObject("Path::FeatureCompoundPython", "ToolControllers")
+        obj.ToolControllers = tcs
+
         obj.setEditorMode('Operations', 2) # hide
         obj.setEditorMode('Placement', 2)
-
+        
         self.setupSetupSheet(obj)
 
         obj.Base = createResourceClone(obj, base, 'Base', 'BaseGeometry')
         obj.Proxy = self
+        base.ViewObject.Visibility = False
 
         self.setFromTemplateFile(obj, templateFile)
         if not obj.Stock:
@@ -139,13 +147,15 @@ class ObjectJob:
             obj.Stock.ViewObject.Visibility = True
         
         if not obj.Fixture:
-            #FixtureTemplate = PathPreferences.defaultFixtureTemplate()
-            #if FixtureTemplate:
-            #    obj.Fixture = PathStock.CreateFromTemplate(obj, json.loads(FixtureTemplate))
+            #fixtureTemplate = PathPreferences.defaultFixtureTemplate()
+            #if fixtureTemplate:
+            #    obj.Fixture = PathStock.CreateFixtureFromTemplate(obj, json.loads(fixtureTemplate))
             if not obj.Fixture:
                 obj.Fixture = PathStock.CreateVacuumTable(obj)
         if obj.Fixture.ViewObject:
             obj.Fixture.ViewObject.Visibility = True
+
+
 
     def setupSetupSheet(self, obj):
         if not hasattr(obj, 'SetupSheet'):
@@ -185,15 +195,20 @@ class ObjectJob:
         if obj.Base:
             PathLog.debug('taking down base')
             if isResourceClone(obj, 'Base'):
+                if obj.Base.Objects:
+                    obj.Base.Objects[0].ViewObject.Visibility = True
                 PathUtil.clearExpressionEngine(obj.Base)
                 doc.removeObject(obj.Base.Name)
             obj.Base = None
         # Tool controllers don't depend on anything
         PathLog.debug('taking down tool controller')
-        for tc in obj.ToolController:
+        while obj.ToolControllers.Group:
+            tc = obj.ToolControllers.Group[0]
             PathUtil.clearExpressionEngine(tc)
             doc.removeObject(tc.Name)
-        obj.ToolController = []
+        obj.ToolControllers.Group = []
+        doc.removeObject(obj.ToolControllers.Name)
+        obj.ToolControllers = None
         # SetupSheet
         PathUtil.clearExpressionEngine(obj.SetupSheet)
         doc.removeObject(obj.SetupSheet.Name)
@@ -248,8 +263,8 @@ class ObjectJob:
                 if attrs.get(JobTemplate.Description):
                     obj.Description = attrs.get(JobTemplate.Description)
 
-                if attrs.get(JobTemplate.ToolController):
-                    for tc in attrs.get(JobTemplate.ToolController):
+                if attrs.get(JobTemplate.ToolControllers):
+                    for tc in attrs.get(JobTemplate.ToolControllers):
                         tcs.append(PathToolController.FromTemplate(tc))
                 if attrs.get(JobTemplate.Stock):
                     obj.Stock = PathStock.CreateFromTemplate(obj, attrs.get(JobTemplate.Stock))
@@ -257,7 +272,7 @@ class ObjectJob:
                 #    obj.Fixture = PathStock.CreateFromTemplate(obj, attrs.get(JobTemplate.Fixture))
 
                 PathLog.debug("setting tool controllers (%d)" % len(tcs))
-                obj.ToolController = tcs
+                obj.ToolControllers.Group = tcs
             else:
                 PathLog.error(translate('PathJob', "Unsupported PathJob template version %s") % attrs.get(JobTemplate.Version))
         if not tcs:
@@ -297,13 +312,13 @@ class ObjectJob:
             self.obj.Operations.Group = group
 
     def addToolController(self, tc):
-        group = self.obj.ToolController
+        group = self.obj.ToolControllers.Group
         PathLog.debug("addToolController(%s): %s" % (tc.Label, [t.Label for t in group]))
         if tc.Name not in [str(t.Name) for t in group]:
             tc.setExpression('VertRapid',  "%s.%s" % (self.setupSheet.expressionReference(), PathSetupSheet.Template.VertRapid))
             tc.setExpression('HorizRapid', "%s.%s" % (self.setupSheet.expressionReference(), PathSetupSheet.Template.HorizRapid))
             group.append(tc)
-            self.obj.ToolController = group
+            self.obj.ToolControllers.Group = group
 
     def allOperations(self):
         ops = []

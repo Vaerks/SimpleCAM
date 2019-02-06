@@ -407,7 +407,7 @@ def getToolControllers(obj):
         job = None
 
     if job:
-        return job.ToolController
+        return job.ToolControllers.Group
     return []
 
 

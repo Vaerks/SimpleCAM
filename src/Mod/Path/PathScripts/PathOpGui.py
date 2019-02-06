@@ -46,10 +46,10 @@ __doc__ = "Base classes and framework for Path operation's UI"
 #  1 ... reverse order
 #  2 ... multi panel layout
 #  3 ... multi panel layout reverse
-TaskPanelLayout = 0
+TaskPanelLayout = 2
 
 
-if False:
+if True:
     PathLog.setLevel(PathLog.Level.DEBUG, PathLog.thisModule())
     PathLog.trackModule(PathLog.thisModule())
 else:
