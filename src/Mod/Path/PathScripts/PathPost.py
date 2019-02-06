@@ -126,15 +126,17 @@ class CommandPathPost:
         if os.path.isfile(filename) and not openDialog:
             if policy == 'Open File Dialog on conflict':
                 openDialog = True
-            elif policy == 'Append Unique ID on conflict':
-                fn, ext = os.path.splitext(filename)
-                nr = fn[-3:]
-                n = 1
-                if nr.isdigit():
-                    n = int(nr)
-                while os.path.isfile("%s%03d%s" % (fn, n, ext)):
-                    n = n + 1
-                filename = "%s%03d%s" % (fn, n, ext)
+
+
+            #elif policy == 'Append Unique ID on conflict':
+            #    fn, ext = os.path.splitext(filename)
+            #    nr = fn[-3:]
+            #    n = 1
+            #    if nr.isdigit():
+            #        n = int(nr)
+            #    while os.path.isfile("%s%03d%s" % (fn, n, ext)):
+            #        n = n + 1
+            #    filename = "%s%03d%s" % (fn, n, ext)
 
         if openDialog:
             foo = QtGui.QFileDialog.getSaveFileName(QtGui.qApp.activeWindow(), "Output File", filename)
@@ -142,6 +144,13 @@ class CommandPathPost:
                 filename = foo[0]
             else:
                 filename = None
+
+        if policy == 'Append Unique ID on conflict':
+            fn, ext = os.path.splitext(filename)
+            n = job.Version
+            filename = "%s_%03d%s" % (fn, n, ext)
+
+        job.Version = job.Version + 1
 
         return filename
 
