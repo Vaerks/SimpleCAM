@@ -309,11 +309,20 @@ class ObjectJob:
     def execute(self, obj):
         obj.Path = obj.Operations.Path
 
-    def addOperation(self, op):
-        group = self.obj.Operations.Group
-        if op not in group:
-            group.append(op)
-            self.obj.Operations.Group = group
+    def addOperation(self, newop):
+        ops = self.obj.Operations.Group
+
+        # Check if operation is already present in job or superoperations
+        for op in ops:
+            if newop is op:
+                return
+            elif op.TypeId == "Path::FeatureCompoundPython":
+                if newop in op.Group:
+                    return
+
+        # Operation was not found in the operations group or within any super operations - Add it to job
+        ops.append(op)
+        self.obj.Operations.Group = ops
 
     def addToolController(self, tc):
         group = self.obj.ToolControllers.Group

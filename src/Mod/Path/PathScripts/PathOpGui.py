@@ -944,13 +944,21 @@ def Create(res):
     this function directly, but calls the Activated() function of the Command object
     that is created in each operations Gui implementation.'''
     FreeCAD.ActiveDocument.openTransaction("Create %s" % res.name)
-    obj = res.objFactory(res.name)
+    
+    obj = res.objFactory(res.name)   
     if obj.Proxy:
         vobj = ViewProvider(obj.ViewObject, res)
+
+        # Add ViewProviders for SubOperations if obj is a SuperOperation
+        if obj.TypeId == 'Path::FeatureCompoundPython':
+            for subobj in subobj.Group:
+                if subobj.Proxy:
+                    vsubobj = ViewProvider(subobj.ViewObject, res)
 
         FreeCAD.ActiveDocument.commitTransaction()
         obj.ViewObject.startEditing()
         return obj
+
     FreeCAD.ActiveDocument.abortTransaction()
     return None
 
