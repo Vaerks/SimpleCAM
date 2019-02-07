@@ -40,7 +40,7 @@ from PathScripts.PathGeom import PathGeom
 from PySide import QtCore
 from PySide import QtGui
 
-if False:
+if True:
     PathLog.setLevel(PathLog.Level.DEBUG, PathLog.thisModule())
     PathLog.trackModule(PathLog.thisModule())
 else:

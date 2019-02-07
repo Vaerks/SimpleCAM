@@ -126,11 +126,11 @@ class TaskPanelOpPage(PathCircularHoleBaseGui.TaskPanelOpPage):
 
         return signals
 
-Command = PathOpGui.SetupOperation('TestDrilling',
-        PathTestDrilling.Create,
+Command = PathOpGui.SetupOperation('SuperDrilling',
+        PathSuperDrilling.Create,
         TaskPanelOpPage,
-        'Path-TestDrilling',
-        QtCore.QT_TRANSLATE_NOOP("PathTestDrilling", "TestDrilling"),
-        QtCore.QT_TRANSLATE_NOOP("PathTestDrilling", "TestDrilling Super Operation"))
+        'Path-SuperDrilling',
+        QtCore.QT_TRANSLATE_NOOP("PathSuperDrilling", "SuperDrilling"),
+        QtCore.QT_TRANSLATE_NOOP("PathSuperDrilling", "SuperDrilling Super Operation"))
 
 FreeCAD.Console.PrintLog("Loading PathTestDrillingGui... done\n")

@@ -144,6 +144,10 @@ def drillselect():
     FreeCADGui.Selection.addSelectionGate(DRILLGate())
     FreeCAD.Console.PrintWarning("Drilling Select Mode\n")
 
+def superdrillselect():
+    FreeCADGui.Selection.addSelectionGate(DRILLGate())
+    FreeCAD.Console.PrintWarning("Super Drilling Select Mode\n")
+
 def engraveselect():
     FreeCADGui.Selection.addSelectionGate(ENGRAVEGate())
     FreeCAD.Console.PrintWarning("Engraving Select Mode\n")
@@ -164,6 +168,7 @@ def select(op):
     opsel = {}
     opsel['Contour'] = contourselect
     opsel['Drilling'] = drillselect
+    opsel['SuperDrilling'] = superdrillselect
     opsel['Engrave'] = engraveselect
     opsel['Helix'] = drillselect
     opsel['MillFace'] = pocketselect

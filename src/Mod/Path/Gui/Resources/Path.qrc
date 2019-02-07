@@ -15,6 +15,7 @@
         <file>icons/Path-Dressup.svg</file>
         <file>icons/Path-Drilling.svg</file>
 		<file>icons/Path-SuperDrilling.svg</file>
+		<file>icons/Path-SuperDrilling.svg</file>
         <file>icons/Path-Engrave.svg</file>
         <file>icons/Path-ExportTemplate.svg</file>
         <file>icons/Path-FacePocket.svg</file>
@@ -77,7 +78,7 @@
         <file>panels/PageDepthsEdit.ui</file>
         <file>panels/PageHeightsEdit.ui</file>
         <file>panels/PageOpDrillingEdit.ui</file>
-		<file>panels/PageOpTestDrillingEdit.ui</file>
+		<file>panels/PageOpSuperDrillingEdit.ui</file>
         <file>panels/PageOpEngraveEdit.ui</file>
         <file>panels/PageOpHelixEdit.ui</file>
         <file>panels/PageOpPocketFullEdit.ui</file>
