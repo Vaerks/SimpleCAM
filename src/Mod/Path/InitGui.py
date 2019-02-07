@@ -55,6 +55,7 @@ class PathWorkbench (Workbench):
         from PathScripts import PathDressupTagGui
         from PathScripts import PathDressupLeadInOut
         from PathScripts import PathDrillingGui
+        from PathScripts import PathSuperDrillingGui
         from PathScripts import PathEngraveGui
         from PathScripts import PathFixture
         from PathScripts import PathHelixGui
@@ -82,6 +83,7 @@ class PathWorkbench (Workbench):
         toolcmdlist = ["Path_Inspect", "Path_Simulator", "Path_ToolLibraryEdit", "Path_SelectLoop"]
         prepcmdlist = ["Path_Fixture", "Path_Comment", "Path_Stop", "Path_Custom"]
         twodopcmdlist = ["Path_Contour", "Path_Profile_Faces", "Path_Profile_Edges", "Path_Pocket_Shape", "Path_Drilling", "Path_Engrave", "Path_MillFace", "Path_Helix"]
+        superoperationslist = ["Path_SuperDrilling"]
         threedopcmdlist = ["Path_Pocket_3D"]
         modcmdlist = ["Path_OperationCopy", "Path_Array", "Path_SimpleCopy" ]
         dressupcmdlist = ["Path_DressupDogbone", "Path_DressupDragKnife", "Path_DressupLeadInOut", "Path_DressupRampEntry", "Path_DressupTag"]
@@ -121,11 +123,12 @@ class PathWorkbench (Workbench):
         self.appendToolbar(QT_TRANSLATE_NOOP("Path", "Project Setup"), projcmdlist)
         self.appendToolbar(QT_TRANSLATE_NOOP("Path", "Tool Commands"), toolcmdlist)
         self.appendToolbar(QT_TRANSLATE_NOOP("Path", "New Operations"), twodopcmdlist+threedcmdgroup)
+        self.appendToolbar(QT_TRANSLATE_NOOP("Path", "Super Operations"), superoperationslist)
         self.appendToolbar(QT_TRANSLATE_NOOP("Path", "Path Modification"), modcmdlist)
         if extracmdlist:
             self.appendToolbar(QT_TRANSLATE_NOOP("Path", "Helpful Tools"), extracmdlist)
 
-        self.appendMenu([QT_TRANSLATE_NOOP("Path", "&Path")], projcmdlist +["Path_ExportTemplate", "Separator"] + toolcmdlist +["Separator"] +twodopcmdlist +["Separator"] +threedopcmdlist +["Separator"])
+        self.appendMenu([QT_TRANSLATE_NOOP("Path", "&Path")], projcmdlist +["Path_ExportTemplate", "Separator"] + toolcmdlist +["Separator"] +twodopcmdlist +["Separator"] +threedopcmdlist +["Separator"] +superoperationslist +["Separator"])
         self.appendMenu([QT_TRANSLATE_NOOP("Path", "&Path"), QT_TRANSLATE_NOOP(
             "Path", "Path Dressup")], dressupcmdlist)
         self.appendMenu([QT_TRANSLATE_NOOP("Path", "&Path"), QT_TRANSLATE_NOOP(

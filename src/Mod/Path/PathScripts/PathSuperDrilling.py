@@ -109,13 +109,6 @@ class ObjectSuperDrilling(PathCircularHoleBase.ObjectOp):
         self.commandlist.append(Path.Command('G90'))
         self.commandlist.append(Path.Command(obj.ReturnLevel))
 
-        # ml: I'm not sure whey these were here, they seem redundant
-        ## rapid to first hole location, with spindle still retracted:
-        #p0 = holes[0]
-        #self.commandlist.append(Path.Command('G0', {'X': p0['x'], 'Y': p0['y'], 'F': self.horizRapid}))
-        ## move tool to clearance plane
-        #self.commandlist.append(Path.Command('G0', {'Z': obj.ClearanceHeight.Value, 'F': self.vertRapid}))
-
         cmd = "G81"
         cmdParams = {}
         cmdParams['Z'] = obj.FinalDepth.Value - tiplength
