@@ -73,6 +73,10 @@ class ObjectSuperDrilling(PathCircularHoleBase.ObjectOp):
         obj.addProperty("App::PropertyInteger", "TestProperty", "XXX",
                         QtCore.QT_TRANSLATE_NOOP("App::Property", "Just a test")) # Test Property
 
+        # Link property
+        obj.addProperty("App::PropertyLink", "SuperDrillingOperation", "SuperOperation",
+                        QtCore.QT_TRANSLATE_NOOP("App:Property", "Sub-operations attribute."))
+
         ################################################################################################
         # Super Operations properties:
         #       "IsActive": Test for all sub-operations. Check if all sub-operations need to be created.
@@ -138,16 +142,18 @@ def Create(name):
     '''Create(name) ... Creates and returns a Drilling operation.'''
 
     obj = FreeCAD.ActiveDocument.addObject("Path::FeaturePython", name)
+
     proxy = ObjectSuperDrilling(obj)
-
-
+    proxy.SuperDrillingOperation = FreeCAD.ActiveDocument.addObject("Path::FeatureCompoundPython",
+                                                                  "Super_Drilling_Operation")
     if obj.Proxy:
         proxy.findAllHoles(obj)
+
     return obj
 
 
 def createSubOperations(suboperations):
-    FreeCAD.ActiveDocument.addObject("Path::FeatureCompoundPython", "Drilling")
+    #FreeCAD.ActiveDocument.addObject("Path::FeatureCompoundPython", "Super_Drilling")
     base = FreeCAD.ActiveDocument.addObject("Path::FeaturePython", "Base_Drilling")
     end = FreeCAD.ActiveDocument.addObject("Path::FeaturePython", "End_Drilling")
     base_drilling = PathDrilling.ObjectDrilling(base)
