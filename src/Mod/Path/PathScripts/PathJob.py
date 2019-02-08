@@ -37,7 +37,7 @@ from PathScripts.PathPreferences import PathPreferences
 from PathScripts.PathPostProcessor import PostProcessor
 from PySide import QtCore
 
-if True:
+if False:
     PathLog.setLevel(PathLog.Level.DEBUG, PathLog.thisModule())
     PathLog.trackModule(PathLog.thisModule())
 else:
@@ -314,14 +314,14 @@ class ObjectJob:
 
         # Check if operation is already present in job or superoperations
         for op in ops:
-            if newop is op:
+            if newop.Name.split('0')[0] == op.Name.split('0')[0]:
                 return
             elif op.TypeId == "Path::FeatureCompoundPython":
                 if newop in op.Group:
                     return
 
         # Operation was not found in the operations group or within any super operations - Add it to job
-        ops.append(op)
+        ops.append(newop)
         self.obj.Operations.Group = ops
 
     def addToolController(self, tc):

@@ -31,6 +31,9 @@ import PathScripts.PathSelection as PathSelection
 import PathScripts.PathOp as PathOp
 import PathScripts.PathUtil as PathUtil
 import PathScripts.PathUtils as PathUtils
+
+from PathScripts import PathDrilling
+
 import importlib
 
 from PySide import QtCore, QtGui
@@ -951,7 +954,13 @@ def Create(res):
 
         # Add ViewProviders for SubOperations if obj is a SuperOperation
         if obj.TypeId == 'Path::FeatureCompoundPython':
-            for subobj in subobj.Group:
+            for subobj in obj.Group:
+                '''
+                # Hardcode TODO: Delete after tests
+                if subobj.Name == "SuperDrilling001":
+                    proxy = PathDrilling.ObjectDrilling(subobj)
+                    proxy.findAllHoles(subobj)
+                   '''
                 if subobj.Proxy:
                     vsubobj = ViewProvider(subobj.ViewObject, res)
 

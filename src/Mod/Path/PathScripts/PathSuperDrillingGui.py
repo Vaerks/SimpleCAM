@@ -72,7 +72,7 @@ class TaskPanelOpPage(PathCircularHoleBaseGui.TaskPanelOpPage):
 
         # If the obj is active, it needs to setup all its sub-operations once
         if obj.IsActive and obj.IsTestCreated is False:
-            PathSuperDrilling.createSubOperations(["Test1", "Test2"])
+            PathSuperDrilling.createSubOperations(["Test1", "Test2"], obj)
             obj.IsTestCreated = True # used to know if the associated sub-operations are already created
 
         # If the sub-operations are already created but we don't want them anymore, they need to be deleted

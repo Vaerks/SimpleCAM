@@ -54,7 +54,7 @@ def translate(context, text, disambig=None):
     return QtCore.QCoreApplication.translate(context, text, disambig)
 
 
-class ObjectSuperDrilling(PathCircularHoleBase.ObjectOp):
+class ObjectSuperDrilling(PathDrilling.ObjectDrilling):
     '''Proxy object for Drilling operation.'''
 
     def circularHoleFeatures(self, obj):
@@ -138,9 +138,11 @@ class ObjectSuperDrilling(PathCircularHoleBase.ObjectOp):
         '''opSetDefaultValues(obj) ... set default value for RetractHeight'''
         obj.RetractHeight = 10
 
-def Create(name):
-    '''Create(name) ... Creates and returns a Drilling operation.'''
 
+
+# Old create function
+'''
+def Create(name):
     obj = FreeCAD.ActiveDocument.addObject("Path::FeaturePython", name)
 
     proxy = ObjectSuperDrilling(obj)
@@ -150,9 +152,42 @@ def Create(name):
         proxy.findAllHoles(obj)
 
     return obj
+'''
 
+def Create(name):
+    superop = FreeCAD.ActiveDocument.addObject("Path::FeatureCompoundPython", name)
+    proxy = ObjectSuperDrilling(superop)
+    if superop.Proxy:
+        proxy.findAllHoles(superop)
 
-def createSubOperations(suboperations):
+    # Creating sub-operations with proxies
+    subops = []
+    newoperation = FreeCAD.ActiveDocument.addObject("Path::FeaturePython", name)
+
+    subproxy = PathDrilling.ObjectDrilling(newoperation)
+    subproxy.findAllHoles(newoperation)
+    newoperation.Proxy = subproxy
+
+    subops.append(newoperation)
+    superop.Group = subops
+
+    return superop
+
+def createSubOperations(suboperationslist, superDrillingOp):
+    pass
+    # Create sub-operations
+    '''subops = []
+    newoperation = FreeCAD.ActiveDocument.addObject("Path::FeaturePython", "Base_Drilling")
+    proxy = PathDrilling.ObjectDrilling(newoperation)
+
+    if newoperation.Proxy:
+        proxy.findAllHoles(newoperation)
+
+    subops.append(newoperation)
+    superDrillingOp.Group = subops
+'''
+'''
+def createSubOperations(suboperations: list, superDrillingOp):
     #FreeCAD.ActiveDocument.addObject("Path::FeatureCompoundPython", "Super_Drilling")
     base = FreeCAD.ActiveDocument.addObject("Path::FeaturePython", "Base_Drilling")
     end = FreeCAD.ActiveDocument.addObject("Path::FeaturePython", "End_Drilling")
@@ -160,8 +195,7 @@ def createSubOperations(suboperations):
     end_drilling = PathDrilling.ObjectDrilling(end)
     end.Active = False
     return [base, end]
+'''
 
-def destroySubOperations(suboperations):
-    FreeCAD.ActiveDocument.removeObject("Base_Drilling")
-    FreeCAD.ActiveDocument.removeObject("End_Drilling")
+def destroySubOperations(suboperationslist, superDrillingOp):
     pass
