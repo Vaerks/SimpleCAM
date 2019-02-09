@@ -39,6 +39,8 @@ import importlib
 from PySide import QtCore, QtGui
 from PathScripts.PathGeom import PathGeom
 
+from PathScripts.PathDrillingGui import TaskPanelOpPage
+
 __title__ = "Path Operation UI base classes"
 __author__ = "sliptonic (Brad Collette)"
 __url__ = "http://www.freecadweb.org"
@@ -52,7 +54,7 @@ __doc__ = "Base classes and framework for Path operation's UI"
 TaskPanelLayout = 2
 
 
-if True:
+if False:
     PathLog.setLevel(PathLog.Level.DEBUG, PathLog.thisModule())
     PathLog.trackModule(PathLog.thisModule())
 else:
@@ -62,6 +64,10 @@ else:
 def translate(context, text, disambig=None):
     return QtCore.QCoreApplication.translate(context, text, disambig)
 
+
+def updateImport(panel):
+    TASK_DRILLING_PANEL_DEL = panel
+    global TASK_DRILLING_PANEL_DEL
 
 class ViewProvider(object):
     '''Generic view provider for path objects.
@@ -1067,6 +1073,7 @@ def SetupOperation(name,
 
     command = CommandPathOp(res)
     FreeCADGui.addCommand("Path_%s" % name.replace(' ', '_'), command)
+
     return command
 
 
