@@ -33,6 +33,7 @@ import PathScripts.PathOp as PathOp
 import PathScripts.PathUtils as PathUtils
 
 import PathScripts.PathDrilling as PathDrilling
+import PathScripts.PathDrillingGui as PathDrillingGui
 
 from PathScripts.PathUtils import fmt, waiting_effects
 from PySide import QtCore
@@ -161,41 +162,18 @@ def Create(name):
         proxy.findAllHoles(superop)
 
     # Creating sub-operations with proxies
-    subops = []
-    newoperation = FreeCAD.ActiveDocument.addObject("Path::FeaturePython", name)
+    op_drill1 = FreeCAD.ActiveDocument.addObject("Path::FeaturePython", superop.Name + "_drill1")
+    op_drill2 = FreeCAD.ActiveDocument.addObject("Path::FeaturePython", superop.Name + "_drill2")
 
-    subproxy = PathDrilling.ObjectDrilling(newoperation)
-    subproxy.findAllHoles(newoperation)
-    newoperation.Proxy = subproxy
+    superop.Group = [op_drill1, op_drill2]
 
-    subops.append(newoperation)
-    superop.Group = subops
+    PathDrilling.ObjectDrilling(op_drill1)
+    PathDrilling.ObjectDrilling(op_drill2)
+
+    
+    
 
     return superop
-
-def createSubOperations(suboperationslist, superDrillingOp):
-    pass
-    # Create sub-operations
-    '''subops = []
-    newoperation = FreeCAD.ActiveDocument.addObject("Path::FeaturePython", "Base_Drilling")
-    proxy = PathDrilling.ObjectDrilling(newoperation)
-
-    if newoperation.Proxy:
-        proxy.findAllHoles(newoperation)
-
-    subops.append(newoperation)
-    superDrillingOp.Group = subops
-'''
-'''
-def createSubOperations(suboperations: list, superDrillingOp):
-    #FreeCAD.ActiveDocument.addObject("Path::FeatureCompoundPython", "Super_Drilling")
-    base = FreeCAD.ActiveDocument.addObject("Path::FeaturePython", "Base_Drilling")
-    end = FreeCAD.ActiveDocument.addObject("Path::FeaturePython", "End_Drilling")
-    base_drilling = PathDrilling.ObjectDrilling(base)
-    end_drilling = PathDrilling.ObjectDrilling(end)
-    end.Active = False
-    return [base, end]
-'''
 
 def destroySubOperations(suboperationslist, superDrillingOp):
     pass

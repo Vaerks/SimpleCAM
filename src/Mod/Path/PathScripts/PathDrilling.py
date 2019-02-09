@@ -122,18 +122,9 @@ class ObjectDrilling(PathCircularHoleBase.ObjectOp):
 
 def Create(name):
     '''Create(name) ... Creates and returns a Drilling operation.'''
-    superobj = FreeCAD.ActiveDocument.addObject("Path::FeatureCompoundPython", name)
-    proxy = ObjectDrilling(superobj)
-    if superobj.Proxy:
-        proxy.findAllHoles(superobj)
-    
-    # Create subobjects
-    objs = []
     obj = FreeCAD.ActiveDocument.addObject("Path::FeaturePython", name)
     proxy = ObjectDrilling(obj)
     if obj.Proxy:
         proxy.findAllHoles(obj)
     
-    objs.append(obj)
-    superobj.Group = objs
-    return superobj
+    return obj
