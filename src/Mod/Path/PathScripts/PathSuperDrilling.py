@@ -162,13 +162,18 @@ def Create(name):
 
     # Creating sub-operations with proxies
     subops = []
-    newoperation = FreeCAD.ActiveDocument.addObject("Path::FeaturePython", name)
 
-    subproxy = PathDrilling.ObjectDrilling(newoperation)
-    subproxy.findAllHoles(newoperation)
-    newoperation.Proxy = subproxy
+    i=0
 
-    subops.append(newoperation)
+    # Test by creating 3 Drillings
+    for i in range(0, 3):
+        newoperation = FreeCAD.ActiveDocument.addObject("Path::FeaturePython", name)
+        subproxy = PathDrilling.ObjectDrilling(newoperation)
+        subproxy.findAllHoles(newoperation)
+        newoperation.Proxy = subproxy
+        newoperation.Label = "Drilling "+str(i)
+        subops.append(newoperation)
+
     superop.Group = subops
 
     return superop
