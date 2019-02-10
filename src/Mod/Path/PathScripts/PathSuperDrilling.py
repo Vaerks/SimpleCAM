@@ -165,6 +165,7 @@ def Create(name):
     op_drill1 = FreeCAD.ActiveDocument.addObject("Path::FeaturePython", superop.Name + "_drill1")
     op_drill2 = FreeCAD.ActiveDocument.addObject("Path::FeaturePython", superop.Name + "_drill2")
 
+    # Adding subobjects to super operation. Objects must be added before initialization to avoid being claimed by Job.Operations.
     superop.Group = [op_drill1, op_drill2]
 
     PathDrilling.ObjectDrilling(op_drill1)

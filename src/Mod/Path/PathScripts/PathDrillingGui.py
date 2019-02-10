@@ -106,13 +106,14 @@ class TaskPanelOpPage(PathCircularHoleBaseGui.TaskPanelOpPage):
 
         return signals
 
-Command = PathOpGui.SetupOperation('Drilling',
+Resource = PathOpGui.CommandResources('Drilling',
         PathDrilling.Create,
         TaskPanelOpPage,
         'Path-Drilling',
         QtCore.QT_TRANSLATE_NOOP("PathDrilling", "Drilling"),
-        QtCore.QT_TRANSLATE_NOOP("PathDrilling", "Creates a Path Drilling object from a features of a base object"))
+        QtCore.QT_TRANSLATE_NOOP("PathDrilling", "Creates a Path Drilling object from a features of a base object"),
+        None)
+
+Command = PathOpGui.SetupOperation(Resource)
 
 FreeCAD.Console.PrintLog("Loading PathDrillingGui... done\n")
-
-PathOpGui.updateImport(TaskPanelOpPage)

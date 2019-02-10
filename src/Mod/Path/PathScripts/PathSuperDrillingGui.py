@@ -34,10 +34,10 @@ from PySide import QtCore, QtGui
 from PathScripts import PathSuperDrilling
 from PathScripts import PathDrillingGui
 
-__title__ = "Path Drilling Test Operation"
-__author__ = "Peter"
-__url__ = "http://www.freecadweb.org"
-__doc__ = "Test operation."
+__title__ = "Path Drilling Super Operation"
+__author__ = "Peter ??"
+__url__ = "http://www.vaerks.com"
+__doc__ = "Super operation."
 
 if True:
     PathLog.setLevel(PathLog.Level.DEBUG, PathLog.thisModule())
@@ -127,14 +127,15 @@ class TaskPanelOpPage(PathCircularHoleBaseGui.TaskPanelOpPage):
 
         return signals
 
-subCommands = [PathDrillingGui.Command, PathDrillingGui.Command]
-Command = PathOpGui.SetupSuperOperation('SuperDrilling',
+subCmdResources = [PathDrillingGui.Resource, PathDrillingGui.Resource]
+Resource = PathOpGui.CommandResources('SuperDrilling',
         PathSuperDrilling.Create,
         TaskPanelOpPage,
         'Path-SuperDrilling',
         QtCore.QT_TRANSLATE_NOOP("PathSuperDrilling", "SuperDrilling"),
         QtCore.QT_TRANSLATE_NOOP("PathSuperDrilling", "SuperDrilling Super Operation"),
-        None,
-        subCommands)
+        None)
 
-FreeCAD.Console.PrintLog("Loading PathTestDrillingGui... done\n")
+Command = PathOpGui.SetupOperation(Resource, subCmdResources)
+
+FreeCAD.Console.PrintLog("Loading PathSuperDrillingGui... done\n")

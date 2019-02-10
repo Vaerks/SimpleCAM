@@ -64,11 +64,14 @@ class TaskPanelOpPage(PathOpGui.TaskPanelPage):
         signals.append(self.form.toolController.currentIndexChanged)
         return signals
 
-Command = PathOpGui.SetupOperation('Engrave',
+Resource = PathOpGui.CommandResources('Engrave',
         PathEngrave.Create,
         TaskPanelOpPage,
         'Path-Engrave',
         QtCore.QT_TRANSLATE_NOOP("PathEngrave", "Engrave"),
-        QtCore.QT_TRANSLATE_NOOP("PathEngrave", "Creates an Engraving Path around a Draft ShapeString"))
+        QtCore.QT_TRANSLATE_NOOP("PathEngrave", "Creates an Engraving Path around a Draft ShapeString"),
+        None)
+
+Command = PathOpGui.SetupOperation(Resource)
 
 FreeCAD.Console.PrintLog("Loading PathEngraveGui... done\n")

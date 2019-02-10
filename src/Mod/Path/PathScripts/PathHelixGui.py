@@ -80,11 +80,14 @@ class TaskPanelOpPage(PathCircularHoleBaseGui.TaskPanelOpPage):
 
         return signals
 
-Command = PathOpGui.SetupOperation('Helix',
+Resource = PathOpGui.CommandResources('Helix',
         PathHelix.Create,
         TaskPanelOpPage,
         'Path-Helix',
         QtCore.QT_TRANSLATE_NOOP("PathHelix", "Helix"),
-        QtCore.QT_TRANSLATE_NOOP("PathHelix", "Creates a Path Helix object from a features of a base object"))
+        QtCore.QT_TRANSLATE_NOOP("PathHelix", "Creates a Path Helix object from a features of a base object"),
+        None)
+
+Command = PathOpGui.SetupOperation(Resource)
 
 FreeCAD.Console.PrintLog("Loading PathHelixGui... done\n")
