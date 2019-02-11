@@ -35,7 +35,7 @@ from PathScripts import PathSuperDrilling
 from PathScripts import PathDrillingGui
 
 __title__ = "Path Drilling Super Operation"
-__author__ = "Peter ??"
+__author__ = "MH Tech"
 __url__ = "http://www.vaerks.com"
 __doc__ = "Super operation."
 
@@ -66,20 +66,8 @@ class TaskPanelOpPage(PathCircularHoleBaseGui.TaskPanelOpPage):
             obj.PeckEnabled = self.form.peckEnabled.isChecked()
         if obj.AddTipLength != self.form.useTipLength.isChecked():
             obj.AddTipLength = self.form.useTipLength.isChecked()
-        if obj.IsActive != self.form.isActiveEnabled.isChecked():
-            obj.IsActive = self.form.isActiveEnabled.isChecked()
 
         self.updateToolController(obj, self.form.toolController)
-
-        # If the obj is active, it needs to setup all its sub-operations once
-        if obj.IsActive and obj.IsTestCreated is False:
-            PathSuperDrilling.createSubOperations(["Test1", "Test2"], obj)
-            obj.IsTestCreated = True # used to know if the associated sub-operations are already created
-
-        # If the sub-operations are already created but we don't want them anymore, they need to be deleted
-        elif obj.IsActive is False and obj.IsTestCreated:
-            PathSuperDrilling.destroySubOperations(["Test1", "Test2"])
-            obj.IsTestCreated = False
 
     def setFields(self, obj):
         '''setFields(obj) ... update UI with obj properties' values'''
@@ -104,11 +92,6 @@ class TaskPanelOpPage(PathCircularHoleBaseGui.TaskPanelOpPage):
         else:
             self.form.useTipLength.setCheckState(QtCore.Qt.Unchecked)
 
-        if obj.IsActive:
-            self.form.isActiveEnabled.setCheckState(QtCore.Qt.Checked)
-        else:
-            self.form.isActiveEnabled.setCheckState(QtCore.Qt.Unchecked)
-
         self.setupToolController(obj, self.form.toolController)
 
     def getSignalsForUpdate(self, obj):
@@ -123,9 +106,8 @@ class TaskPanelOpPage(PathCircularHoleBaseGui.TaskPanelOpPage):
         signals.append(self.form.useTipLength.stateChanged)
         signals.append(self.form.toolController.currentIndexChanged)
 
-        signals.append(self.form.isActiveEnabled.stateChanged)
-
         return signals
+
 
 subCmdResources = [PathDrillingGui.Resource, PathDrillingGui.Resource]
 Resource = PathOpGui.CommandResources('SuperDrilling',

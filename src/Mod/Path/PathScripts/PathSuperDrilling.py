@@ -32,18 +32,19 @@ import PathScripts.PathLog as PathLog
 import PathScripts.PathOp as PathOp
 import PathScripts.PathUtils as PathUtils
 
+# Imports for Sub-operations creation
 import PathScripts.PathDrilling as PathDrilling
-import PathScripts.PathDrillingGui as PathDrillingGui
+import PathScripts.PathSurface as PathSurface
 
 from PathScripts.PathUtils import fmt, waiting_effects
 from PySide import QtCore
 
-__title__ = "Super Drilling operation"
-__author__ = "Peter"
-__url__ = "http://www.freecadweb.org"
-__doc__ = "Test operation."
+__title__ = "Path Drilling Super Operation"
+__author__ = "MH Tech"
+__url__ = "http://www.vaerks.com"
+__doc__ = "Super operation."
 
-if True:
+if False:
     PathLog.setLevel(PathLog.Level.DEBUG, PathLog.thisModule())
     PathLog.trackModule(PathLog.thisModule())
 else:
@@ -74,23 +75,12 @@ class ObjectSuperDrilling(PathDrilling.ObjectDrilling):
         obj.addProperty("App::PropertyInteger", "TestProperty", "XXX",
                         QtCore.QT_TRANSLATE_NOOP("App::Property", "Just a test")) # Test Property
 
-        # Link property
-        obj.addProperty("App::PropertyLink", "SuperDrillingOperation", "SuperOperation",
-                        QtCore.QT_TRANSLATE_NOOP("App:Property", "Sub-operations attribute."))
-
         ################################################################################################
         # Super Operations properties:
-        #       "IsActive": Test for all sub-operations. Check if all sub-operations need to be created.
-        obj.addProperty("App::PropertyBool", "IsActive", "SuperOperations",
-                        QtCore.QT_TRANSLATE_NOOP("App::Property", "Check if all sub-operations need to be created."))  # Test Property
-
-        #       "IsTestCreated": Test for all sub-operations. Check if all sub-operations have been created.
-        obj.addProperty("App::PropertyBool", "IsTestCreated", ".Advanced.",
-                        QtCore.QT_TRANSLATE_NOOP("App::Property", "Advanced property for intern logic."))
-
-        # Test TODO: Delete
-        obj.addProperty("App::PropertyBool", "IsActive", "XXX",
-                        QtCore.QT_TRANSLATE_NOOP("App::Property", "Just a test"))  # Test Property
+        # Link property: Each sub-operation needs be linked to the Super Operation in order to allow it
+        # to edit those correctly if needed by the user from the GUI
+        obj.addProperty("App::PropertyLink", "SuperDrillingOperation", "SuperOperation",
+                        QtCore.QT_TRANSLATE_NOOP("App:Property", "Sub-operations attribute."))
         ################################################################################################
 
         obj.ReturnLevel = ['G98', 'G99']  # this is the direction that the Contour runs
@@ -140,21 +130,6 @@ class ObjectSuperDrilling(PathDrilling.ObjectDrilling):
         obj.RetractHeight = 10
 
 
-
-# Old create function
-'''
-def Create(name):
-    obj = FreeCAD.ActiveDocument.addObject("Path::FeaturePython", name)
-
-    proxy = ObjectSuperDrilling(obj)
-    proxy.SuperDrillingOperation = FreeCAD.ActiveDocument.addObject("Path::FeatureCompoundPython",
-                                                                  "Super_Drilling_Operation")
-    if obj.Proxy:
-        proxy.findAllHoles(obj)
-
-    return obj
-'''
-
 def Create(name):
     superop = FreeCAD.ActiveDocument.addObject("Path::FeatureCompoundPython", name)
     proxy = ObjectSuperDrilling(superop)
@@ -164,17 +139,14 @@ def Create(name):
     # Creating sub-operations with proxies
     op_drill1 = FreeCAD.ActiveDocument.addObject("Path::FeaturePython", superop.Name + "_drill1")
     op_drill2 = FreeCAD.ActiveDocument.addObject("Path::FeaturePython", superop.Name + "_drill2")
+    op_surface1 = FreeCAD.ActiveDocument.addObject("Path::FeaturePython", superop.Name + "_surface")
 
-    # Adding subobjects to super operation. Objects must be added before initialization to avoid being claimed by Job.Operations.
+    # Adding sub-objects to super operation. Objects must be added before initialization to avoid
+    #  being claimed by Job.Operations.
     superop.Group = [op_drill1, op_drill2]
 
     PathDrilling.ObjectDrilling(op_drill1)
     PathDrilling.ObjectDrilling(op_drill2)
-
-    
-    
+    # PathSurface.ObjectSurface(op_surface1)
 
     return superop
-
-def destroySubOperations(suboperationslist, superDrillingOp):
-    pass
