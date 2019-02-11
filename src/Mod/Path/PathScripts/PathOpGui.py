@@ -953,7 +953,7 @@ def Create(res, subRes=None):
         
         # Add ViewProviders for SubOperations
         if obj.TypeId == "Path::FeatureCompoundPython":
-            assert(len(obj.Group) == len(subRes))
+            # assert(len(obj.Group) == len(subRes))
             for i in range(len(subRes)):
                 subobj = obj.Group[i]
                 if subobj.Proxy:

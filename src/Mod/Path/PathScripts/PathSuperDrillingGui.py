@@ -32,14 +32,17 @@ import PathScripts.PathOpGui as PathOpGui
 from PySide import QtCore, QtGui
 
 from PathScripts import PathSuperDrilling
+
+# Imports for Sub-operations creation
 from PathScripts import PathDrillingGui
+from PathScripts import PathHelixGui
 
 __title__ = "Path Drilling Super Operation"
 __author__ = "MH Tech"
 __url__ = "http://www.vaerks.com"
 __doc__ = "Super operation."
 
-if True:
+if False:
     PathLog.setLevel(PathLog.Level.DEBUG, PathLog.thisModule())
     PathLog.trackModule(PathLog.thisModule())
 else:
@@ -109,7 +112,9 @@ class TaskPanelOpPage(PathCircularHoleBaseGui.TaskPanelOpPage):
         return signals
 
 
-subCmdResources = [PathDrillingGui.Resource, PathDrillingGui.Resource]
+# The subCmdResources has to be manually updated by adding a new Resource type when a new sub-operation
+# has to be done in the Super Operation procedure
+subCmdResources = [PathDrillingGui.Resource, PathDrillingGui.Resource, PathHelixGui.Resource]
 Resource = PathOpGui.CommandResources('SuperDrilling',
         PathSuperDrilling.Create,
         TaskPanelOpPage,

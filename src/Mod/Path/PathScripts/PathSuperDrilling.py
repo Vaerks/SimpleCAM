@@ -34,7 +34,7 @@ import PathScripts.PathUtils as PathUtils
 
 # Imports for Sub-operations creation
 import PathScripts.PathDrilling as PathDrilling
-import PathScripts.PathSurface as PathSurface
+import PathScripts.PathHelix as PathHelix
 
 from PathScripts.PathUtils import fmt, waiting_effects
 from PySide import QtCore
@@ -139,14 +139,14 @@ def Create(name):
     # Creating sub-operations with proxies
     op_drill1 = FreeCAD.ActiveDocument.addObject("Path::FeaturePython", superop.Name + "_drill1")
     op_drill2 = FreeCAD.ActiveDocument.addObject("Path::FeaturePython", superop.Name + "_drill2")
-    op_surface1 = FreeCAD.ActiveDocument.addObject("Path::FeaturePython", superop.Name + "_surface")
+    op_helix1 = FreeCAD.ActiveDocument.addObject("Path::FeaturePython", superop.Name + "_helix1")
 
     # Adding sub-objects to super operation. Objects must be added before initialization to avoid
     #  being claimed by Job.Operations.
-    superop.Group = [op_drill1, op_drill2]
+    superop.Group = [op_drill1, op_drill2, op_helix1]
 
     PathDrilling.ObjectDrilling(op_drill1)
     PathDrilling.ObjectDrilling(op_drill2)
-    # PathSurface.ObjectSurface(op_surface1)
+    PathHelix.ObjectHelix(op_helix1)
 
     return superop
