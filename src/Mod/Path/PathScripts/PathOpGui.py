@@ -167,7 +167,16 @@ class ViewProvider(object):
             self.panel.updateData(obj, prop)
 
     def onDelete(self, vobj, arg2=None):
-        PathUtil.clearExpressionEngine(vobj.Object)
+        obj = vobj.Object
+
+        # When an operation is deleted from the GUI, if it is a Compound that contains many operations
+        # like a Super Operation, all its children must be deleted as well
+        if obj.TypeId == "Path::FeatureCompoundPython":
+            for subobj in obj.Group:
+                FreeCAD.ActiveDocument.removeObject(subobj.Name)
+                PathUtil.clearExpressionEngine(subobj)
+
+        PathUtil.clearExpressionEngine(obj)
         return True
 
 
