@@ -724,6 +724,12 @@ class TaskPanel(object):
         PathLog.track(obj.Label, deleteOnReject, opPage, selectionFactory)
         FreeCAD.ActiveDocument.openTransaction(translate("Path", "AreaOp Operation"))
         self.deleteOnReject = deleteOnReject
+
+        # Checks if the obj is a sub-operation which cannot be canceled after being created by the Super Operation
+        if obj.Proxy:
+            if obj.IsSuboperation:
+                self.deleteOnReject = False
+
         self.featurePages = []
 
         features = obj.Proxy.opFeatures(obj)
@@ -966,6 +972,7 @@ def Create(res, subRes=None):
             # assert(len(obj.Group) == len(subRes))
             for i in range(len(subRes)):
                 subobj = obj.Group[i]
+                subobj.IsSuboperation = True
                 if subobj.Proxy:
                     ViewProvider(subobj.ViewObject, subRes[i])
 

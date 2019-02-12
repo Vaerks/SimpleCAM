@@ -114,6 +114,10 @@ class ObjectOp(object):
         obj.addProperty("App::PropertyString", "Comment", "Path", QtCore.QT_TRANSLATE_NOOP("PathOp", "An optional comment for this Operation"))
         obj.addProperty("App::PropertyString", "UserLabel", "Path", QtCore.QT_TRANSLATE_NOOP("PathOp", "User Assigned Label"))
 
+        # Sub-operation property is used to know when an operation is created from a SuperOperation
+        obj.addProperty("App::PropertyBool", "IsSuboperation", "Misc",
+                        QtCore.QT_TRANSLATE_NOOP("PathOp", "Check to know if the operation is a sub-operation."))
+
         features = self.opFeatures(obj)
 
         if FeatureBaseGeometry & features:

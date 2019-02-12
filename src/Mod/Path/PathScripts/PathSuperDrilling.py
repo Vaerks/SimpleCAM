@@ -136,7 +136,7 @@ def Create(name):
     if superop.Proxy:
         proxy.findAllHoles(superop)
 
-    # Creating sub-operations with proxies
+    # Creating sub-operations
     op_drill1 = FreeCAD.ActiveDocument.addObject("Path::FeaturePython", superop.Name + "_drill1")
     op_drill2 = FreeCAD.ActiveDocument.addObject("Path::FeaturePython", superop.Name + "_drill2")
     op_helix1 = FreeCAD.ActiveDocument.addObject("Path::FeaturePython", superop.Name + "_helix1")
@@ -145,8 +145,8 @@ def Create(name):
     #  being claimed by Job.Operations.
     superop.Group = [op_drill1, op_drill2, op_helix1]
 
-    PathDrilling.ObjectDrilling(op_drill1)
-    PathDrilling.ObjectDrilling(op_drill2)
-    PathHelix.ObjectHelix(op_helix1)
+    drill1 = PathDrilling.ObjectDrilling(op_drill1)
+    drill2 = PathDrilling.ObjectDrilling(op_drill2)
+    helix1 = PathHelix.ObjectHelix(op_helix1)
 
     return superop
