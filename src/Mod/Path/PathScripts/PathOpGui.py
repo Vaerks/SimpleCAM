@@ -831,7 +831,8 @@ class TaskPanel(object):
             page.onDirtyChanged(None)
         PathSelection.clear()
         FreeCADGui.Selection.removeObserver(self)
-        self.obj.ViewObject.Proxy.clearTaskPanel()
+        if self.obj.ViewObject.Proxy:
+            self.obj.ViewObject.Proxy.clearTaskPanel()
 
     def cleanup(self, resetEdit):
         '''cleanup() ... implements common cleanup tasks.'''
