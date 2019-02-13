@@ -646,6 +646,29 @@ class TaskPanelDepthsPage(TaskPanelPage):
         if PathOp.FeatureFinishDepth & self.features:
             self.finishDepth.updateProperty()
 
+        # For sub-operations properties
+        # The Super Operation has to parse some of its properties to its associated sub-operations
+        if obj.TypeId == "Path::FeatureCompoundPython":
+            for subobj in obj.Group:
+                try:
+                    suboperationtype = subobj.Name.split("_")[1]
+                except:
+                    suboperationtype = "unknown"
+
+                subobj.FinalDepth = obj.FinalDepth
+                subobj.StartDepth = obj.StartDepth
+
+                if obj.Locations and hasattr(subobj, 'Locations'):
+                    subobj.Locations = obj.Locations
+
+                if obj.Base and hasattr(subobj, 'Base') and suboperationtype != 'helix':
+                    # TODO: Delete the helix type condition because it is a test
+                    subobj.Base = obj.Base
+
+                if suboperationtype == 'drill' or 'holemill' or 'gevind':
+                    subobj.SafeHeight = obj.SafeHeight
+                    subobj.ClearanceHeight = obj.ClearanceHeight
+
     def setFields(self, obj):
         self.startDepth.updateSpinBox()
         if not PathOp.FeatureNoFinalDepth & self.features:
