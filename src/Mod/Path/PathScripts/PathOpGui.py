@@ -651,7 +651,7 @@ class TaskPanelDepthsPage(TaskPanelPage):
         if obj.TypeId == "Path::FeatureCompoundPython":
             for subobj in obj.Group:
                 try:
-                    suboperationtype = subobj.Name.split("_")[1]
+                    suboperationtype = subobj.Name.split("_")[2]
                 except:
                     suboperationtype = "unknown"
 
@@ -665,7 +665,9 @@ class TaskPanelDepthsPage(TaskPanelPage):
                     # TODO: Delete the helix type condition because it is a test
                     subobj.Base = obj.Base
 
-                if suboperationtype == 'drill' or 'holemill' or 'gevind':
+                if suboperationtype == 'drill' \
+                        or suboperationtype == 'holemill' \
+                        or suboperationtype == 'gevind':
                     subobj.SafeHeight = obj.SafeHeight
                     subobj.ClearanceHeight = obj.ClearanceHeight
 

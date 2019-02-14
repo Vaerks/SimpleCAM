@@ -246,13 +246,19 @@ class ObjectOp(object):
 
         features = self.opFeatures(obj)
 
+        # Checking to know if the obj is a sub-operation or not
+        objname = obj.Name.split("_")
+        if objname[0] == "sub":
+            obj.IsSuboperation = True
+            obj.Label = obj.Name.replace(objname[0]+"_", "")
+
         if FeatureTool & features:
             obj.ToolController = PathUtils.findToolController(obj)
             if not obj.ToolController:
                 return False
             obj.OpToolDiameter  =  obj.ToolController.Tool.Diameter
 
-        if FeatureDepths & features:
+        if (FeatureDepths & features) and obj.IsSuboperation is False:
             if self.applyExpression(obj, 'StartDepth', job.SetupSheet.StartDepthExpression):
                 obj.OpStartDepth =  1.0
             else:
@@ -266,7 +272,7 @@ class ObjectOp(object):
             if not self.applyExpression(obj, 'StepDown', job.SetupSheet.StepDownExpression):
                 obj.StepDown = '1 mm'
 
-        if FeatureHeights & features:
+        if (FeatureHeights & features) and obj.IsSuboperation is False:
             if job.SetupSheet.SafeHeightExpression:
                 if not self.applyExpression(obj, 'SafeHeight', job.SetupSheet.SafeHeightExpression):
                     obj.SafeHeight = '3 mm'

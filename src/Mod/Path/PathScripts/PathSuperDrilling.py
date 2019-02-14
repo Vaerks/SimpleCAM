@@ -137,9 +137,9 @@ def Create(name):
         proxy.findAllHoles(superop)
 
     # Creating sub-operations
-    op_drill1 = FreeCAD.ActiveDocument.addObject("Path::FeaturePython", superop.Name + "_drill_1")
-    op_drill2 = FreeCAD.ActiveDocument.addObject("Path::FeaturePython", superop.Name + "_drill_2")
-    op_helix1 = FreeCAD.ActiveDocument.addObject("Path::FeaturePython", superop.Name + "_helix_1")
+    op_drill1 = FreeCAD.ActiveDocument.addObject("Path::FeaturePython", "sub_"+superop.Name + "_drill_1")
+    op_drill2 = FreeCAD.ActiveDocument.addObject("Path::FeaturePython", "sub_"+superop.Name + "_drill_2")
+    op_helix1 = FreeCAD.ActiveDocument.addObject("Path::FeaturePython", "sub_"+superop.Name + "_helix_1")
 
     # Adding sub-objects to super operation. Objects must be added before initialization to avoid
     #  being claimed by Job.Operations.
