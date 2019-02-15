@@ -70,6 +70,14 @@ class TaskPanelOpPage(PathCircularHoleBaseGui.TaskPanelOpPage):
         if obj.AddTipLength != self.form.useTipLength.isChecked():
             obj.AddTipLength = self.form.useTipLength.isChecked()
 
+        # For sub-operations parameter:
+        if obj.Group[0].Active != self.form.centerdrill_active.isChecked():
+            obj.Group[0].Active = self.form.centerdrill_active.isChecked()
+        if obj.Group[1].Active != self.form.basedrill_active.isChecked():
+            obj.Group[1].Active = self.form.basedrill_active.isChecked()
+        if obj.Group[2].Active != self.form.basehelix_active.isChecked():
+            obj.Group[2].Active = self.form.basehelix_active.isChecked()
+
         self.updateToolController(obj, self.form.toolController)
 
     def setFields(self, obj):
@@ -97,6 +105,24 @@ class TaskPanelOpPage(PathCircularHoleBaseGui.TaskPanelOpPage):
 
         self.setupToolController(obj, self.form.toolController)
 
+        # For sub-operations parameter
+        if obj.Group[0].Active:
+            self.form.centerdrill_active.setCheckState(QtCore.Qt.Checked)
+        else:
+            self.form.centerdrill_active.setCheckState(QtCore.Qt.UnChecked)
+
+        if obj.Group[1].Active:
+            self.form.basedrill_active.setCheckState(QtCore.Qt.Checked)
+        else:
+            self.form.basedrill_active.setCheckState(QtCore.Qt.UnChecked)
+
+        if obj.Group[2].Active:
+            self.form.basehelix_active.setCheckState(QtCore.Qt.Checked)
+        else:
+            self.form.basehelix_active.setCheckState(QtCore.Qt.UnChecked)
+
+
+
     def getSignalsForUpdate(self, obj):
         '''getSignalsForUpdate(obj) ... return list of signals which cause the receiver to update the model'''
         signals = []
@@ -108,6 +134,10 @@ class TaskPanelOpPage(PathCircularHoleBaseGui.TaskPanelOpPage):
         signals.append(self.form.peckEnabled.stateChanged)
         signals.append(self.form.useTipLength.stateChanged)
         signals.append(self.form.toolController.currentIndexChanged)
+
+        signals.append(self.form.centerdrill_active.stateChanged)
+        signals.append(self.form.basedrill_active.stateChanged)
+        signals.append(self.form.basehelix_active.stateChanged)
 
         return signals
 

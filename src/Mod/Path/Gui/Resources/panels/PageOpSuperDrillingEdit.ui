@@ -49,17 +49,31 @@
    <item>
     <widget class="QWidget" name="widget" native="true">
      <layout class="QGridLayout" name="gridLayout">
-      <item row="1" column="2">
-       <widget class="Gui::InputField" name="peckDepth">
+      <item row="0" column="2">
+       <widget class="Gui::InputField" name="retractHeight">
         <property name="unit" stdset="0">
          <string notr="true">mm</string>
         </property>
        </widget>
       </item>
-      <item row="1" column="0" colspan="2">
-       <widget class="QCheckBox" name="peckEnabled">
+      <item row="3" column="0" rowspan="2" colspan="2">
+       <widget class="QCheckBox" name="dwellEnabled">
         <property name="text">
-         <string>Peck</string>
+         <string>Dwell</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_10">
+        <property name="text">
+         <string>Retract Height</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="2">
+       <widget class="Gui::InputField" name="peckDepth">
+        <property name="unit" stdset="0">
+         <string notr="true">mm</string>
         </property>
        </widget>
       </item>
@@ -80,44 +94,10 @@
         </property>
        </widget>
       </item>
-      <item row="0" column="2">
-       <widget class="Gui::InputField" name="retractHeight">
-        <property name="unit" stdset="0">
-         <string notr="true">mm</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="0">
-       <widget class="QLabel" name="label_10">
+      <item row="1" column="0" colspan="2">
+       <widget class="QCheckBox" name="peckEnabled">
         <property name="text">
-         <string>Retract Height</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="0" rowspan="2" colspan="2">
-       <widget class="QCheckBox" name="dwellEnabled">
-        <property name="text">
-         <string>Dwell</string>
-        </property>
-       </widget>
-      </item>
-      <item row="6" column="0">
-       <widget class="QCheckBox" name="isActiveEnabled">
-        <property name="enabled">
-         <bool>true</bool>
-        </property>
-        <property name="text">
-         <string>Sub-operatons</string>
-        </property>
-        <property name="checked">
-         <bool>true</bool>
-        </property>
-       </widget>
-      </item>
-      <item row="6" column="2">
-       <widget class="QLabel" name="label">
-        <property name="text">
-         <string>: Generate all sub-operations from the super one.</string>
+         <string>Peck</string>
         </property>
        </widget>
       </item>
@@ -135,12 +115,28 @@
         <x>0</x>
         <y>0</y>
         <width>443</width>
-        <height>96</height>
+        <height>70</height>
        </rect>
       </property>
       <attribute name="label">
        <string>Center Drilling</string>
       </attribute>
+      <widget class="QCheckBox" name="centerdrill_active">
+       <property name="geometry">
+        <rect>
+         <x>0</x>
+         <y>0</y>
+         <width>441</width>
+         <height>21</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Center Drilling Active</string>
+       </property>
+       <property name="checked">
+        <bool>false</bool>
+       </property>
+      </widget>
      </widget>
      <widget class="QWidget" name="page_2">
       <property name="geometry">
@@ -154,18 +150,79 @@
       <attribute name="label">
        <string>Base Drilling</string>
       </attribute>
+      <widget class="QCheckBox" name="basedrill_active">
+       <property name="geometry">
+        <rect>
+         <x>0</x>
+         <y>0</y>
+         <width>441</width>
+         <height>21</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Base Drilling Active</string>
+       </property>
+       <property name="checked">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </widget>
+     <widget class="QWidget" name="page_6">
+      <attribute name="label">
+       <string>Base Helix</string>
+      </attribute>
+      <widget class="QCheckBox" name="basehelix_active">
+       <property name="geometry">
+        <rect>
+         <x>0</x>
+         <y>0</y>
+         <width>441</width>
+         <height>21</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Base Helix Active</string>
+       </property>
+       <property name="checked">
+        <bool>false</bool>
+       </property>
+      </widget>
      </widget>
      <widget class="QWidget" name="page_3">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>443</width>
+        <height>96</height>
+       </rect>
+      </property>
       <attribute name="label">
        <string>Hole Milling</string>
       </attribute>
      </widget>
      <widget class="QWidget" name="page_4">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>443</width>
+        <height>96</height>
+       </rect>
+      </property>
       <attribute name="label">
        <string>Chamfering</string>
       </attribute>
      </widget>
      <widget class="QWidget" name="page_5">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>443</width>
+        <height>96</height>
+       </rect>
+      </property>
       <attribute name="label">
        <string>Thread Miling</string>
       </attribute>
