@@ -651,25 +651,38 @@ class TaskPanelDepthsPage(TaskPanelPage):
         if obj.TypeId == "Path::FeatureCompoundPython":
             for subobj in obj.Group:
                 try:
-                    suboperationtype = subobj.Name.split("_")[2]
+                    suboperationname = subobj.Name.split("_")
+                    suboperationtype = suboperationname[2]
+                    suboperationlocation = suboperationname[3]
                 except:
                     suboperationtype = "unknown"
+                    suboperationlocation = "unknown"
 
-                subobj.FinalDepth = obj.FinalDepth
-                subobj.StartDepth = obj.StartDepth
+                subobj.SafeHeight = obj.SafeHeight
+                subobj.ClearanceHeight = obj.ClearanceHeight
 
                 if obj.Locations and hasattr(subobj, 'Locations'):
                     subobj.Locations = obj.Locations
 
-                if obj.Base and hasattr(subobj, 'Base') and suboperationtype != 'helix':
-                    # TODO: Delete the helix type condition because it is a test
+                if obj.Base and hasattr(subobj, 'Base'):
                     subobj.Base = obj.Base
 
                 if suboperationtype == 'drill' \
                         or suboperationtype == 'holemill' \
-                        or suboperationtype == 'gevind':
-                    subobj.SafeHeight = obj.SafeHeight
-                    subobj.ClearanceHeight = obj.ClearanceHeight
+                        or suboperationtype == 'gevind' \
+                        or suboperationtype == "helix":
+
+                    subobj.StartDepth = obj.OpStartDepth
+
+                    # The Quantity properties seem to have a specific way to edit them with strings,
+                    # that is why we need to parse it to integer first and then to string again
+                    if suboperationlocation == 'center':
+                        intDepth = int(str(obj.OpStartDepth).split(" ")[0])
+                        newFinalDepth = str(intDepth-1)+' mm'
+                        subobj.FinalDepth = newFinalDepth
+                    else:
+                        subobj.FinalDepth = obj.OpFinalDepth
+
 
     def setFields(self, obj):
         self.startDepth.updateSpinBox()
