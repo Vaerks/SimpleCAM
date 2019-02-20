@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>461</width>
-    <height>465</height>
+    <height>399</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -70,6 +70,16 @@
         </property>
        </widget>
       </item>
+      <item row="3" column="2" rowspan="2">
+       <widget class="Gui::InputField" name="dwellTime">
+        <property name="text">
+         <string>0 sec</string>
+        </property>
+        <property name="unit" stdset="0">
+         <string notr="true">sec</string>
+        </property>
+       </widget>
+      </item>
       <item row="1" column="2">
        <widget class="Gui::InputField" name="peckDepth">
         <property name="unit" stdset="0">
@@ -84,16 +94,6 @@
         </property>
        </widget>
       </item>
-      <item row="3" column="2" rowspan="2">
-       <widget class="Gui::InputField" name="dwellTime">
-        <property name="text">
-         <string>0 sec</string>
-        </property>
-        <property name="unit" stdset="0">
-         <string notr="true">sec</string>
-        </property>
-       </widget>
-      </item>
       <item row="1" column="0" colspan="2">
        <widget class="QCheckBox" name="peckEnabled">
         <property name="text">
@@ -105,128 +105,180 @@
     </widget>
    </item>
    <item>
-    <widget class="QToolBox" name="superDrillingToolBox">
-     <property name="currentIndex">
-      <number>0</number>
+    <widget class="Line" name="line">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
      </property>
-     <widget class="QWidget" name="page">
-      <property name="geometry">
-       <rect>
-        <x>0</x>
-        <y>0</y>
-        <width>443</width>
-        <height>70</height>
-       </rect>
-      </property>
-      <attribute name="label">
-       <string>Center Drilling</string>
-      </attribute>
-      <widget class="QCheckBox" name="centerdrill_active">
-       <property name="geometry">
-        <rect>
-         <x>0</x>
-         <y>0</y>
-         <width>441</width>
-         <height>21</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>Center Drilling Active</string>
-       </property>
-       <property name="checked">
-        <bool>false</bool>
-       </property>
-      </widget>
-     </widget>
-     <widget class="QWidget" name="page_2">
-      <property name="geometry">
-       <rect>
-        <x>0</x>
-        <y>0</y>
-        <width>443</width>
-        <height>96</height>
-       </rect>
-      </property>
-      <attribute name="label">
-       <string>Base Drilling</string>
-      </attribute>
-      <widget class="QCheckBox" name="basedrill_active">
-       <property name="geometry">
-        <rect>
-         <x>0</x>
-         <y>0</y>
-         <width>441</width>
-         <height>21</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>Base Drilling Active</string>
-       </property>
-       <property name="checked">
-        <bool>false</bool>
-       </property>
-      </widget>
-     </widget>
-     <widget class="QWidget" name="page_6">
-      <attribute name="label">
-       <string>Base Helix</string>
-      </attribute>
-      <widget class="QCheckBox" name="basehelix_active">
-       <property name="geometry">
-        <rect>
-         <x>0</x>
-         <y>0</y>
-         <width>441</width>
-         <height>21</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>Base Helix Active</string>
-       </property>
-       <property name="checked">
-        <bool>false</bool>
-       </property>
-      </widget>
-     </widget>
-     <widget class="QWidget" name="page_3">
-      <property name="geometry">
-       <rect>
-        <x>0</x>
-        <y>0</y>
-        <width>443</width>
-        <height>96</height>
-       </rect>
-      </property>
-      <attribute name="label">
-       <string>Hole Milling</string>
-      </attribute>
-     </widget>
-     <widget class="QWidget" name="page_4">
-      <property name="geometry">
-       <rect>
-        <x>0</x>
-        <y>0</y>
-        <width>443</width>
-        <height>96</height>
-       </rect>
-      </property>
-      <attribute name="label">
-       <string>Chamfering</string>
-      </attribute>
-     </widget>
-     <widget class="QWidget" name="page_5">
-      <property name="geometry">
-       <rect>
-        <x>0</x>
-        <y>0</y>
-        <width>443</width>
-        <height>96</height>
-       </rect>
-      </property>
-      <attribute name="label">
-       <string>Thread Miling</string>
-      </attribute>
-     </widget>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="label111">
+     <property name="text">
+      <string>Center Drilling</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QCheckBox" name="centerdrill_active">
+     <property name="text">
+      <string>Center Drilling Active</string>
+     </property>
+     <property name="checked">
+      <bool>false</bool>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QComboBox" name="centerdrill_tool"/>
+   </item>
+   <item>
+    <widget class="QFrame" name="centerdrill_frame">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Minimum" vsizetype="Ignored">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="minimumSize">
+      <size>
+       <width>0</width>
+       <height>20</height>
+      </size>
+     </property>
+     <property name="frameShape">
+      <enum>QFrame::StyledPanel</enum>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Raised</enum>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="Line" name="line_2">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="label">
+     <property name="text">
+      <string>Drilling</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QCheckBox" name="basedrill_active">
+     <property name="text">
+      <string>Base Drilling Active</string>
+     </property>
+     <property name="checked">
+      <bool>false</bool>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QComboBox" name="basedrill_tool"/>
+   </item>
+   <item>
+    <widget class="QFrame" name="basedrill_frame">
+     <property name="minimumSize">
+      <size>
+       <width>0</width>
+       <height>20</height>
+      </size>
+     </property>
+     <property name="frameShape">
+      <enum>QFrame::StyledPanel</enum>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Raised</enum>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="Line" name="line_3">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="label_3">
+     <property name="text">
+      <string>Helix</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QCheckBox" name="basehelix_active">
+     <property name="text">
+      <string>Base Helix Active</string>
+     </property>
+     <property name="checked">
+      <bool>false</bool>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QComboBox" name="basehelix_tool"/>
+   </item>
+   <item>
+    <widget class="QFrame" name="basehelix_frame">
+     <property name="minimumSize">
+      <size>
+       <width>0</width>
+       <height>20</height>
+      </size>
+     </property>
+     <property name="frameShape">
+      <enum>QFrame::StyledPanel</enum>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Raised</enum>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="Line" name="line_4">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="label_4">
+     <property name="text">
+      <string>Hole Milling</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="Line" name="line_5">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="label_5">
+     <property name="text">
+      <string>Chamfering</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="Line" name="line_6">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="label_6">
+     <property name="text">
+      <string>Thread Milling</string>
+     </property>
     </widget>
    </item>
    <item>
