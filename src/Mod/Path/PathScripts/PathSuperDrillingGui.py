@@ -37,6 +37,8 @@ from PathScripts import PathSuperDrilling
 from PathScripts import PathDrillingGui
 from PathScripts import PathHelixGui
 
+from PathScripts import PathUtils
+
 __title__ = "Path Drilling Super Operation"
 __author__ = "MH Tech"
 __url__ = "http://www.vaerks.com"
@@ -77,6 +79,43 @@ class TaskPanelOpPage(PathCircularHoleBaseGui.TaskPanelOpPage):
             obj.Group[1].Active = self.form.basedrill_active.isChecked()
         if obj.Group[2].Active != self.form.basehelix_active.isChecked():
             obj.Group[2].Active = self.form.basehelix_active.isChecked()
+
+        # -------------------------------------------------------------
+        # Retrieve the hole diameter for tool suggestions searching
+        holediameter = 0.0
+
+        # The code will only looking for one hole
+        # TODO: Making it for few holes
+        for i, (base, subs) in enumerate(obj.Base):
+            for sub in subs:
+                holediameter = obj.Proxy.holeDiameter(obj, base, sub)
+                break
+            break
+
+        # Tool suggestions:
+        # It selects all the ToolControllers in the job and checks which has the closer diameter with the hole.
+        # For that, it simply takes all the tools that have a diameter under the hole and sort them by reverse
+        #  so the biggest one will be at the start of the list (which is the best suggested tool that will be given
+        #  as the first element in the combobox).
+        # TODO: Code optimization is required because for now, these "heavy" actions are made for each field update
+        suggestedTool = None
+        suggestedToolList = []
+
+        toolcontrollers = PathUtils.getToolControllers(obj)
+
+        for tc in toolcontrollers:
+            if holediameter > tc.Tool.Diameter > 0.0:
+                suggestedToolList.append(tc)
+
+        # Todo: Implement
+        if len(suggestedToolList) > 0:
+            suggestedToolList.sort(key=lambda x: x.Tool.Diameter, reverse=True)
+            suggestedTool = suggestedToolList[0]
+            toolLabel = suggestedTool.Label
+        else:
+            toolLabel = "No tools are available for this hole diameter"
+
+        self.setupSuggestedToolController(obj, self.form.centerdrill_tool, suggestedToolList, toolLabel)
 
         self.updateToolController(obj, self.form.toolController)
 
