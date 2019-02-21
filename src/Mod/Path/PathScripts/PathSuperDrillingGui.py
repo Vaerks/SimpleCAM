@@ -98,8 +98,11 @@ class TaskPanelOpPage(PathCircularHoleBaseGui.TaskPanelOpPage):
         #  so the biggest one will be at the start of the list (which is the best suggested tool that will be given
         #  as the first element in the combobox).
         # TODO: Code optimization is required because for now, these "heavy" actions are made for each field update
-        suggestedTool = None
         suggestedToolList = []
+        centerdrillTools = []
+        drillTools = []
+        helixTools = []
+        chamferingTools = []
 
         toolcontrollers = PathUtils.getToolControllers(obj)
 
@@ -107,15 +110,45 @@ class TaskPanelOpPage(PathCircularHoleBaseGui.TaskPanelOpPage):
             if holediameter > tc.Tool.Diameter > 0.0:
                 suggestedToolList.append(tc)
 
-        # Todo: Implement
+            # Center Drill
+            if tc.Tool.ToolType == "CenterDrill":
+                centerdrillTools.append(tc)
+
+            # Chamfering
+            if tc.Tool.ToolType == "ChamferMill":
+                chamferingTools.append(tc)
+
+        # Center Drill
+        if len(centerdrillTools) > 0:
+            toolLabel = centerdrillTools[0].Label
+            self.setupSuggestedToolController(obj, self.form.centerdrill_tool, centerdrillTools, toolLabel)
+
+        # Chamfering
+        if len(chamferingTools) > 0:
+            toolLabel = chamferingTools[0].Label
+            self.setupSuggestedToolController(obj, self.form.chamfering_tool, chamferingTools, toolLabel)
+
         if len(suggestedToolList) > 0:
             suggestedToolList.sort(key=lambda x: x.Tool.Diameter, reverse=True)
-            suggestedTool = suggestedToolList[0]
-            toolLabel = suggestedTool.Label
-        else:
-            toolLabel = "No tools are available for this hole diameter"
 
-        self.setupSuggestedToolController(obj, self.form.centerdrill_tool, suggestedToolList, toolLabel)
+            for tool in suggestedToolList:
+                # Base Helix & Hole Milling
+                if tool.Tool.ToolType == "EndMill":
+                    helixTools.append(tool)
+                # Base Drill
+                elif tool.Tool.ToolType == "Drill":
+                    drillTools.append(tool)
+
+            if len(helixTools) > 0:
+                toolLabel = helixTools[0].Label
+                self.setupSuggestedToolController(obj, self.form.basehelix_tool, helixTools, toolLabel)
+
+                toolLabel = helixTools[0].Label
+                self.setupSuggestedToolController(obj, self.form.holemilling_tool, helixTools, toolLabel)
+
+            if len(drillTools) > 0:
+                toolLabel = drillTools[0].Label
+                self.setupSuggestedToolController(obj, self.form.basedrill_tool, drillTools, toolLabel)
 
         self.updateToolController(obj, self.form.toolController)
 

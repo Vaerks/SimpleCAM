@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>461</width>
-    <height>399</height>
+    <height>469</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -254,6 +254,9 @@
     </widget>
    </item>
    <item>
+    <widget class="QComboBox" name="holemilling_tool"/>
+   </item>
+   <item>
     <widget class="Line" name="line_5">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
@@ -268,6 +271,9 @@
     </widget>
    </item>
    <item>
+    <widget class="QComboBox" name="chamfering_tool"/>
+   </item>
+   <item>
     <widget class="Line" name="line_6">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
@@ -280,6 +286,9 @@
       <string>Thread Milling</string>
      </property>
     </widget>
+   </item>
+   <item>
+    <widget class="QComboBox" name="comboBox_3"/>
    </item>
    <item>
     <spacer name="verticalSpacer">
