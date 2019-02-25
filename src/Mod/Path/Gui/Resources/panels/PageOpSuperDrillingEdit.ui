@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>461</width>
-    <height>469</height>
+    <height>654</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -132,28 +132,6 @@
     <widget class="QComboBox" name="centerdrill_tool"/>
    </item>
    <item>
-    <widget class="QFrame" name="centerdrill_frame">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Minimum" vsizetype="Ignored">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="minimumSize">
-      <size>
-       <width>0</width>
-       <height>20</height>
-      </size>
-     </property>
-     <property name="frameShape">
-      <enum>QFrame::StyledPanel</enum>
-     </property>
-     <property name="frameShadow">
-      <enum>QFrame::Raised</enum>
-     </property>
-    </widget>
-   </item>
-   <item>
     <widget class="Line" name="line_2">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
@@ -170,7 +148,7 @@
    <item>
     <widget class="QCheckBox" name="basedrill_active">
      <property name="text">
-      <string>Base Drilling Active</string>
+      <string>Drilling Active</string>
      </property>
      <property name="checked">
       <bool>false</bool>
@@ -179,22 +157,6 @@
    </item>
    <item>
     <widget class="QComboBox" name="basedrill_tool"/>
-   </item>
-   <item>
-    <widget class="QFrame" name="basedrill_frame">
-     <property name="minimumSize">
-      <size>
-       <width>0</width>
-       <height>20</height>
-      </size>
-     </property>
-     <property name="frameShape">
-      <enum>QFrame::StyledPanel</enum>
-     </property>
-     <property name="frameShadow">
-      <enum>QFrame::Raised</enum>
-     </property>
-    </widget>
    </item>
    <item>
     <widget class="Line" name="line_3">
@@ -206,14 +168,14 @@
    <item>
     <widget class="QLabel" name="label_3">
      <property name="text">
-      <string>Helix</string>
+      <string>Hole Milling (Helix)</string>
      </property>
     </widget>
    </item>
    <item>
     <widget class="QCheckBox" name="basehelix_active">
      <property name="text">
-      <string>Base Helix Active</string>
+      <string>Hole Milling Active</string>
      </property>
      <property name="checked">
       <bool>false</bool>
@@ -222,39 +184,6 @@
    </item>
    <item>
     <widget class="QComboBox" name="basehelix_tool"/>
-   </item>
-   <item>
-    <widget class="QFrame" name="basehelix_frame">
-     <property name="minimumSize">
-      <size>
-       <width>0</width>
-       <height>20</height>
-      </size>
-     </property>
-     <property name="frameShape">
-      <enum>QFrame::StyledPanel</enum>
-     </property>
-     <property name="frameShadow">
-      <enum>QFrame::Raised</enum>
-     </property>
-    </widget>
-   </item>
-   <item>
-    <widget class="Line" name="line_4">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-    </widget>
-   </item>
-   <item>
-    <widget class="QLabel" name="label_4">
-     <property name="text">
-      <string>Hole Milling</string>
-     </property>
-    </widget>
-   </item>
-   <item>
-    <widget class="QComboBox" name="holemilling_tool"/>
    </item>
    <item>
     <widget class="Line" name="line_5">

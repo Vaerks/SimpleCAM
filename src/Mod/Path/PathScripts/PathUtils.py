@@ -412,6 +412,18 @@ def getToolControllers(obj):
         return job.ToolControllers.Group
     return []
 
+def filterToolControllers(tools, type):
+    result = []
+    for tool in tools:
+        if tool.Tool.ToolType == type:  
+            result.append(tool)
+
+    return result
+
+def getSuggestedTool(tools, holediameter):
+    suggestedtoolslist = filter(lambda x: 0.0 < x.Tool.Diameter < holediameter, tools)
+    return max(suggestedtoolslist, key=lambda x: x.Tool.Diameter)
+
 def getToolControllerByName(obj, name):
     controllers = getToolControllers(obj)
 

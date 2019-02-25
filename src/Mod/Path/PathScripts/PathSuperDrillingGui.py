@@ -82,7 +82,6 @@ class TaskPanelOpPage(PathCircularHoleBaseGui.TaskPanelOpPage):
 
         basedrilltool = None
         basehelixtool = None
-        holemillingtool = None
 
         # Get the current ToolController
         for subobj in obj.Group:
@@ -96,14 +95,11 @@ class TaskPanelOpPage(PathCircularHoleBaseGui.TaskPanelOpPage):
             elif opname == "helix":
                 basehelixtool = subobj.ToolController
 
-            elif opname == "holemilling":
-                holemillingtool = subobj.ToolController
 
         suggestedToolList = []
         centerdrillTools = []
         drillTools = []
         helixTools = []
-        holemillingTools = []
         chamferingTools = []
 
         toolcontrollers = PathUtils.getToolControllers(obj)
@@ -135,7 +131,7 @@ class TaskPanelOpPage(PathCircularHoleBaseGui.TaskPanelOpPage):
                 # Base Helix & Hole Milling
                 if tool.Tool.ToolType == "EndMill":
                     helixTools.append(tool)
-                    holemillingTools.append(tool)
+
                 # Base Drill
                 elif tool.Tool.ToolType == "Drill":
                     drillTools.append(tool)
@@ -146,12 +142,6 @@ class TaskPanelOpPage(PathCircularHoleBaseGui.TaskPanelOpPage):
                     helixTools.insert(0, basehelixtool)
 
                 self.setupSuggestedToolController(obj, self.form.basehelix_tool, helixTools)
-
-                if holemillingTools.__contains__(holemillingtool):
-                    holemillingTools.remove(holemillingtool)
-                    holemillingTools.insert(0, holemillingtool)
-
-                self.setupSuggestedToolController(obj, self.form.holemilling_tool, holemillingTools)
 
             if len(drillTools) > 0:
 

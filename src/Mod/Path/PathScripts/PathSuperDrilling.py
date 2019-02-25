@@ -139,7 +139,7 @@ def Create(name):
     # Creating sub-operations
     op_drill1 = FreeCAD.ActiveDocument.addObject("Path::FeaturePython", "sub_"+superop.Name + "_drill_center")
     op_drill2 = FreeCAD.ActiveDocument.addObject("Path::FeaturePython", "sub_"+superop.Name + "_drill_base")
-    op_helix1 = FreeCAD.ActiveDocument.addObject("Path::FeaturePython", "sub_"+superop.Name + "_helix_base")
+    op_helix1 = FreeCAD.ActiveDocument.addObject("Path::FeaturePython", "sub_"+superop.Name + "_helix_holemilling")
 
     # Adding sub-objects to super operation. Objects must be added before initialization to avoid
     #  being claimed by Job.Operations.
