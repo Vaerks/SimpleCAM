@@ -410,6 +410,15 @@ def getToolControllers(obj):
         return job.ToolControllers.Group
     return []
 
+def getToolControllerByName(obj, name):
+    controllers = getToolControllers(obj)
+
+    for controller in controllers:
+        tcname = controller.Label
+        if tcname == name:
+            return controller
+
+    return None
 
 def findToolController(obj, name=None):
     '''returns a tool controller with a given name.

@@ -334,15 +334,14 @@ class TaskPanelPage(object):
         if obj.ToolController is not None:
             self.selectInComboBox(obj.ToolController.Label, combo)
 
-    def setupSuggestedToolController(self, obj, combo, suggestedTools, suggestedToolLabel):
+    def setupSuggestedToolController(self, obj, combo, suggestedTools):
         '''setupToolController(obj, combo) ... helper function to setup obj's ToolController in the given combo box.'''
         controllers = suggestedTools
         labels = [c.Label for c in controllers]
         combo.blockSignals(True)
+        combo.clear()
         combo.addItems(labels)
         combo.blockSignals(False)
-
-        self.selectInComboBox(suggestedToolLabel, combo)
 
     def updateToolController(self, obj, combo):
         '''updateToolController(obj, combo) ... helper function to update obj's ToolController property if a different one has been selected in the combo box.'''
@@ -350,6 +349,12 @@ class TaskPanelPage(object):
         if obj.ToolController != tc:
             obj.ToolController = tc
 
+    def updateSuggestionToolController(self, obj, combo):
+        name = combo.currentText()
+        tc = PathUtils.getToolControllerByName(obj, name)
+        actualtc = obj.ToolController
+        if actualtc != tc:
+            obj.ToolController = tc
 
 class TaskPanelBaseGeometryPage(TaskPanelPage):
     '''Page controller for the base geometry.'''

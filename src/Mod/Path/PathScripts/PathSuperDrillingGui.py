@@ -29,6 +29,8 @@ import PathScripts.PathGui as PathGui
 import PathScripts.PathLog as PathLog
 import PathScripts.PathOpGui as PathOpGui
 
+import copy
+
 from PySide import QtCore, QtGui
 
 from PathScripts import PathSuperDrilling
@@ -58,6 +60,106 @@ class TaskPanelOpPage(PathCircularHoleBaseGui.TaskPanelOpPage):
         '''getForm() ... return UI'''
         return FreeCADGui.PySideUic.loadUi(":/panels/PageOpSuperDrillingEdit.ui")
 
+    def setToolSuggestions(self, obj):
+        # Tool suggestions:
+        # It selects all the ToolControllers in the job and checks which has the closer diameter with the hole.
+        # For that, it simply takes all the tools that have a diameter under the hole and sort them by reverse
+        #  so the biggest one will be at the start of the list (which is the best suggested tool that will be given
+        #  as the first element in the combobox).
+        # TODO: Code optimization is required because for now, these "heavy" actions are made for each field update
+
+        # -------------------------------------------------------------
+        # Retrieve the hole diameter for tool suggestions searching
+        holediameter = 0.0
+
+        # The code will only looking for one hole
+        # TODO: Making it for few holes
+        for i, (base, subs) in enumerate(obj.Base):
+            for sub in subs:
+                holediameter = obj.Proxy.holeDiameter(obj, base, sub)
+                break
+            break
+
+        basedrilltool = None
+        basehelixtool = None
+        holemillingtool = None
+
+        # Get the current ToolController
+        for subobj in obj.Group:
+            name = subobj.Name.split("_")
+            opname = name[2]
+            oplocation = name[3]
+
+            if opname == "drill" and oplocation == "base":
+                basedrilltool = subobj.ToolController
+
+            elif opname == "helix":
+                basehelixtool = subobj.ToolController
+
+            elif opname == "holemilling":
+                holemillingtool = subobj.ToolController
+
+        suggestedToolList = []
+        centerdrillTools = []
+        drillTools = []
+        helixTools = []
+        holemillingTools = []
+        chamferingTools = []
+
+        toolcontrollers = PathUtils.getToolControllers(obj)
+
+        for tc in toolcontrollers:
+            if holediameter > tc.Tool.Diameter > 0.0:
+                suggestedToolList.append(tc)
+
+            # Center Drill
+            if tc.Tool.ToolType == "CenterDrill":
+                centerdrillTools.append(tc)
+
+            # Chamfering
+            if tc.Tool.ToolType == "ChamferMill":
+                chamferingTools.append(tc)
+
+        # Center Drill
+        if len(centerdrillTools) > 0:
+            self.setupSuggestedToolController(obj, self.form.centerdrill_tool, centerdrillTools)
+
+        # Chamfering
+        if len(chamferingTools) > 0:
+            self.setupSuggestedToolController(obj, self.form.chamfering_tool, chamferingTools)
+
+        if len(suggestedToolList) > 0:
+            suggestedToolList.sort(key=lambda x: x.Tool.Diameter, reverse=True)
+
+            for tool in suggestedToolList:
+                # Base Helix & Hole Milling
+                if tool.Tool.ToolType == "EndMill":
+                    helixTools.append(tool)
+                    holemillingTools.append(tool)
+                # Base Drill
+                elif tool.Tool.ToolType == "Drill":
+                    drillTools.append(tool)
+
+            if len(helixTools) > 0:
+                if helixTools.__contains__(basehelixtool):
+                    helixTools.remove(basehelixtool)
+                    helixTools.insert(0, basehelixtool)
+
+                self.setupSuggestedToolController(obj, self.form.basehelix_tool, helixTools)
+
+                if holemillingTools.__contains__(holemillingtool):
+                    holemillingTools.remove(holemillingtool)
+                    holemillingTools.insert(0, holemillingtool)
+
+                self.setupSuggestedToolController(obj, self.form.holemilling_tool, holemillingTools)
+
+            if len(drillTools) > 0:
+
+                if drillTools.__contains__(basedrilltool):
+                    drillTools.remove(basedrilltool)
+                    drillTools.insert(0, basedrilltool)
+                self.setupSuggestedToolController(obj, self.form.basedrill_tool, drillTools)
+
     def getFields(self, obj):
         '''setFields(obj) ... update obj's properties with values from the UI'''
         PathLog.track()
@@ -80,77 +182,27 @@ class TaskPanelOpPage(PathCircularHoleBaseGui.TaskPanelOpPage):
         if obj.Group[2].Active != self.form.basehelix_active.isChecked():
             obj.Group[2].Active = self.form.basehelix_active.isChecked()
 
-        # -------------------------------------------------------------
-        # Retrieve the hole diameter for tool suggestions searching
-        holediameter = 0.0
-
-        # The code will only looking for one hole
-        # TODO: Making it for few holes
-        for i, (base, subs) in enumerate(obj.Base):
-            for sub in subs:
-                holediameter = obj.Proxy.holeDiameter(obj, base, sub)
-                break
-            break
-
-        # Tool suggestions:
-        # It selects all the ToolControllers in the job and checks which has the closer diameter with the hole.
-        # For that, it simply takes all the tools that have a diameter under the hole and sort them by reverse
-        #  so the biggest one will be at the start of the list (which is the best suggested tool that will be given
-        #  as the first element in the combobox).
-        # TODO: Code optimization is required because for now, these "heavy" actions are made for each field update
-        suggestedToolList = []
-        centerdrillTools = []
-        drillTools = []
-        helixTools = []
-        chamferingTools = []
-
-        toolcontrollers = PathUtils.getToolControllers(obj)
-
-        for tc in toolcontrollers:
-            if holediameter > tc.Tool.Diameter > 0.0:
-                suggestedToolList.append(tc)
-
-            # Center Drill
-            if tc.Tool.ToolType == "CenterDrill":
-                centerdrillTools.append(tc)
-
-            # Chamfering
-            if tc.Tool.ToolType == "ChamferMill":
-                chamferingTools.append(tc)
-
-        # Center Drill
-        if len(centerdrillTools) > 0:
-            toolLabel = centerdrillTools[0].Label
-            self.setupSuggestedToolController(obj, self.form.centerdrill_tool, centerdrillTools, toolLabel)
-
-        # Chamfering
-        if len(chamferingTools) > 0:
-            toolLabel = chamferingTools[0].Label
-            self.setupSuggestedToolController(obj, self.form.chamfering_tool, chamferingTools, toolLabel)
-
-        if len(suggestedToolList) > 0:
-            suggestedToolList.sort(key=lambda x: x.Tool.Diameter, reverse=True)
-
-            for tool in suggestedToolList:
-                # Base Helix & Hole Milling
-                if tool.Tool.ToolType == "EndMill":
-                    helixTools.append(tool)
-                # Base Drill
-                elif tool.Tool.ToolType == "Drill":
-                    drillTools.append(tool)
-
-            if len(helixTools) > 0:
-                toolLabel = helixTools[0].Label
-                self.setupSuggestedToolController(obj, self.form.basehelix_tool, helixTools, toolLabel)
-
-                toolLabel = helixTools[0].Label
-                self.setupSuggestedToolController(obj, self.form.holemilling_tool, helixTools, toolLabel)
-
-            if len(drillTools) > 0:
-                toolLabel = drillTools[0].Label
-                self.setupSuggestedToolController(obj, self.form.basedrill_tool, drillTools, toolLabel)
-
         self.updateToolController(obj, self.form.toolController)
+
+        for subobj in obj.Group:
+            name = subobj.Name.split("_")
+            opname = name[2]
+            oplocation = name[3]
+
+            if opname == "drill" and oplocation == "center":
+                self.updateSuggestionToolController(subobj, self.form.centerdrill_tool)
+
+            elif opname == "drill" and oplocation == "base":
+                self.updateSuggestionToolController(subobj, self.form.basedrill_tool)
+
+            elif opname == "helix":
+                self.updateSuggestionToolController(subobj, self.form.basehelix_tool)
+
+            elif opname == "chamfering":
+                self.updateSuggestionToolController(subobj, self.form.chamfering_tool)
+
+            elif opname == "holemilling":
+                self.updateSuggestionToolController(subobj, self.form.holemilling_tool)
 
     def setFields(self, obj):
         '''setFields(obj) ... update UI with obj properties' values'''
@@ -193,7 +245,36 @@ class TaskPanelOpPage(PathCircularHoleBaseGui.TaskPanelOpPage):
         else:
             self.form.basehelix_active.setCheckState(QtCore.Qt.UnChecked)
 
+        # Change the SuggestionToolControllers GUI
+        if len(obj.Group) > 0:
+            self.setToolSuggestions(obj)
 
+            '''
+            if True:
+                for subobj in obj.Group:
+                    name = subobj.Name.split("_")
+                    opname = name[2]
+                    oplocation = name[3]
+                    combo = None
+
+                    if opname == "drill" and oplocation == "center":
+                        combo = self.form.centerdrill_tool
+
+                    elif opname == "drill" and oplocation == "base":
+                        combo = self.form.basedrill_tool
+
+                    elif opname == "helix":
+                        combo = self.form.basehelix_tool
+
+                    elif opname == "chamfering":
+                        combo = self.form.chamfering_tool
+
+                    elif opname == "holemilling":
+                        combo = self.form.holemilling_tool
+
+                    self.selectInComboBox(subobj.ToolController.Label, combo)
+                    
+            '''
 
     def getSignalsForUpdate(self, obj):
         '''getSignalsForUpdate(obj) ... return list of signals which cause the receiver to update the model'''
@@ -207,9 +288,17 @@ class TaskPanelOpPage(PathCircularHoleBaseGui.TaskPanelOpPage):
         signals.append(self.form.useTipLength.stateChanged)
         signals.append(self.form.toolController.currentIndexChanged)
 
+        signals.append(self.form.centerdrill_tool.currentIndexChanged)
+        signals.append(self.form.basedrill_tool.currentIndexChanged)
+        signals.append(self.form.basehelix_tool.currentIndexChanged)
+        signals.append(self.form.chamfering_tool.currentIndexChanged)
+        signals.append(self.form.holemilling_tool.currentIndexChanged)
+
         signals.append(self.form.centerdrill_active.stateChanged)
         signals.append(self.form.basedrill_active.stateChanged)
         signals.append(self.form.basehelix_active.stateChanged)
+
+        self.setToolSuggestions(obj)
 
         return signals
 

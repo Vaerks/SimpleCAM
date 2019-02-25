@@ -314,7 +314,7 @@ class ObjectJob:
 
         # Check if operation is already present in job or superoperations
         for op in ops:
-            if newop.Name.split('0')[0] == op.Name.split('0')[0]:
+            if newop is op:
                 return
             elif op.TypeId == "Path::FeatureCompoundPython":
                 if newop in op.Group:
