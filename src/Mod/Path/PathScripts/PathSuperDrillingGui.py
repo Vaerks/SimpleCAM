@@ -184,6 +184,26 @@ class TaskPanelOpPage(PathCircularHoleBaseGui.TaskPanelOpPage):
 
         self.updateToolController(obj, self.form.toolController)
 
+        # Max diameter and holes with different diameters detection:
+        holediameter = 0
+        n = 0
+        for i, (base, subs) in enumerate(obj.Base):
+            for sub in subs:
+                if n > 0 and holediameter != obj.Proxy.holeDiameter(obj, base, sub):
+                    w = QtGui.QWidget()
+                    QtGui.QMessageBox.critical(w, "Warning",
+                                               "Super Drilling Operation can not support different hole diameters.")
+                else:
+                    holediameter = obj.Proxy.holeDiameter(obj, base, sub)
+
+                if holediameter >= 8.0:
+                    w = QtGui.QWidget()
+                    QtGui.QMessageBox.critical(w, "Warning", "A hole diameter can not exceed 8 mm. Tip: Use Super Helix instead.")
+
+                n = n+1
+            break
+
+
         for subobj in obj.Group:
             name = subobj.Name.split("_")
             opname = name[2]

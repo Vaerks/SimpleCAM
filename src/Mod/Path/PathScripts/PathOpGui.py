@@ -676,10 +676,10 @@ class TaskPanelDepthsPage(TaskPanelPage):
                 subobj.SafeHeight = obj.SafeHeight
                 subobj.ClearanceHeight = obj.ClearanceHeight
 
-                if obj.Locations and hasattr(subobj, 'Locations'):
+                if hasattr(subobj, 'Locations'):
                     subobj.Locations = obj.Locations
 
-                if obj.Base and hasattr(subobj, 'Base'):
+                if hasattr(subobj, 'Base'):
                     subobj.Base = obj.Base
 
                 if suboperationtype == 'drill' \
