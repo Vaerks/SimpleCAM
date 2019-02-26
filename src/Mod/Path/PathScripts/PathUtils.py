@@ -40,6 +40,8 @@ from PathScripts.PathGeom import PathGeom
 from PySide import QtCore
 from PySide import QtGui
 
+import copy
+
 if True:
     PathLog.setLevel(PathLog.Level.DEBUG, PathLog.thisModule())
     PathLog.trackModule(PathLog.thisModule())
@@ -415,7 +417,7 @@ def getToolControllers(obj):
 def filterToolControllers(tools, type):
     result = []
     for tool in tools:
-        if tool.Tool.ToolType == type:  
+        if tool.Tool.ToolType == type:
             result.append(tool)
 
     return result
@@ -423,6 +425,13 @@ def filterToolControllers(tools, type):
 def getSuggestedTool(tools, holediameter):
     suggestedtoolslist = filter(lambda x: 0.0 < x.Tool.Diameter < holediameter, tools)
     return max(suggestedtoolslist, key=lambda x: x.Tool.Diameter)
+
+def getAllSuggestedTools(tools, holediameter):
+    result = copy.copy(tools)
+    suggestedtool = getSuggestedTool(result, holediameter)
+    result.remove(suggestedtool)
+    result.insert(0, suggestedtool)
+    return result
 
 def getToolControllerByName(obj, name):
     controllers = getToolControllers(obj)
@@ -962,5 +971,3 @@ class depth_params:
             return depths
         else:
             return [stop] + depths
-
-
