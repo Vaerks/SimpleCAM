@@ -55,12 +55,12 @@ else:
 
 class TaskPanelOpPage(PathCircularHoleBaseGui.TaskPanelOpPage):
     '''Controller for the drilling operation's page'''
-    holediameter = 0.0
 
     def getForm(self):
         '''getForm() ... return UI'''
         return FreeCADGui.PySideUic.loadUi(":/panels/PageOpSuperDrillingEdit.ui")
 
+        '''
     def setToolSuggestions(self, obj):
         # Tool suggestions:
         # It selects all the ToolControllers in the job and checks which has the closer diameter with the hole.
@@ -150,6 +150,8 @@ class TaskPanelOpPage(PathCircularHoleBaseGui.TaskPanelOpPage):
                     drillTools.remove(basedrilltool)
                     drillTools.insert(0, basedrilltool)
                 self.setupSuggestedToolController(obj, self.form.basedrill_tool, drillTools)
+                
+        '''
 
     def getFields(self, obj):
         '''setFields(obj) ... update obj's properties with values from the UI'''
@@ -177,16 +179,17 @@ class TaskPanelOpPage(PathCircularHoleBaseGui.TaskPanelOpPage):
 
         # Max diameter and holes with different diameters detection:
         n = 0
+        holediameter = 0
         for i, (base, subs) in enumerate(obj.Base):
             for sub in subs:
-                if n > 0 and self.holediameter != obj.Proxy.holeDiameter(obj, base, sub):
+                if n > 0 and holediameter != obj.Proxy.holeDiameter(obj, base, sub):
                     w = QtGui.QWidget()
                     QtGui.QMessageBox.critical(w, "Warning",
                                                "Super Drilling Operation can not support different hole diameters.")
                 else:
-                    self.holediameter = obj.Proxy.holeDiameter(obj, base, sub)
+                    holediameter = obj.Proxy.holeDiameter(obj, base, sub)
 
-                if self.holediameter >= 8.0:
+                if holediameter >= 8.0:
                     w = QtGui.QWidget()
                     QtGui.QMessageBox.critical(w, "Warning", "A hole diameter can not exceed 8 mm. Tip: Use Super Helix instead.")
 
@@ -209,6 +212,7 @@ class TaskPanelOpPage(PathCircularHoleBaseGui.TaskPanelOpPage):
 
             elif opname == "chamfering":
                 self.updateSuggestionToolController(subobj, self.form.chamfering_tool)
+
 
 
     def setFields(self, obj):
@@ -253,9 +257,11 @@ class TaskPanelOpPage(PathCircularHoleBaseGui.TaskPanelOpPage):
             self.form.basehelix_active.setCheckState(QtCore.Qt.UnChecked)
 
         # Change the SuggestionToolControllers GUI
+
         holediameter = self.getHoleDiameter(obj)
+
         for subobj in obj.Group:
-             self.updateSuggestedTool(subobj, holediameter)
+            self.updateSuggestedTool(subobj, holediameter)
 
     def getHoleDiameter(self, obj):
         for i, (base, subs) in enumerate(obj.Base):
@@ -273,12 +279,17 @@ class TaskPanelOpPage(PathCircularHoleBaseGui.TaskPanelOpPage):
             self.setupSuggestedToolController(subobj, self.form.centerdrill_tool,
                                               PathUtils.filterToolControllers(PathUtils.getToolControllers(subobj), "CenterDrill"))
 
+        elif opname == "chamfering":
+            self.setupSuggestedToolController(subobj, self.form.chamfering_tool,
+                                              PathUtils.filterToolControllers(PathUtils.getToolControllers(subobj),
+                                                                              "ChamferMill"))
+
         elif opname == "drill" and oplocation == "base":
             toolslist = PathUtils.getAllSuggestedTools(
                                               PathUtils.filterToolControllers(PathUtils.getToolControllers(subobj),
                                                                               "Drill"), holediameter)
 
-            if subobj.ToolController is not None:
+            if subobj.ToolController is not None and toolslist.__contains__(subobj.ToolController):
                 toolslist.remove(subobj.ToolController)
                 toolslist.insert(0, subobj.ToolController)
 
@@ -289,16 +300,12 @@ class TaskPanelOpPage(PathCircularHoleBaseGui.TaskPanelOpPage):
                 PathUtils.filterToolControllers(PathUtils.getToolControllers(subobj),
                                                 "EndMill"), holediameter)
 
-            if subobj.ToolController is not None:
+            if subobj.ToolController is not None and toolslist.__contains__(subobj.ToolController):
                 toolslist.remove(subobj.ToolController)
                 toolslist.insert(0, subobj.ToolController)
 
             self.setupSuggestedToolController(subobj, self.form.basehelix_tool, toolslist)
 
-        elif opname == "chamfering":
-            self.setupSuggestedToolController(subobj, self.form.chamfering_tool,
-                                              PathUtils.filterToolControllers(PathUtils.getToolControllers(subobj),
-                                                                              "ChamferMill"))
 
     def getSignalsForUpdate(self, obj):
         '''getSignalsForUpdate(obj) ... return list of signals which cause the receiver to update the model'''

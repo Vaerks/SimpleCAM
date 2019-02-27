@@ -423,15 +423,25 @@ def filterToolControllers(tools, type):
     return result
 
 def getSuggestedTool(tools, holediameter):
-    suggestedtoolslist = filter(lambda x: 0.0 < x.Tool.Diameter < holediameter, tools)
-    return max(suggestedtoolslist, key=lambda x: x.Tool.Diameter)
+    #suggestedtoolslist = filter(lambda x: 0.0 < x.Tool.Diameter < holediameter, tools)
+
+    for tool in tools:
+        if tool.Tool.Diameter > float(holediameter) or tool.Tool.Diameter <= 0.0:
+            tools.remove(tool)
+
+    return max(tools, key=lambda x: x.Tool.Diameter)
 
 def getAllSuggestedTools(tools, holediameter):
-    result = copy.copy(tools)
-    suggestedtool = getSuggestedTool(result, holediameter)
-    result.remove(suggestedtool)
-    result.insert(0, suggestedtool)
-    return result
+
+    if holediameter <= 0.0:
+        return []
+
+    suggestedtool = getSuggestedTool(tools, holediameter)
+    if tools.__contains__(suggestedtool):
+        tools.remove(suggestedtool)
+        tools.insert(0, suggestedtool)
+
+    return tools
 
 def getToolControllerByName(obj, name):
     controllers = getToolControllers(obj)
@@ -971,3 +981,4 @@ class depth_params:
             return depths
         else:
             return [stop] + depths
+

@@ -223,7 +223,7 @@ class ViewProvider:
             self.obj.Fixture.ViewObject.Visibility = True
 
     def resetEditVisibility(self, obj):
-        if obj.Base and obj.Base.ViewObject:
+        if obj.Base and obj.Base.ViewObject and hasattr(self, "baseVisibility"):
             obj.Base.ViewObject.Visibility = self.baseVisibility
         self.baseObjectRestoreVisibility(obj)
         if obj.Stock and obj.Stock.ViewObject:
