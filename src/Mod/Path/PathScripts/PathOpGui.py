@@ -676,11 +676,17 @@ class TaskPanelDepthsPage(TaskPanelPage):
                 subobj.SafeHeight = obj.SafeHeight
                 subobj.ClearanceHeight = obj.ClearanceHeight
 
+                if hasattr(subobj, "StepOver"):
+                    subobj.StepOver = 50
+
                 if hasattr(subobj, 'Locations'):
                     subobj.Locations = obj.Locations
 
                 if hasattr(subobj, 'Base'):
                     subobj.Base = obj.Base
+
+                if hasattr(subobj, "StepDown") and subobj.ToolController is not None:
+                    subobj.StepDown = str((subobj.ToolController.Tool.Diameter * 0.2)) + " mm"
 
                 if suboperationtype == 'drill' \
                         or suboperationtype == 'holemill' \

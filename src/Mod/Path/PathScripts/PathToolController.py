@@ -79,6 +79,11 @@ class ToolController:
         obj.addProperty("App::PropertySpeed", "HorizFeed", "Feed", QtCore.QT_TRANSLATE_NOOP("App::Property", "Feed rate for horizontal moves"))
         obj.addProperty("App::PropertySpeed", "VertRapid", "Rapid", QtCore.QT_TRANSLATE_NOOP("App::Property", "Rapid rate for vertical moves in Z"))
         obj.addProperty("App::PropertySpeed", "HorizRapid", "Rapid", QtCore.QT_TRANSLATE_NOOP("App::Property", "Rapid rate for horizontal moves"))
+
+        # Max StepDown:
+        obj.addProperty("App::PropertyFloat", "MaxStepDown", "SuperOperation",
+                        QtCore.QT_TRANSLATE_NOOP("App::Property", "The max stepdown for Helix operations"))
+
         obj.Proxy = self
         mode = 2
         obj.setEditorMode('Placement', mode)

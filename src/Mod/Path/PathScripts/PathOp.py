@@ -268,7 +268,7 @@ class ObjectOp(object):
             else:
                 obj.FinalDepth   =  0.0
 
-        if FeatureStepDown & features:
+        if FeatureStepDown & features and obj.IsSuboperation is False:
             if not self.applyExpression(obj, 'StepDown', job.SetupSheet.StepDownExpression):
                 obj.StepDown = '1 mm'
 
