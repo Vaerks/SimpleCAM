@@ -26,6 +26,7 @@ from __future__ import print_function
 
 import ArchPanel
 import FreeCAD
+import FreeCADGui
 import Path
 import PathScripts.PathCircularHoleBase as PathCircularHoleBase
 import PathScripts.PathLog as PathLog
@@ -152,9 +153,10 @@ def Create(name):
     helix1 = PathHelix.ObjectHelix(op_helix1)
 
     # To select all edges of a hole:
-    cmd = PathCommands._CommandSelectLoop()
-    cmd.obj = superop
+    if len(FreeCADGui.Selection.getSelectionEx()) > 0:
+        cmd = PathCommands._CommandSelectLoop()
+        cmd.obj = superop
 
-    cmd.Activated()
+        cmd.Activated()
 
     return superop
