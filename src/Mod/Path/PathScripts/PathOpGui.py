@@ -36,6 +36,8 @@ from PathScripts import PathDrilling
 
 import importlib
 
+import PathCommands
+
 from PySide import QtCore, QtGui
 from PathScripts.PathGeom import PathGeom
 
@@ -439,6 +441,11 @@ class TaskPanelBaseGeometryPage(TaskPanelPage):
         return True
 
     def addBase(self):
+        # Hole edges selection:
+        if len(FreeCADGui.Selection.getSelectionEx()) > 0:
+            cmd = PathCommands._CommandSelectLoop()
+            cmd.Activated()
+
         if self.addBaseGeometry(FreeCADGui.Selection.getSelectionEx()):
             # self.obj.Proxy.execute(self.obj)
             self.setFields(self.obj)
