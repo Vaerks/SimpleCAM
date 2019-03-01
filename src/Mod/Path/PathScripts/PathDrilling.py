@@ -107,12 +107,17 @@ class ObjectDrilling(PathCircularHoleBase.ObjectOp):
             cmd = "G82"
             cmdParams['P'] = obj.DwellTime
 
+        usedholes = []
+
         for p in holes:
             params = {}
-            params['X'] = p['x']
-            params['Y'] = p['y']
-            params.update(cmdParams)
-            self.commandlist.append(Path.Command(cmd, params))
+
+            if p not in usedholes:
+                usedholes.append(p)
+                params['X'] = p['x']
+                params['Y'] = p['y']
+                params.update(cmdParams)
+                self.commandlist.append(Path.Command(cmd, params))
 
         self.commandlist.append(Path.Command('G80'))
 

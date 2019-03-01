@@ -36,6 +36,8 @@ import PathScripts.PathUtils as PathUtils
 import PathScripts.PathDrilling as PathDrilling
 import PathScripts.PathHelix as PathHelix
 
+import PathCommands
+
 from PathScripts.PathUtils import fmt, waiting_effects
 from PySide import QtCore
 
@@ -148,5 +150,11 @@ def Create(name):
     drill1 = PathDrilling.ObjectDrilling(op_drill1)
     drill2 = PathDrilling.ObjectDrilling(op_drill2)
     helix1 = PathHelix.ObjectHelix(op_helix1)
+
+    # To select all edges of a hole:
+    cmd = PathCommands._CommandSelectLoop()
+    cmd.obj = superop
+
+    cmd.Activated()
 
     return superop

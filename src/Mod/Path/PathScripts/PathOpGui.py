@@ -591,6 +591,7 @@ class TaskPanelBaseLocationPage(TaskPanelPage):
             self.setFields(obj)
 
 
+
 class TaskPanelHeightsPage(TaskPanelPage):
     '''Page controller for heights.'''
     def getForm(self):

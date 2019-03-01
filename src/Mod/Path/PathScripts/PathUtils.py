@@ -383,8 +383,8 @@ def getEnvelope(partshape, subshape=None, depthparams=None):
     if PathLog.getLevel(PathLog.thisModule()) == PathLog.Level.DEBUG:
         pass
         # TODO: Find another way to remove the removalshape after creating the operation
-        # removalshape = FreeCAD.ActiveDocument.addObject("Part::Feature", "Envelope")
-        # removalshape.Shape = envelopeshape
+        removalshape = FreeCAD.ActiveDocument.addObject("Part::Feature", "Envelope")
+        removalshape.Shape = envelopeshape
     return envelopeshape
 
 
