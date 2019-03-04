@@ -56,6 +56,9 @@ else:
 class TaskPanelOpPage(PathCircularHoleBaseGui.TaskPanelOpPage):
     '''Controller for the drilling operation's page'''
 
+    def getBaseGeometryForm(self):
+        return FreeCADGui.PySideUic.loadUi(":/panels/PageBaseHoleGeometryEdit.ui")
+
     def getForm(self):
         '''getForm() ... return UI'''
         return FreeCADGui.PySideUic.loadUi(":/panels/PageOpSuperDrillingEdit.ui")
@@ -141,24 +144,9 @@ class TaskPanelOpPage(PathCircularHoleBaseGui.TaskPanelOpPage):
         self.setSuggestedToolFields()
 
     def getHoleDiameter(self, obj):
-        n = 0
-        holediameter = 0
         for i, (base, subs) in enumerate(obj.Base):
             for sub in subs:
-                if n > 0 and holediameter != obj.Proxy.holeDiameter(obj, base, sub):
-                    w = QtGui.QWidget()
-                    QtGui.QMessageBox.critical(w, "Warning",
-                                               "Super Drilling Operation can not support different hole diameters.")
-                else:
-                    holediameter = obj.Proxy.holeDiameter(obj, base, sub)
-
-                if holediameter >= 8.0:
-                    w = QtGui.QWidget()
-                    QtGui.QMessageBox.critical(w, "Warning",
-                                               "A hole diameter can not exceed 8 mm. Tip: Use Super Helix instead.")
-
-                n = n + 1
-            return holediameter
+                return obj.Proxy.holeDiameter(obj, base, sub)
 
     def setSuggestedToolFields(self):
         obj = self.obj

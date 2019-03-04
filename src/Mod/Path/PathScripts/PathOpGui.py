@@ -415,8 +415,40 @@ class TaskPanelBaseGeometryPage(TaskPanelPage):
             return 'edges'
         return 'nothing'
 
+    def checkHoleDiameter(self, obj):
+
+        if obj.TypeId != "Path::FeatureCompoundPython":
+            return
+
+        self.form.warning_label.setText(
+            "")
+        n = 0
+        holediameter = 0
+        for i, (base, subs) in enumerate(obj.Base):
+            for sub in subs:
+                if n > 0 and holediameter != obj.Proxy.holeDiameter(obj, base, sub):
+                    #w = QtGui.QWidget()
+                    #QtGui.QMessageBox.critical(w, "Warning",
+                    #                           "Super Drilling Operation can not support different hole diameters.")
+                    self.form.warning_label.setText(
+                        "Error: Super Drilling Operation can not support different hole diameters.")
+                else:
+                    holediameter = obj.Proxy.holeDiameter(obj, base, sub)
+
+                if holediameter >= 8.0:
+                    #w = QtGui.QWidget()
+                    #QtGui.QMessageBox.critical(w, "Warning",
+                    #                           "A hole diameter can not exceed 8 mm. Tip: Use Super Helix instead.")
+                    self.form.warning_label.setText(
+                        "Error: A hole diameter can not exceed 8 mm. Tip: Use Super Helix Operation instead.")
+
+                n = n + 1
+
     def addBaseGeometry(self, selection):
         PathLog.track(selection)
+
+        self.checkHoleDiameter(self.obj)
+
         if len(selection) != 1:
             PathLog.error(translate("PathProject", "Please select %s from a single solid" % self.featureName()))
             return False

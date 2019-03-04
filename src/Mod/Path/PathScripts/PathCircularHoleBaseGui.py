@@ -129,6 +129,9 @@ class TaskPanelHoleGeometryPage(PathOpGui.TaskPanelBaseGeometryPage):
     def updateBase(self):
         '''updateBase() ... helper function to transfer current table to obj'''
         PathLog.track()
+
+        self.checkHoleDiameter(self.obj)
+
         newlist = []
         for i in range(self.form.baseList.rowCount()):
             item = self.form.baseList.item(i, 0)
@@ -169,6 +172,8 @@ class TaskPanelHoleGeometryPage(PathOpGui.TaskPanelBaseGeometryPage):
 
         self.obj.Proxy.execute(self.obj)
         FreeCAD.ActiveDocument.recompute()
+
+        self.checkHoleDiameter(self.obj)
 
     def updateData(self, obj, prop):
         '''updateData(obj, prop) ... callback whenever a property of the model changed'''
