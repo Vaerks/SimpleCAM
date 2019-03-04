@@ -60,99 +60,6 @@ class TaskPanelOpPage(PathCircularHoleBaseGui.TaskPanelOpPage):
         '''getForm() ... return UI'''
         return FreeCADGui.PySideUic.loadUi(":/panels/PageOpSuperDrillingEdit.ui")
 
-        '''
-    def setToolSuggestions(self, obj):
-        # Tool suggestions:
-        # It selects all the ToolControllers in the job and checks which has the closer diameter with the hole.
-        # For that, it simply takes all the tools that have a diameter under the hole and sort them by reverse
-        #  so the biggest one will be at the start of the list (which is the best suggested tool that will be given
-        #  as the first element in the combobox).
-        # TODO: Code optimization is required because for now, these "heavy" actions are made for each field update
-
-        # -------------------------------------------------------------
-        # Retrieve the hole diameter for tool suggestions searching
-        holediameter = 0.0
-
-        # The code will only looking for one hole
-        # TODO: Making it for few holes
-        for i, (base, subs) in enumerate(obj.Base):
-            for sub in subs:
-                holediameter = obj.Proxy.holeDiameter(obj, base, sub)
-                break
-            break
-
-        basedrilltool = None
-        basehelixtool = None
-
-        # Get the current ToolController
-        for subobj in obj.Group:
-            name = subobj.Name.split("_")
-            opname = name[2]
-            oplocation = name[3]
-
-            if opname == "drill" and oplocation == "base":
-                basedrilltool = subobj.ToolController
-
-            elif opname == "helix":
-                basehelixtool = subobj.ToolController
-
-
-        suggestedToolList = []
-        centerdrillTools = []
-        drillTools = []
-        helixTools = []
-        chamferingTools = []
-
-        toolcontrollers = PathUtils.getToolControllers(obj)
-
-        for tc in toolcontrollers:
-            if holediameter > tc.Tool.Diameter > 0.0:
-                suggestedToolList.append(tc)
-
-            # Center Drill
-            if tc.Tool.ToolType == "CenterDrill":
-                centerdrillTools.append(tc)
-
-            # Chamfering
-            if tc.Tool.ToolType == "ChamferMill":
-                chamferingTools.append(tc)
-
-        # Center Drill
-        if len(centerdrillTools) > 0:
-            self.setupSuggestedToolController(obj, self.form.centerdrill_tool, centerdrillTools)
-
-        # Chamfering
-        if len(chamferingTools) > 0:
-            self.setupSuggestedToolController(obj, self.form.chamfering_tool, chamferingTools)
-
-        if len(suggestedToolList) > 0:
-            suggestedToolList.sort(key=lambda x: x.Tool.Diameter, reverse=True)
-
-            for tool in suggestedToolList:
-                # Base Helix & Hole Milling
-                if tool.Tool.ToolType == "EndMill":
-                    helixTools.append(tool)
-
-                # Base Drill
-                elif tool.Tool.ToolType == "Drill":
-                    drillTools.append(tool)
-
-            if len(helixTools) > 0:
-                if helixTools.__contains__(basehelixtool):
-                    helixTools.remove(basehelixtool)
-                    helixTools.insert(0, basehelixtool)
-
-                self.setupSuggestedToolController(obj, self.form.basehelix_tool, helixTools)
-
-            if len(drillTools) > 0:
-
-                if drillTools.__contains__(basedrilltool):
-                    drillTools.remove(basedrilltool)
-                    drillTools.insert(0, basedrilltool)
-                self.setupSuggestedToolController(obj, self.form.basedrill_tool, drillTools)
-                
-        '''
-
     def getFields(self, obj):
         '''setFields(obj) ... update obj's properties with values from the UI'''
         PathLog.track()
@@ -168,51 +75,31 @@ class TaskPanelOpPage(PathCircularHoleBaseGui.TaskPanelOpPage):
             obj.AddTipLength = self.form.useTipLength.isChecked()
 
         # For sub-operations parameter:
-        if obj.Group[0].Active != self.form.centerdrill_active.isChecked():
-            obj.Group[0].Active = self.form.centerdrill_active.isChecked()
-        if obj.Group[1].Active != self.form.basedrill_active.isChecked():
-            obj.Group[1].Active = self.form.basedrill_active.isChecked()
         if obj.Group[2].Active != self.form.basehelix_active.isChecked():
             obj.Group[2].Active = self.form.basehelix_active.isChecked()
 
-        self.updateToolController(obj, self.form.toolController)
+        if obj.DrillingAutoSuggest != self.form.basedrill_autosuggest.isChecked():
+            obj.DrillingAutoSuggest = self.form.basedrill_autosuggest.isChecked()
+        if obj.HoleMillingAutoSuggest != self.form.basehelix_autosuggest.isChecked():
+            obj.HoleMillingAutoSuggest = self.form.basehelix_autosuggest.isChecked()
+        if obj.ThreadMillingAutoSuggest != self.form.thread_autosuggest.isChecked():
+            obj.ThreadMillingAutoSuggest = self.form.thread_autosuggest.isChecked()
 
         # Max diameter and holes with different diameters detection:
-        n = 0
-        holediameter = 0
-        for i, (base, subs) in enumerate(obj.Base):
-            for sub in subs:
-                if n > 0 and holediameter != obj.Proxy.holeDiameter(obj, base, sub):
-                    w = QtGui.QWidget()
-                    QtGui.QMessageBox.critical(w, "Warning",
-                                               "Super Drilling Operation can not support different hole diameters.")
-                else:
-                    holediameter = obj.Proxy.holeDiameter(obj, base, sub)
-
-                if holediameter >= 8.0:
-                    w = QtGui.QWidget()
-                    QtGui.QMessageBox.critical(w, "Warning", "A hole diameter can not exceed 8 mm. Tip: Use Super Helix instead.")
-
-                n = n+1
-            break
+        self.getHoleDiameter(obj)
 
         for subobj in obj.Group:
             name = subobj.Name.split("_")
             opname = name[2]
             oplocation = name[3]
 
-            if opname == "drill" and oplocation == "center":
-                self.updateSuggestionToolController(subobj, self.form.centerdrill_tool)
-
-            elif opname == "drill" and oplocation == "base":
+            if opname == "drill" and oplocation == "base":
                 self.updateSuggestionToolController(subobj, self.form.basedrill_tool)
 
             elif opname == "helix":
                 self.updateSuggestionToolController(subobj, self.form.basehelix_tool)
 
-            elif opname == "chamfering":
-                self.updateSuggestionToolController(subobj, self.form.chamfering_tool)
-
+        self.setSuggestedToolFields()
 
 
     def setFields(self, obj):
@@ -238,58 +125,70 @@ class TaskPanelOpPage(PathCircularHoleBaseGui.TaskPanelOpPage):
         else:
             self.form.useTipLength.setCheckState(QtCore.Qt.Unchecked)
 
-        self.setupToolController(obj, self.form.toolController)
-
         # For sub-operations parameter
-        if obj.Group[0].Active:
-            self.form.centerdrill_active.setCheckState(QtCore.Qt.Checked)
-        else:
-            self.form.centerdrill_active.setCheckState(QtCore.Qt.UnChecked)
-
-        if obj.Group[1].Active:
-            self.form.basedrill_active.setCheckState(QtCore.Qt.Checked)
-        else:
-            self.form.basedrill_active.setCheckState(QtCore.Qt.UnChecked)
-
         if obj.Group[2].Active:
             self.form.basehelix_active.setCheckState(QtCore.Qt.Checked)
         else:
             self.form.basehelix_active.setCheckState(QtCore.Qt.UnChecked)
 
-        # Change the SuggestionToolControllers GUI
+        if obj.DrillingAutoSuggest:
+            self.form.basedrill_autosuggest.toggle()
+        if obj.HoleMillingAutoSuggest:
+            self.form.basehelix_autosuggest.toggle()
+        if obj.ThreadMillingAutoSuggest:
+            self.form.thread_autosuggest.toggle()
 
+        self.suggestionsChangeState()
+
+        # Change the SuggestionToolControllers GUI
+        self.setSuggestedToolFields()
+
+    def getHoleDiameter(self, obj):
+        n = 0
+        holediameter = 0
+        for i, (base, subs) in enumerate(obj.Base):
+            for sub in subs:
+                if n > 0 and holediameter != obj.Proxy.holeDiameter(obj, base, sub):
+                    w = QtGui.QWidget()
+                    QtGui.QMessageBox.critical(w, "Warning",
+                                               "Super Drilling Operation can not support different hole diameters.")
+                else:
+                    holediameter = obj.Proxy.holeDiameter(obj, base, sub)
+
+                if holediameter >= 8.0:
+                    w = QtGui.QWidget()
+                    QtGui.QMessageBox.critical(w, "Warning",
+                                               "A hole diameter can not exceed 8 mm. Tip: Use Super Helix instead.")
+
+                n = n + 1
+            return holediameter
+
+    def setSuggestedToolFields(self):
+        obj = self.obj
         holediameter = self.getHoleDiameter(obj)
 
         for subobj in obj.Group:
             self.updateSuggestedTool(subobj, holediameter)
-
-    def getHoleDiameter(self, obj):
-        for i, (base, subs) in enumerate(obj.Base):
-            for sub in subs:
-                return obj.Proxy.holeDiameter(obj, base, sub)
-
-        return 0.0
 
     def updateSuggestedTool(self, subobj, holediameter):
         name = subobj.Name.split("_")
         opname = name[2]
         oplocation = name[3]
 
+        tc = PathUtils.getToolControllers(subobj)
+
         if opname == "drill" and oplocation == "center":
-            self.setupSuggestedToolController(subobj, self.form.centerdrill_tool,
-                                              PathUtils.filterToolControllers(PathUtils.getToolControllers(subobj), "CenterDrill"))
+            subobj.ToolController = PathUtils.filterToolControllers(tc, "CenterDrill")[0]
 
         elif opname == "chamfering":
-            self.setupSuggestedToolController(subobj, self.form.chamfering_tool,
-                                              PathUtils.filterToolControllers(PathUtils.getToolControllers(subobj),
-                                                                              "ChamferMill"))
+            subobj.ToolController = PathUtils.filterToolControllers(tc, "ChamferMill")[0]
 
         elif opname == "drill" and oplocation == "base":
             toolslist = PathUtils.getAllSuggestedTools(
-                                              PathUtils.filterToolControllers(PathUtils.getToolControllers(subobj),
-                                                                              "Drill"), holediameter)
+                                              PathUtils.filterToolControllers(tc, "Drill"), holediameter)
 
-            if subobj.ToolController is not None and toolslist.__contains__(subobj.ToolController):
+            if self.form.basedrill_autosuggest.isChecked() is False \
+                    and toolslist.__contains__(subobj.ToolController):
                 toolslist.remove(subobj.ToolController)
                 toolslist.insert(0, subobj.ToolController)
 
@@ -297,10 +196,10 @@ class TaskPanelOpPage(PathCircularHoleBaseGui.TaskPanelOpPage):
 
         elif opname == "helix":
             toolslist = PathUtils.getAllSuggestedTools(
-                PathUtils.filterToolControllers(PathUtils.getToolControllers(subobj),
-                                                "EndMill"), holediameter)
+                PathUtils.filterToolControllers(tc, "EndMill"), holediameter)
 
-            if subobj.ToolController is not None and toolslist.__contains__(subobj.ToolController):
+            if self.form.basehelix_autosuggest.isChecked() is False \
+                    and toolslist.__contains__(subobj.ToolController):
                 toolslist.remove(subobj.ToolController)
                 toolslist.insert(0, subobj.ToolController)
 
@@ -317,18 +216,23 @@ class TaskPanelOpPage(PathCircularHoleBaseGui.TaskPanelOpPage):
         signals.append(self.form.dwellEnabled.stateChanged)
         signals.append(self.form.peckEnabled.stateChanged)
         signals.append(self.form.useTipLength.stateChanged)
-        signals.append(self.form.toolController.currentIndexChanged)
 
-        signals.append(self.form.centerdrill_tool.currentIndexChanged)
         signals.append(self.form.basedrill_tool.currentIndexChanged)
         signals.append(self.form.basehelix_tool.currentIndexChanged)
-        signals.append(self.form.chamfering_tool.currentIndexChanged)
 
-        signals.append(self.form.centerdrill_active.stateChanged)
-        signals.append(self.form.basedrill_active.stateChanged)
         signals.append(self.form.basehelix_active.stateChanged)
 
+        self.form.basedrill_autosuggest.clicked.connect(self.suggestionsChangeState)
+        self.form.basehelix_autosuggest.clicked.connect(self.suggestionsChangeState)
+        self.form.thread_autosuggest.clicked.connect(self.suggestionsChangeState)
+
         return signals
+
+    def suggestionsChangeState(self):
+        self.form.basedrill_tool.setEnabled(not self.form.basedrill_autosuggest.isChecked())
+        self.form.basehelix_tool.setEnabled(not self.form.basehelix_autosuggest.isChecked())
+        self.form.thread_tool.setEnabled(not self.form.thread_autosuggest.isChecked())
+        self.setSuggestedToolFields()
 
 
 # The subCmdResources has to be manually updated by adding a new Resource type when a new sub-operation

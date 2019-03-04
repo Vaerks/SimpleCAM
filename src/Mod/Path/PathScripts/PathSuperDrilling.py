@@ -84,11 +84,22 @@ class ObjectSuperDrilling(PathDrilling.ObjectDrilling):
         # to edit those correctly if needed by the user from the GUI
         obj.addProperty("App::PropertyLink", "SuperDrillingOperation", "SuperOperation",
                         QtCore.QT_TRANSLATE_NOOP("App:Property", "Sub-operations attribute."))
+
+        obj.addProperty("App::PropertyBool", "DrillingAutoSuggest", "SuperOperation",
+                        QtCore.QT_TRANSLATE_NOOP("App:Property", "Drilling tool auto suggestion"))
+        obj.addProperty("App::PropertyBool", "HoleMillingAutoSuggest", "SuperOperation",
+                        QtCore.QT_TRANSLATE_NOOP("App:Property", "Hole Milling tool auto suggestion"))
+        obj.addProperty("App::PropertyBool", "ThreadMillingAutoSuggest", "SuperOperation",
+                        QtCore.QT_TRANSLATE_NOOP("App:Property", "Thread Milling tool auto suggestion"))
         ################################################################################################
 
         obj.ReturnLevel = ['G98', 'G99']  # this is the direction that the Contour runs
 
         obj.addProperty("App::PropertyDistance", "RetractHeight", "Drill", QtCore.QT_TRANSLATE_NOOP("App::Property", "The height where feed starts and height during retract tool when path is finished"))
+
+        obj.DrillingAutoSuggest = True
+        obj.HoleMillingAutoSuggest = True
+        obj.ThreadMillingAutoSuggest = True
 
     def circularHoleExecute(self, obj, holes):
         '''circularHoleExecute(obj, holes) ... generate drill operation for each hole in holes.'''
