@@ -41,6 +41,8 @@ else:
     def translate(ctxt, txt):
         return txt
 
+from PathScripts import PathUtils
+
 __title__="FreeCAD Path Commands"
 __author__ = "sliptonic"
 __url__ = "http://www.freecadweb.org"
@@ -83,27 +85,7 @@ class _CommandSelectLoop:
 
     def Activated(self):
         sel = FreeCADGui.Selection.getSelectionEx()[0]
-        obj = sel.Object
-        edge1 = sel.SubObjects[0]
-        if 'Face' in sel.SubElementNames[0]:
-            loop = horizontalFaceLoop(sel.Object, sel.SubObjects[0], sel.SubElementNames)
-            if loop:
-                FreeCADGui.Selection.clearSelection()
-                FreeCADGui.Selection.addSelection(sel.Object, loop)
-            loopwire = []
-        elif len(sel.SubObjects) == 1:
-            loopwire = horizontalEdgeLoop(obj, edge1)
-        else:
-            edge2 = sel.SubObjects[1]
-            loopwire = loopdetect(obj, edge1, edge2)
-
-        if loopwire:
-            FreeCADGui.Selection.clearSelection()
-            elist = obj.Shape.Edges
-            for e in elist:
-                for i in loopwire.Edges:
-                    if e.hashCode() == i.hashCode():
-                        FreeCADGui.Selection.addSelection(obj, "Edge"+str(elist.index(e)+1))
+        PathUtils.selectAllLoops(sel)
 
     def formsPartOfALoop(self, obj, sub, names):
         if names[0][0:4] != 'Edge':

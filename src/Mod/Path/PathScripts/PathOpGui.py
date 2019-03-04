@@ -443,8 +443,7 @@ class TaskPanelBaseGeometryPage(TaskPanelPage):
     def addBase(self):
         # Hole edges selection:
         if len(FreeCADGui.Selection.getSelectionEx()) > 0:
-            cmd = PathCommands._CommandSelectLoop()
-            cmd.Activated()
+            PathUtils.selectAllLoops(FreeCADGui.Selection.getSelectionEx()[0])
 
         if self.addBaseGeometry(FreeCADGui.Selection.getSelectionEx()):
             # self.obj.Proxy.execute(self.obj)

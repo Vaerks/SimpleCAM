@@ -37,8 +37,6 @@ import PathScripts.PathUtils as PathUtils
 import PathScripts.PathDrilling as PathDrilling
 import PathScripts.PathHelix as PathHelix
 
-import PathCommands
-
 from PathScripts.PathUtils import fmt, waiting_effects
 from PySide import QtCore
 
@@ -165,9 +163,7 @@ def Create(name):
 
     # To select all edges of a hole:
     if len(FreeCADGui.Selection.getSelectionEx()) > 0:
-        cmd = PathCommands._CommandSelectLoop()
-        cmd.obj = superop
-
-        cmd.Activated()
+        selection = FreeCADGui.Selection.getSelectionEx()[0]
+        PathUtils.selectAllLoops(selection)
 
     return superop

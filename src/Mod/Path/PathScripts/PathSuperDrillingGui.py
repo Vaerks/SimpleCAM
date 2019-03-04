@@ -85,9 +85,6 @@ class TaskPanelOpPage(PathCircularHoleBaseGui.TaskPanelOpPage):
         if obj.ThreadMillingAutoSuggest != self.form.thread_autosuggest.isChecked():
             obj.ThreadMillingAutoSuggest = self.form.thread_autosuggest.isChecked()
 
-        # Max diameter and holes with different diameters detection:
-        self.getHoleDiameter(obj)
-
         for subobj in obj.Group:
             name = subobj.Name.split("_")
             opname = name[2]
@@ -229,10 +226,16 @@ class TaskPanelOpPage(PathCircularHoleBaseGui.TaskPanelOpPage):
         return signals
 
     def suggestionsChangeState(self):
-        self.form.basedrill_tool.setEnabled(not self.form.basedrill_autosuggest.isChecked())
-        self.form.basehelix_tool.setEnabled(not self.form.basehelix_autosuggest.isChecked())
-        self.form.thread_tool.setEnabled(not self.form.thread_autosuggest.isChecked())
+        self.updateState(self.form.basedrill_tool, self.form.basedrill_autosuggest)
+        self.updateState(self.form.basehelix_tool, self.form.basehelix_autosuggest)
+        self.updateState(self.form.thread_tool, self.form.thread_autosuggest)
+
         self.setSuggestedToolFields()
+
+    def updateState(self, combo, button):
+        if hasattr(button, "isChecked"):
+            combo.setEnabled(not button.isChecked())
+
 
 
 # The subCmdResources has to be manually updated by adding a new Resource type when a new sub-operation

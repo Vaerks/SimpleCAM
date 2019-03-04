@@ -49,6 +49,31 @@ else:
     PathLog.setLevel(PathLog.Level.INFO, PathLog.thisModule())
 #FreeCAD.setLogLevel('Path.Area', 0)
 
+
+def selectLoop(selection, subobj):
+    sel = selection
+    obj = sel.Object
+    edge1 = subobj
+    if 'Face' in sel.SubElementNames[0]:
+        loop = horizontalFaceLoop(sel.Object, edge1, sel.SubElementNames)
+        if loop:
+            FreeCADGui.Selection.clearSelection()
+            FreeCADGui.Selection.addSelection(sel.Object, loop)
+        loopwire = []
+
+    loopwire = horizontalEdgeLoop(obj, edge1)
+
+    if loopwire:
+        elist = obj.Shape.Edges
+        for e in elist:
+            for i in loopwire.Edges:
+                if e.hashCode() == i.hashCode():
+                    FreeCADGui.Selection.addSelection(obj, "Edge"+str(elist.index(e)+1))
+
+def selectAllLoops(selection):
+    for subobj in selection.SubObjects:
+        selectLoop(selection, subobj)
+
 def translate(context, text, disambig=None):
     return QtCore.QCoreApplication.translate(context, text, disambig)
 
