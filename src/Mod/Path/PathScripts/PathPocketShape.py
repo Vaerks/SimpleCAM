@@ -30,9 +30,13 @@ import PathScripts.PathPocketBase as PathPocketBase
 import PathScripts.PathUtils as PathUtils
 import TechDraw
 import sys
+import FreeCADGui
 
 from PathScripts.PathGeom import PathGeom
 from PySide import QtCore
+
+import PathScripts.PathDressupRampEntry
+import PathScripts.PathUtils
 
 __title__ = "Path Pocket Shape Operation"
 __author__ = "sliptonic (Brad Collette)"
@@ -137,8 +141,10 @@ class ObjectPocket(PathPocketBase.ObjectPocket):
 
     def areaOpSetDefaultValues(self, obj):
         '''areaOpSetDefaultValues(obj) ... set default values'''
-        obj.StepOver = 100
+        # Default values changed to SimpleCAD
+        obj.StepOver = 50
         obj.ZigZagAngle = 45
+        obj.OffsetPattern = "ZigZagOffset"
         job = PathUtils.findParentJob(obj)
         if job and job.Stock:
             bb = job.Stock.Shape.BoundBox
@@ -147,6 +153,20 @@ class ObjectPocket(PathPocketBase.ObjectPocket):
 
 def Create(name):
     '''Create(name) ... Creates and returns a Pocket operation.'''
-    obj = FreeCAD.ActiveDocument.addObject("Path::FeaturePython", name)
-    proxy = ObjectPocket(obj)
-    return obj
+    pocketobj = FreeCAD.ActiveDocument.addObject("Path::FeaturePython", name)
+    proxy = ObjectPocket(pocketobj)
+
+    # To select all edges of a hole:
+    if len(FreeCADGui.Selection.getSelectionEx()) > 0:
+        selection = FreeCADGui.Selection.getSelectionEx()[0]
+        PathUtils.selectAllLoops(selection)
+
+    # Auto-creation of the RampEntry Dress-up
+    obj = FreeCAD.ActiveDocument.addObject("Path::FeaturePython", "RampEntryDressup")
+    dbo = PathScripts.PathDressupRampEntry.ObjectDressup(obj)
+    obj.Base = pocketobj
+    PathScripts.PathDressupRampEntry.ViewProviderDressup(obj.ViewObject)
+    PathScripts.PathUtils.addToJob(obj)
+    dbo.setup(obj)
+
+    return pocketobj

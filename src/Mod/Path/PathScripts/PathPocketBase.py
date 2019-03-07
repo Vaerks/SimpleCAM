@@ -78,6 +78,7 @@ class ObjectPocket(PathAreaOp.ObjectOp):
         obj.addProperty("App::PropertyFloat", "ZigZagAngle", "Pocket", QtCore.QT_TRANSLATE_NOOP("App::Property", "Angle of the zigzag pattern"))
         obj.addProperty("App::PropertyEnumeration", "OffsetPattern", "Face", QtCore.QT_TRANSLATE_NOOP("App::Property", "clearing pattern to use"))
         obj.OffsetPattern = ['ZigZag', 'Offset', 'Spiral', 'ZigZagOffset', 'Line', 'Grid', 'Triangle']
+        # obj.OffsetPattern = ['ZigZag', 'Offset', 'ZigZagOffset']
         obj.addProperty("App::PropertyBool", "MinTravel", "Pocket", QtCore.QT_TRANSLATE_NOOP("App::Property", "Use 3D Sorting of Path"))
         obj.addProperty("App::PropertyBool", "KeepToolDown", "Face", QtCore.QT_TRANSLATE_NOOP("App::Property", "Attempts to avoid unnecessary retractions."))
 
@@ -108,6 +109,7 @@ class ObjectPocket(PathAreaOp.ObjectOp):
         params['ToolRadius'] = self.radius
 
         Pattern = ['ZigZag', 'Offset', 'Spiral', 'ZigZagOffset', 'Line', 'Grid', 'Triangle']
+        # Pattern = ['ZigZag', 'Offset', 'ZigZagOffset']
         params['PocketMode'] = Pattern.index(obj.OffsetPattern) + 1
         return params
 
