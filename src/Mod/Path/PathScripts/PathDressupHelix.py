@@ -350,21 +350,25 @@ class CommandPathDressupHelix:
             PathLog.error(translate("Please select a Profile object"))
             return
 
-        # everything ok!
-        FreeCAD.ActiveDocument.openTransaction(translate("Create Helix Dress-up"))
-        FreeCADGui.addModule("PathScripts.PathDressupHelix")
-        FreeCADGui.addModule("PathScripts.PathUtils")
-        FreeCADGui.doCommand('obj = FreeCAD.ActiveDocument.addObject("Path::FeaturePython", "HelixDressup")')
-        FreeCADGui.doCommand('dbo = PathScripts.PathDressupHelix.ObjectDressup(obj)')
-        FreeCADGui.doCommand('obj.Base = FreeCAD.ActiveDocument.' + selection[0].Name)
-        FreeCADGui.doCommand('PathScripts.PathDressupHelix.ViewProviderDressup(obj.ViewObject)')
-        FreeCADGui.doCommand('PathScripts.PathUtils.addToJob(obj)')
-        FreeCADGui.doCommand('Gui.ActiveDocument.getObject(obj.Base.Name).Visibility = False')
-        FreeCADGui.doCommand('dbo.setup(obj)')
-        FreeCAD.ActiveDocument.commitTransaction()
-        FreeCAD.ActiveDocument.recompute()
+        subobjs = []
 
-        op_helix = FreeCAD.ActiveDocument.addObject("Path::FeaturePython", "center_helix")
+        helixname = "center_helix"
+        op_helix = FreeCAD.ActiveDocument.addObject("Path::FeaturePython", helixname)
+
+        subobjs.append(op_helix)
+
+        obj = FreeCAD.ActiveDocument.addObject("Path::FeatureCompoundPython", "HelixDressup")
+        dbo = ObjectDressup(obj)
+
+        obj.Group = subobjs
+        obj.Base = baseObject
+        #FreeCADGui.doCommand('obj.Group.append(FreeCAD.ActiveDocument.' + selection[0].Name+')')
+        #FreeCADGui.doCommand('obj.Base.append(FreeCAD.ActiveDocument.' + helixname + ')')
+
+        PathUtils.addToJob(obj)
+
+        dbo.setup(obj)
+
         helix = PathHelix.ObjectHelix(op_helix)
 
 

@@ -65,20 +65,26 @@ class ObjectHelix(PathCircularHoleBase.ObjectOp):
     def circularHoleExecute(self, obj, holes):
         '''circularHoleExecute(obj, holes) ... generate helix commands for each hole in holes'''
         PathLog.track()
+
+        output = ''
         self.commandlist.append(Path.Command('(helix cut operation)'))
 
         self.commandlist.append(Path.Command('G0', {'Z': obj.ClearanceHeight.Value, 'F': self.vertRapid}))
 
-        zsafe = max(baseobj.Shape.BoundBox.ZMax for baseobj, features in obj.Base) + obj.ClearanceHeight.Value
         output = ''
-        output += "G0 Z" + fmt(zsafe)
 
         if obj.UseStartPoint:
+            # TODO: Parse "Final Depth" to Helix from Pocket Operation
+            obj.FinalDepth = "0 mm"
+            zsafe = 46.0
+            output += "G0 Z" + fmt(zsafe)
             r = 6.0
             self.radius = 2.5
             output += self.helix_cut(obj, obj.StartPoint[0], obj.StartPoint[1], r / 2, 0.0,
                                      (float(obj.StepOver.Value) / 50.0) * self.radius)
         else:
+            zsafe = max(baseobj.Shape.BoundBox.ZMax for baseobj, features in obj.Base) + obj.ClearanceHeight.Value
+            output += "G0 Z" + fmt(zsafe)
             for hole in holes:
                 print("Hole r: "+str(hole['r'])+" Radius"+str(self.radius)+" x-StartPoint:"+str(obj.StartPoint[0]))
                 output += self.helix_cut(obj, hole['x'], hole['y'], hole['r'] / 2, 0.0, (float(obj.StepOver.Value)/50.0) * self.radius)

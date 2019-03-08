@@ -173,7 +173,7 @@ class ObjectOp(PathOp.ObjectOp):
             for location in obj.Locations:
                 holes.append({'x': location.x, 'y': location.y, 'r': 0})
 
-        if len(holes) > 0:
+        if len(holes) > 0 or obj.UseStartPoint:
             self.circularHoleExecute(obj, holes)
 
     def circularHoleExecute(self, obj, holes):
