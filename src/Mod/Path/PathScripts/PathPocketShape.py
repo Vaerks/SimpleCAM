@@ -162,11 +162,11 @@ def Create(name):
         PathUtils.selectAllLoops(selection)
 
     # Auto-creation of the RampEntry Dress-up
-    obj = FreeCAD.ActiveDocument.addObject("Path::FeaturePython", "RampEntryDressup")
-    dbo = PathScripts.PathDressupRampEntry.ObjectDressup(obj)
-    obj.Base = pocketobj
-    PathScripts.PathDressupRampEntry.ViewProviderDressup(obj.ViewObject)
-    PathScripts.PathUtils.addToJob(obj)
-    dbo.setup(obj)
+    #obj = FreeCAD.ActiveDocument.addObject("Path::FeaturePython", "RampEntryDressup")
+    #dbo = PathScripts.PathDressupRampEntry.ObjectDressup(obj)
+    #obj.Base = pocketobj
+    #PathScripts.PathDressupRampEntry.ViewProviderDressup(obj.ViewObject)
+    #PathScripts.PathUtils.addToJob(obj)
+    #dbo.setup(obj)
 
     return pocketobj

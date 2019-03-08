@@ -56,6 +56,12 @@ class ObjectHelix(PathCircularHoleBase.ObjectOp):
 
         obj.addProperty("App::PropertyLength", "StepOver", "Helix Drill", translate("PathHelix", "Radius increment (must be smaller than tool diameter)"))
 
+        # For start point Helix feature:
+        obj.addProperty("App::PropertyVector", "StartPoint", "Start Point",
+                        QtCore.QT_TRANSLATE_NOOP("PathOp", "The start point of this path"))
+        obj.addProperty("App::PropertyBool", "UseStartPoint", "Start Point",
+                        QtCore.QT_TRANSLATE_NOOP("PathOp", "make True, if specifying a Start Point"))
+
     def circularHoleExecute(self, obj, holes):
         '''circularHoleExecute(obj, holes) ... generate helix commands for each hole in holes'''
         PathLog.track()
@@ -67,8 +73,16 @@ class ObjectHelix(PathCircularHoleBase.ObjectOp):
         output = ''
         output += "G0 Z" + fmt(zsafe)
 
-        for hole in holes:
-            output += self.helix_cut(obj, hole['x'], hole['y'], hole['r'] / 2, 0.0, (float(obj.StepOver.Value)/50.0) * self.radius)
+        if obj.UseStartPoint:
+            r = 6.0
+            self.radius = 2.5
+            output += self.helix_cut(obj, obj.StartPoint[0], obj.StartPoint[1], r / 2, 0.0,
+                                     (float(obj.StepOver.Value) / 50.0) * self.radius)
+        else:
+            for hole in holes:
+                print("Hole r: "+str(hole['r'])+" Radius"+str(self.radius)+" x-StartPoint:"+str(obj.StartPoint[0]))
+                output += self.helix_cut(obj, hole['x'], hole['y'], hole['r'] / 2, 0.0, (float(obj.StepOver.Value)/50.0) * self.radius)
+
         PathLog.debug(output)
 
     def helix_cut(self, obj, x0, y0, r_out, r_in, dr):
