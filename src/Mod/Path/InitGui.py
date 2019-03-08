@@ -52,6 +52,7 @@ class PathWorkbench (Workbench):
         from PathScripts import PathDressupDogbone
         from PathScripts import PathDressupDragknife
         from PathScripts import PathDressupRampEntry
+        from PathScripts import PathDressupHelix
         from PathScripts import PathDressupTagGui
         from PathScripts import PathDressupLeadInOut
         from PathScripts import PathDrillingGui
@@ -86,7 +87,7 @@ class PathWorkbench (Workbench):
         superoperationslist = ["Path_SuperDrilling"]
         threedopcmdlist = ["Path_Pocket_3D"]
         modcmdlist = ["Path_OperationCopy", "Path_Array", "Path_SimpleCopy" ]
-        dressupcmdlist = ["Path_DressupDogbone", "Path_DressupDragKnife", "Path_DressupLeadInOut", "Path_DressupRampEntry", "Path_DressupTag"]
+        dressupcmdlist = ["Path_DressupDogbone", "Path_DressupDragKnife", "Path_DressupLeadInOut", "Path_DressupRampEntry", "Path_DressupHelix", "Path_DressupTag"]
         extracmdlist = []
         #modcmdmore = ["Path_Hop",]
         #remotecmdlist = ["Path_Remote"]
