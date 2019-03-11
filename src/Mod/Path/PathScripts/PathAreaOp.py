@@ -196,6 +196,8 @@ class ObjectOp(PathOp.ObjectOp):
         obj.PathParams = str({key: value for key, value in pathParams.items() if key != 'shapes'})
         PathLog.debug("Path with params: {}".format(obj.PathParams))
 
+        testtest = pathParams
+
         (pp, end_vector) = Path.fromShapes(**pathParams)
         PathLog.debug('pp: {}, end vector: {}'.format(pp, end_vector))
         self.endVector = end_vector
@@ -232,6 +234,8 @@ class ObjectOp(PathOp.ObjectOp):
                 final_depth=obj.FinalDepth.Value,
                 user_depths=None)
 
+        testtesttest = self.depthparams
+
         if PathOp.FeatureStartPoint & self.opFeatures(obj) and obj.UseStartPoint:
             start = obj.StartPoint
         else:
@@ -244,6 +248,7 @@ class ObjectOp(PathOp.ObjectOp):
             try:
                 (pp, sim) = self._buildPathArea(obj, shape, isHole, start, getsim)
                 self.commandlist.extend(pp.Commands)
+                test = self.commandlist
                 sims.append(sim)
             except Exception as e:
                 FreeCAD.Console.PrintError(e)
