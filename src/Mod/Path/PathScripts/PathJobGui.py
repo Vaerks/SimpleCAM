@@ -132,7 +132,7 @@ class ViewProvider:
         self.taskPanel.setupUi(activate)
         self.deleteOnReject = False
         self.showOriginAxis(True)
-        FreeCADGui.ActiveDocument.ActiveView.fitAll()
+        #FreeCADGui.ActiveDocument.ActiveView.fitAll()
 
     def resetTaskPanel(self):
         self.showOriginAxis(False)
@@ -160,9 +160,7 @@ class ViewProvider:
         return ":/icons/Path-Job.svg"
 
     def claimChildren(self):
-        PathLog.track()
-        children = []
-        children.append(self.obj.ToolControllers)
+        children = self.obj.ToolController
         children.append(self.obj.Operations)
         if self.obj.Base:
             children.append(self.obj.Base)
@@ -923,7 +921,7 @@ class TaskPanel:
 
         vUnit = FreeCAD.Units.Quantity(1, FreeCAD.Units.Velocity).getUserPreferred()[2]
 
-        for row,tc in enumerate(sorted(self.obj.ToolController.Group, key=lambda tc: tc.Label)):
+        for row, tc in enumerate(sorted(self.obj.ToolController, key=lambda tc: tc.Label)):
             self.form.activeToolController.addItem(tc.Label, tc)
             if tc == select:
                 index = row
@@ -1056,7 +1054,7 @@ class TaskPanel:
         # can only delete what is selected
         delete = edit
         # ... but we want to make sure there's at least one TC left
-        if len(self.obj.ToolControllers.Group) == len(self.form.toolControllerList.selectedItems()):
+        if len(self.obj.ToolController) == len(self.form.toolControllerList.selectedItems()):
             delete = False
         # ... also don't want to delete any TCs that are already used
         if delete:

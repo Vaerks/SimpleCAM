@@ -435,7 +435,7 @@ def getToolControllers(obj):
         job = None
 
     if job:
-        return job.ToolControllers.Group
+        return job.ToolController
     return []
 
 def filterToolControllers(tools, type):

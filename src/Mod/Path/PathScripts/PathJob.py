@@ -60,7 +60,7 @@ class JobTemplate:
     SetupSheet = 'SetupSheet'
     Stock = 'Stock'
     Fixture = 'Fixture'
-    ToolControllers = 'ToolControllers'
+    ToolController = 'ToolController'
     Version = 'Version'
 
 def isArchPanelSheet(obj):
@@ -84,12 +84,9 @@ def createResourceClone(obj, orig, name, icon):
     clone.addProperty('App::PropertyString', 'PathResource')
     clone.PathResource = name
 
-    # Move clone to "positive" position
-    bb = clone.Shape.BoundBox
-    Draft.move(clone, FreeCAD.Vector(-bb.XMin + 2, -bb.YMin + 2, -bb.ZMin))
     if clone.ViewObject:
         PathIconViewProvider.ViewProvider(clone.ViewObject, icon)
-        clone.ViewObject.Visibility = True
+        clone.ViewObject.Visibility = False
     obj.Document.recompute() # necessary to create the clone shape
     return clone
 
@@ -108,7 +105,8 @@ class ObjectJob:
         obj.addProperty("App::PropertyLink", "Stock", "Base", QtCore.QT_TRANSLATE_NOOP("PathJob", "Solid object to be used as stock."))
         obj.addProperty("App::PropertyLink", "Fixture", "Base", QtCore.QT_TRANSLATE_NOOP("PathJob", "Solid object to be used as Fixture."))
         obj.addProperty("App::PropertyLink", "Operations", "Base", QtCore.QT_TRANSLATE_NOOP("PathJob", "Compound path of all operations in the order they are processed."))
-        obj.addProperty("App::PropertyLink", "ToolControllers", "Base", QtCore.QT_TRANSLATE_NOOP("PathJob", "Collection of tool controllers available for this job."))
+        obj.addProperty("App::PropertyLinkList", "ToolController", "Base",
+                        QtCore.QT_TRANSLATE_NOOP("PathJob", "Collection of tool controllers available for this job."))
 
         # MH Tech
         obj.addProperty("App::PropertyInteger", "Version", "Path", QtCore.QT_TRANSLATE_NOOP("PathJob", "Version of the selected Job."))
@@ -128,8 +126,8 @@ class ObjectJob:
 
         ops = FreeCAD.ActiveDocument.addObject("Path::FeatureCompoundPython", "Operations")
         obj.Operations = ops
-        tcs = FreeCAD.ActiveDocument.addObject("Path::FeatureCompoundPython", "ToolControllers")
-        obj.ToolControllers = tcs
+        tcs = FreeCAD.ActiveDocument.addObject("Path::FeatureCompoundPython", "ToolController")
+        obj.ToolController = tcs
 
         obj.setEditorMode('Operations', 2) # hide
         obj.setEditorMode('Placement', 2)
@@ -199,20 +197,15 @@ class ObjectJob:
         if obj.Base:
             PathLog.debug('taking down base')
             if isResourceClone(obj, 'Base'):
-                if obj.Base.Objects:
-                    obj.Base.Objects[0].ViewObject.Visibility = True
                 PathUtil.clearExpressionEngine(obj.Base)
                 doc.removeObject(obj.Base.Name)
             obj.Base = None
         # Tool controllers don't depend on anything
         PathLog.debug('taking down tool controller')
-        while obj.ToolControllers.Group:
-            tc = obj.ToolControllers.Group[0]
+        for tc in obj.ToolController:
             PathUtil.clearExpressionEngine(tc)
             doc.removeObject(tc.Name)
-        obj.ToolControllers.Group = []
-        doc.removeObject(obj.ToolControllers.Name)
-        obj.ToolControllers = None
+        obj.ToolController = []
         # SetupSheet
         PathUtil.clearExpressionEngine(obj.SetupSheet)
         doc.removeObject(obj.SetupSheet.Name)
@@ -267,8 +260,8 @@ class ObjectJob:
                 if attrs.get(JobTemplate.Description):
                     obj.Description = attrs.get(JobTemplate.Description)
 
-                if attrs.get(JobTemplate.ToolControllers):
-                    for tc in attrs.get(JobTemplate.ToolControllers):
+                if attrs.get(JobTemplate.ToolController):
+                    for tc in attrs.get(JobTemplate.ToolController):
                         tcs.append(PathToolController.FromTemplate(tc))
                 if attrs.get(JobTemplate.Stock):
                     obj.Stock = PathStock.CreateFromTemplate(obj, attrs.get(JobTemplate.Stock))
@@ -276,7 +269,7 @@ class ObjectJob:
                 #    obj.Fixture = PathStock.CreateFromTemplate(obj, attrs.get(JobTemplate.Fixture))
 
                 PathLog.debug("setting tool controllers (%d)" % len(tcs))
-                obj.ToolControllers.Group = tcs
+                obj.ToolController = tcs
             else:
                 PathLog.error(translate('PathJob', "Unsupported PathJob template version %s") % attrs.get(JobTemplate.Version))
         if not tcs:
@@ -325,13 +318,13 @@ class ObjectJob:
         self.obj.Operations.Group = ops
 
     def addToolController(self, tc):
-        group = self.obj.ToolControllers.Group
+        group = self.obj.ToolController
         PathLog.debug("addToolController(%s): %s" % (tc.Label, [t.Label for t in group]))
         if tc.Name not in [str(t.Name) for t in group]:
             tc.setExpression('VertRapid',  "%s.%s" % (self.setupSheet.expressionReference(), PathSetupSheet.Template.VertRapid))
             tc.setExpression('HorizRapid', "%s.%s" % (self.setupSheet.expressionReference(), PathSetupSheet.Template.HorizRapid))
             group.append(tc)
-            self.obj.ToolControllers.Group = group
+            self.obj.ToolController = group
 
     def allOperations(self):
         ops = []

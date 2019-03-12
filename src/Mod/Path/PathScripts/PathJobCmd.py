@@ -168,7 +168,7 @@ class DlgJobTemplateExport:
         self.dialog.settingOperationDepths.setChecked(depthsChanged)
         self.dialog.settingOperationHeights.setChecked(heightsChanged)
 
-        for tc in sorted(job.ToolControllers.Group, key=lambda o: o.Label):
+        for tc in sorted(job.ToolController, key=lambda o: o.Label):
             item = QtGui.QListWidgetItem(tc.Label)
             item.setData(self.DataObject, tc)
             item.setCheckState(QtCore.Qt.CheckState.Checked)
@@ -265,10 +265,10 @@ class CommandJobTemplateExport:
             attrs.pop(PathJob.JobTemplate.PostProcessorOutputFile, None)
 
         # tool controller settings
-        toolControllers = dialog.includeToolControllers() if dialog else job.ToolControllers.Group
+            toolControllers = dialog.includeToolControllers() if dialog else job.ToolController
         if toolControllers:
             tcAttrs = [tc.Proxy.templateAttrs(tc) for tc in toolControllers]
-            attrs[PathJob.JobTemplate.ToolControllers] = tcAttrs
+            attrs[PathJob.JobTemplate.ToolController] = tcAttrs
 
         # stock settings
         stockAttrs = None
