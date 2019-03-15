@@ -408,6 +408,7 @@ class ObjectOp(object):
                 self.horizFeed = tc.HorizFeed.Value
                 self.vertRapid = tc.VertRapid.Value
                 self.horizRapid = tc.HorizRapid.Value
+                #tool = tc.Tool
                 tool = tc.Proxy.getTool(tc)
                 if not tool or tool.Diameter == 0:
                     FreeCAD.Console.PrintError("No Tool found or diameter is zero. We need a tool to build a Path.")

@@ -234,8 +234,6 @@ class ObjectOp(PathOp.ObjectOp):
                 final_depth=obj.FinalDepth.Value,
                 user_depths=None)
 
-        testtesttest = self.depthparams
-
         if PathOp.FeatureStartPoint & self.opFeatures(obj) and obj.UseStartPoint:
             start = obj.StartPoint
         else:
@@ -248,7 +246,6 @@ class ObjectOp(PathOp.ObjectOp):
             try:
                 (pp, sim) = self._buildPathArea(obj, shape, isHole, start, getsim)
                 self.commandlist.extend(pp.Commands)
-                test = self.commandlist
                 sims.append(sim)
             except Exception as e:
                 FreeCAD.Console.PrintError(e)

@@ -108,7 +108,6 @@ class ObjectPocket(PathPocketBase.ObjectPocket):
                 else:
                     self.horiz.append(face)
 
-
             # move all horizontal faces to FinalDepth
             for f in self.horiz:
                 f.translate(FreeCAD.Vector(0, 0, obj.FinalDepth.Value - f.BoundBox.ZMin))
@@ -141,6 +140,7 @@ class ObjectPocket(PathPocketBase.ObjectPocket):
 
     def areaOpSetDefaultValues(self, obj):
         '''areaOpSetDefaultValues(obj) ... set default values'''
+        from PathScripts import PathJob
         # Default values changed to SimpleCAD
         obj.StepOver = 50
         obj.ZigZagAngle = 45
