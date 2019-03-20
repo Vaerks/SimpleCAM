@@ -330,10 +330,26 @@ class TaskPanelPage(object):
         if obj.ToolController is not None:
             self.selectInComboBox(obj.ToolController.Label, combo)
 
+    def setupSuggestedToolController(self, obj, combo, suggestedTools):
+        '''setupToolController(obj, combo) ... helper function to setup obj's ToolController in the given combo box.'''
+        controllers = suggestedTools
+        labels = [c.Label for c in controllers]
+        combo.blockSignals(True)
+        combo.clear()
+        combo.addItems(labels)
+        combo.blockSignals(False)
+
     def updateToolController(self, obj, combo):
         '''updateToolController(obj, combo) ... helper function to update obj's ToolController property if a different one has been selected in the combo box.'''
         tc = PathUtils.findToolController(obj, combo.currentText())
         if obj.ToolController != tc:
+            obj.ToolController = tc
+
+    def updateSuggestionToolController(self, obj, combo):
+        name = combo.currentText()
+        tc = PathUtils.getToolControllerByName(obj, name)
+        actualtc = obj.ToolController
+        if actualtc != tc:
             obj.ToolController = tc
 
 
@@ -341,6 +357,35 @@ class TaskPanelBaseGeometryPage(TaskPanelPage):
     '''Page controller for the base geometry.'''
     DataObject = QtCore.Qt.ItemDataRole.UserRole
     DataObjectSub = QtCore.Qt.ItemDataRole.UserRole + 1
+
+    def checkHoleDiameter(self, obj):
+
+        if obj.TypeId != "Path::FeatureCompoundPython":
+            return
+
+        self.form.warning_label.setText(
+            "")
+        n = 0
+        holediameter = 0
+        for i, (base, subs) in enumerate(obj.Base):
+            for sub in subs:
+                if n > 0 and holediameter != obj.Proxy.holeDiameter(obj, base, sub):
+                    #w = QtGui.QWidget()
+                    #QtGui.QMessageBox.critical(w, "Warning",
+                    #                           "Super Drilling Operation can not support different hole diameters.")
+                    self.form.warning_label.setText(
+                        "Error: Super Drilling Operation can not support different hole diameters.")
+                else:
+                    holediameter = obj.Proxy.holeDiameter(obj, base, sub)
+
+                if holediameter >= 8.0:
+                    #w = QtGui.QWidget()
+                    #QtGui.QMessageBox.critical(w, "Warning",
+                    #                           "A hole diameter can not exceed 8 mm. Tip: Use Super Helix instead.")
+                    self.form.warning_label.setText(
+                        "Error: A hole diameter can not exceed 8 mm. Tip: Use Super Helix Operation instead.")
+
+                n = n + 1
 
     def getForm(self):
         return FreeCADGui.PySideUic.loadUi(":/panels/PageBaseGeometryEdit.ui")

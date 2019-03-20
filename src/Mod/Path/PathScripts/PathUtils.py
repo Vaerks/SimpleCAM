@@ -442,6 +442,47 @@ def getToolControllers(obj):
     return []
 
 
+def filterToolControllers(tools, type):
+    result = []
+    for tool in tools:
+        if tool.Tool.ToolType == type:
+            result.append(tool)
+
+    return result
+
+
+def getSuggestedTool(tools, holediameter):
+    # suggestedtoolslist = filter(lambda x: 0.0 < x.Tool.Diameter < holediameter, tools)
+    for tool in tools:
+        if tool.Tool.Diameter > float(holediameter) or tool.Tool.Diameter <= 0.0:
+            tools.remove(tool)
+
+    return max(tools, key=lambda x: x.Tool.Diameter)
+
+
+def getAllSuggestedTools(tools, holediameter):
+    if holediameter <= 0.0:
+        return []
+
+    suggestedtool = getSuggestedTool(tools, holediameter)
+    if tools.__contains__(suggestedtool):
+        tools.remove(suggestedtool)
+        tools.insert(0, suggestedtool)
+
+    return tools
+
+
+def getToolControllerByName(obj, name):
+    controllers = getToolControllers(obj)
+
+    for controller in controllers:
+        tcname = controller.Label
+        if tcname == name:
+            return controller
+
+    return None
+
+
 def findToolController(obj, name=None):
     '''returns a tool controller with a given name.
     If no name is specified, returns the first controller.
