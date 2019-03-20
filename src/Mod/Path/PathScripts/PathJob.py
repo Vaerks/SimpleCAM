@@ -351,6 +351,7 @@ class ObjectJob:
 
     def addOperation(self, op, before = None):
         group = self.obj.Operations.Group
+
         if op not in group:
             if before:
                 try:
@@ -359,7 +360,13 @@ class ObjectJob:
                     PathLog.error(e)
                     group.append(op)
             else:
+                for operation in group:
+                    if operation.TypeId == "Path::FeatureCompoundPython":
+                        if op in operation.Group:
+                            return
+
                 group.append(op)
+
             self.obj.Operations.Group = group
             op.Path.Center = self.obj.Operations.Path.Center
 
