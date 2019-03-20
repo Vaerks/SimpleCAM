@@ -893,6 +893,10 @@ class TaskPanel(object):
         FreeCAD.ActiveDocument.abortTransaction()
         if self.deleteOnReject:
             FreeCAD.ActiveDocument.openTransaction(translate("Path", "Uncreate AreaOp Operation"))
+            # Cancel all sub-operations from the Super Operation
+            if self.obj.TypeId == "Path::FeatureCompoundPython":
+                for subobj in self.obj.Group:
+                    FreeCAD.ActiveDocument.removeObject(subobj.Name)
             PathUtil.clearExpressionEngine(self.obj)
             FreeCAD.ActiveDocument.removeObject(self.obj.Name)
             FreeCAD.ActiveDocument.commitTransaction()
