@@ -137,29 +137,32 @@ class ObjectSuperDrilling(PathDrilling.ObjectDrilling):
 
         self.commandlist.append(Path.Command('G80'))
 
-    def opSetDefaultValues(self, obj):
+    def opSetDefaultValues(self, obj, job):
         '''opSetDefaultValues(obj) ... set default value for RetractHeight'''
         obj.RetractHeight = 10
 
 
 def Create(name):
     superop = FreeCAD.ActiveDocument.addObject("Path::FeatureCompoundPython", name)
-    proxy = ObjectSuperDrilling(superop)
+    proxy = ObjectSuperDrilling(superop, name)
     if superop.Proxy:
         proxy.findAllHoles(superop)
 
     # Creating sub-operations
-    op_drill1 = FreeCAD.ActiveDocument.addObject("Path::FeaturePython", "sub_"+superop.Name + "_drill_center")
-    op_drill2 = FreeCAD.ActiveDocument.addObject("Path::FeaturePython", "sub_"+superop.Name + "_drill_base")
-    op_helix1 = FreeCAD.ActiveDocument.addObject("Path::FeaturePython", "sub_"+superop.Name + "_helix_holemilling")
+    drill1_name = "sub_"+superop.Name + "_drill_center"
+    drill2_name = "sub_"+superop.Name + "_drill_base"
+    helix1_name = "sub_"+superop.Name + "_helix_holemilling"
+    op_drill1 = FreeCAD.ActiveDocument.addObject("Path::FeaturePython", drill1_name)
+    op_drill2 = FreeCAD.ActiveDocument.addObject("Path::FeaturePython", drill2_name)
+    op_helix1 = FreeCAD.ActiveDocument.addObject("Path::FeaturePython", helix1_name)
 
     # Adding sub-objects to super operation. Objects must be added before initialization to avoid
     #  being claimed by Job.Operations.
     superop.Group = [op_drill1, op_drill2, op_helix1]
 
-    drill1 = PathDrilling.ObjectDrilling(op_drill1)
-    drill2 = PathDrilling.ObjectDrilling(op_drill2)
-    helix1 = PathHelix.ObjectHelix(op_helix1)
+    drill1 = PathDrilling.ObjectDrilling(op_drill1, drill1_name)
+    drill2 = PathDrilling.ObjectDrilling(op_drill2, drill2_name)
+    helix1 = PathHelix.ObjectHelix(op_helix1, helix1_name)
 
     # To select all edges of a hole:
     if len(FreeCADGui.Selection.getSelectionEx()) > 0:
