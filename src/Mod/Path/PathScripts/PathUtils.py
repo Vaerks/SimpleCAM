@@ -503,6 +503,10 @@ def findToolController(obj, name=None):
 
     controllers = getToolControllers(obj)
 
+    # The ToolController asking box shall not popup if a Super Operation is created
+    if len(controllers) > 0 and (obj.TypeId == "Path::FeatureCompoundPython" or obj.Name.split("_")[0] == "sub"):
+        return controllers[0]
+
     if len(controllers) == 0:
         return None
 
