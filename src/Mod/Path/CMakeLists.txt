@@ -46,6 +46,8 @@ SET(PathScripts_SRCS
     PathScripts/PathDressupTagPreferences.py
     PathScripts/PathDrilling.py
     PathScripts/PathDrillingGui.py
+    PathScripts/PathSuperDrilling.py
+    PathScripts/PathSuperDrillingGui.py
     PathScripts/PathEngrave.py
     PathScripts/PathEngraveBase.py
     PathScripts/PathEngraveGui.py
