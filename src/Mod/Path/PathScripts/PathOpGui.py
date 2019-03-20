@@ -976,19 +976,30 @@ class CommandSetStartPoint:
         FreeCADGui.Snapper.getPoint(callback=self.setpoint)
 
 
-def Create(res):
+def Create(res, subRes=None):
     '''Create(res) ... generic implementation of a create function.
     res is an instance of CommandResources. It is not expected that the user invokes
     this function directly, but calls the Activated() function of the Command object
     that is created in each operations Gui implementation.'''
     FreeCAD.ActiveDocument.openTransaction("Create %s" % res.name)
+
     obj = res.objFactory(res.name)
     if obj.Proxy:
         vobj = ViewProvider(obj.ViewObject, res)
 
+        # Add ViewProviders for SubOperations
+        if obj.TypeId == "Path::FeatureCompoundPython":
+            # assert(len(obj.Group) == len(subRes))
+            for i in range(len(subRes)):
+                subobj = obj.Group[i]
+                #subobj.IsSuboperation = True
+                if subobj.Proxy:
+                    ViewProvider(subobj.ViewObject, subRes[i])
+
         FreeCAD.ActiveDocument.commitTransaction()
         obj.ViewObject.Document.setEdit(obj.ViewObject, 0)
         return obj
+
     FreeCAD.ActiveDocument.abortTransaction()
     return None
 
@@ -998,8 +1009,9 @@ class CommandPathOp:
     Instances of this class are stored in all Path operation Gui modules and can
     be used to create said operations with view providers and all.'''
 
-    def __init__(self, resources):
+    def __init__(self, resources, subResources=None):
         self.res = resources
+        self.subRes = subResources
 
     def GetResources(self):
         ress = {'Pixmap':   self.res.pixmap,
@@ -1017,29 +1029,28 @@ class CommandPathOp:
         return False
 
     def Activated(self):
-        return Create(self.res)
+        return Create(self.res, self.subRes)
 
 
 class CommandResources:
-    '''POD class to hold command specific resources.'''
-    def __init__(self, name, objFactory, opPageClass, pixmap, menuText, accelKey, toolTip):
+    '''POD class to hold command specific resources.
+    Used by operation classes
+    '''
+    def __init__(self, name, objFactory, opPageClass, pixmap, menuText, toolTip, accelKey=None, setupProperties=None):
         self.name = name
         self.objFactory = objFactory
         self.opPageClass = opPageClass
         self.pixmap = pixmap
         self.menuText = menuText
-        self.accelKey = accelKey
         self.toolTip = toolTip
+        self.accelKey = accelKey
+
+        if not setupProperties is None:
+            PathSetupSheet.RegisterOperation(name, objFactory, setupProperties)
 
 
-def SetupOperation(name,
-                   objFactory,
-                   opPageClass,
-                   pixmap,
-                   menuText,
-                   toolTip,
-                   setupProperties=None):
-    '''SetupOperation(name, objFactory, opPageClass, pixmap, menuText, toolTip, setupProperties=None)
+def SetupOperation(res, subRes=None):
+    '''SetupOperation(name, objFactory, opPageClass, pixmap, menuText, toolTip, accelKey=None)
     Creates an instance of CommandPathOp with the given parameters and registers the command with FreeCAD.
     When activated it creates a model with proxy (by invoking objFactory), assigns a view provider to it
     (see ViewProvider in this module) and starts the editor specifically for this operation (driven by opPageClass).
@@ -1047,13 +1058,8 @@ def SetupOperation(name,
     It is not expected to be called manually.
     '''
 
-    res = CommandResources(name, objFactory, opPageClass, pixmap, menuText, None, toolTip)
-
-    command = CommandPathOp(res)
-    FreeCADGui.addCommand("Path_%s" % name.replace(' ', '_'), command)
-
-    if not setupProperties is None:
-        PathSetupSheet.RegisterOperation(name, objFactory, setupProperties)
+    command = CommandPathOp(res, subRes)
+    FreeCADGui.addCommand("Path_%s" % res.name.replace(' ', '_'), command)
 
     return command
 

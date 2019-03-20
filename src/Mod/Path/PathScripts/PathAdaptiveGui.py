@@ -220,9 +220,14 @@ class TaskPanelOpPage(PathOpGui.TaskPanelPage):
 
 
 
-Command = PathOpGui.SetupOperation('Adaptive',
+Resource = PathOpGui.CommandResources('Adaptive',
         PathAdaptive.Create,
         TaskPanelOpPage,
         'Path-Adaptive',
         QtCore.QT_TRANSLATE_NOOP("PathAdaptive", "Adaptive"),
-        QtCore.QT_TRANSLATE_NOOP("PathPocket", "Adaptive clearing and profiling"))
+        QtCore.QT_TRANSLATE_NOOP("PathPocket", "Adaptive clearing and profiling"),
+        None)
+
+Command = PathOpGui.SetupOperation(Resource)
+
+FreeCAD.Console.PrintLog("Loading PathAdaptiveGui... done\n")

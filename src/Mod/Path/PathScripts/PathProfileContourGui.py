@@ -41,12 +41,15 @@ class TaskPanelOpPage(PathProfileBaseGui.TaskPanelOpPage):
         '''profileFeatues() ... return 0 - profile doesn't support any of the optional UI features.'''
         return 0
 
-Command = PathOpGui.SetupOperation('Contour',
+Resource = PathOpGui.CommandResources('Contour',
         PathProfileContour.Create,
         TaskPanelOpPage,
         'Path-Contour',
         QtCore.QT_TRANSLATE_NOOP("PathProfileContour", "Contour"),
         QtCore.QT_TRANSLATE_NOOP("PathProfileContour", "Creates a Contour Path for the Base Object "),
+        None,
         PathProfileContour.SetupProperties)
+
+Command = PathOpGui.SetupOperation(Resource)
 
 FreeCAD.Console.PrintLog("Loading PathProfileContourGui... done\n")

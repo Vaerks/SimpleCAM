@@ -81,8 +81,8 @@ def createResourceClone(obj, orig, name, icon):
     clone.PathResource = name
 
     # Move clone to "positive" position
-    bb = clone.Shape.BoundBox
-    Draft.move(clone, FreeCAD.Vector(-bb.XMin + 2, -bb.YMin + 2, -bb.ZMin))
+    #bb = clone.Shape.BoundBox
+    #Draft.move(clone, FreeCAD.Vector(-bb.XMin + 2, -bb.YMin + 2, -bb.ZMin))
     if clone.ViewObject:
         PathIconViewProvider.Attach(clone.ViewObject, icon)
         clone.ViewObject.Visibility = False

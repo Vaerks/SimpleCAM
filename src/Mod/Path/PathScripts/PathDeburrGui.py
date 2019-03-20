@@ -99,13 +99,16 @@ class TaskPanelOpPage(PathOpGui.TaskPanelPage):
         self.form.value_h.editingFinished.connect(self.updateExtraDepth)
 
 
-Command = PathOpGui.SetupOperation('Deburr',
+Resource = PathOpGui.CommandResources('Deburr',
         PathDeburr.Create,
         TaskPanelOpPage,
         'Path-Deburr',
         QtCore.QT_TRANSLATE_NOOP("PathDeburr", "Deburr"),
         QtCore.QT_TRANSLATE_NOOP("PathDeburr", "Creates a Deburr Path along Edges or around Faces"),
+        None,
         PathDeburr.SetupProperties)
+
+Command = PathOpGui.SetupOperation(Resource)
 
 FreeCAD.Console.PrintLog("Loading PathDeburrGui... done\n")
 

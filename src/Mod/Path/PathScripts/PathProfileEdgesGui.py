@@ -42,12 +42,15 @@ class TaskPanelOpPage(PathProfileBaseGui.TaskPanelOpPage):
         See PathProfileBaseGui.py for details.'''
         return PathProfileBaseGui.FeatureSide
 
-Command = PathOpGui.SetupOperation('Profile Edges',
+Resource = PathOpGui.CommandResources('Profile Faces',
         PathProfileEdges.Create,
         TaskPanelOpPage,
         'Path-Profile-Edges',
         QtCore.QT_TRANSLATE_NOOP("PathProfile", "Edge Profile"),
         QtCore.QT_TRANSLATE_NOOP("PathProfile", "Profile based on edges"),
+        None,
         PathProfileEdges.SetupProperties)
+
+Command = PathOpGui.SetupOperation(Resource)
 
 FreeCAD.Console.PrintLog("Loading PathProfileEdgesGui... done\n")

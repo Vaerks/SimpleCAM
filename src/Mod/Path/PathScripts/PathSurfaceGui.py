@@ -126,12 +126,15 @@ class TaskPanelOpPage(PathOpGui.TaskPanelPage):
         self.form.algorithmSelect.currentIndexChanged.connect(self.updateVisibility)
 
 
-Command = PathOpGui.SetupOperation('Surface',
+Resource = PathOpGui.CommandResources('Surface',
         PathSurface.Create,
         TaskPanelOpPage,
         'Path-3DSurface',
         QtCore.QT_TRANSLATE_NOOP("Surface", "3D Surface"),
         QtCore.QT_TRANSLATE_NOOP("Surface", "Create a 3D Surface Operation from a model"),
+        None,
         PathSurface.SetupProperties)
+
+Command = PathOpGui.SetupOperation(Resource)
 
 FreeCAD.Console.PrintLog("Loading PathSurfaceGui... done\n")
