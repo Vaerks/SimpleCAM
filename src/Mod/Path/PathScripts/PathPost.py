@@ -193,9 +193,18 @@ class CommandPathPost:
         if postname and needFilename:
             filename = self.resolveFileName(job)
 
+        subobjs = []
+
+        for obj in objs:
+            if obj.TypeId == "Path::FeatureCompoundPython":
+                objs.remove(obj)
+                for subobj in obj.Group:
+                    subobjs.append(subobj)
+
         if postname and filename:
             print("post: %s(%s, %s)" % (postname, filename, postArgs))
             processor = PostProcessor.load(postname)
+            objs = objs + subobjs
             gcode = processor.export(objs, filename, postArgs)
             return (False, gcode)
         else:
