@@ -68,9 +68,32 @@ def selectLoop(selection, subobj):
                 if e.hashCode() == i.hashCode():
                     FreeCADGui.Selection.addSelection(obj, "Edge"+str(elist.index(e)+1))
 
+def selectAreaLoop(selection, subobj):
+    sel = selection
+    obj = sel.Object
+    edge1 = subobj
+    if 'Face' in sel.SubElementNames[0]:
+        loop = horizontalFaceLoop(sel.Object, edge1, sel.SubElementNames)
+        if loop:
+            FreeCADGui.Selection.clearSelection()
+            FreeCADGui.Selection.addSelection(sel.Object, loop)
+        loops = []
+
+    loops = horizontalEdgeLoops(obj, edge1)
+    for loopwire in loops:
+        elist = obj.Shape.Edges
+        for e in elist:
+            for i in loopwire.Edges:
+                if e.hashCode() == i.hashCode():
+                    FreeCADGui.Selection.addSelection(obj, "Edge"+str(elist.index(e)+1))
+
 def selectAllLoops(selection):
     for subobj in selection.SubObjects:
         selectLoop(selection, subobj)
+
+def selectAllAreaLoops(selection):
+    for subobj in selection.SubObjects:
+        selectAreaLoop(selection, subobj)
 
 def translate(context, text, disambig=None):
     return QtCore.QCoreApplication.translate(context, text, disambig)
@@ -264,9 +287,30 @@ def horizontalEdgeLoop(obj, edge):
     h = edge.hashCode()
     wires = [w for w in obj.Shape.Wires if any(e.hashCode() == h for e in w.Edges)]
     loops = [w for w in wires if all(PathGeom.isHorizontal(e) for e in w.Edges) and PathGeom.isHorizontal(Part.Face(w))]
+
     if len(loops) == 1:
         return loops[0]
     return None
+
+def horizontalEdgeLoops(obj, edge):
+    h = edge.hashCode()
+    wires = [w for w in obj.Shape.Wires if any(e.hashCode() == h for e in w.Edges)]
+    #loops = [w for w in wires if all(PathGeom.isHorizontal(e) for e in w.Edges) and PathGeom.isHorizontal(Part.Face(w))]
+    loops = []
+    #if len(wires) > 0:
+    #    loops.append(wires[0])
+    #    edges = []
+    #    for wire in wires:
+    #        for edge in wire.Edges:
+    #            loops[0].Edges.append(edge)
+
+    #loops[0].Edges = edges
+
+    #if len(loops) == 1:
+    #    return loops[0]
+    #return None
+
+    return wires
 
 def horizontalFaceLoop(obj, face, faceList=None):
     '''horizontalFaceLoop(obj, face, faceList=None) ... returns a list of face names which form the walls of a vertical hole face is a part of.

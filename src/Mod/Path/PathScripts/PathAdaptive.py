@@ -441,4 +441,10 @@ def Create(name, obj = None):
     if obj is None:
         obj = FreeCAD.ActiveDocument.addObject("Path::FeaturePython", name)
     proxy = PathAdaptive(obj,name)
+
+    # To select all edges of a hole:
+    if len(FreeCADGui.Selection.getSelectionEx()) > 0:
+        selection = FreeCADGui.Selection.getSelectionEx()[0]
+        PathUtils.selectAllAreaLoops(selection)
+
     return obj

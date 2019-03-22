@@ -128,10 +128,11 @@ class ObjectOp(object):
         features = self.opFeatures(obj)
 
         # Checking to know if the obj is a sub-operation or not
-        objname = obj.Name.split("_")
-        if objname[0] == "sub":
-            obj.IsSuboperation = True
-            obj.Label = obj.Name.replace(objname[0]+"_", "")
+        if hasattr(obj, "Name"):
+            objname = obj.Name.split("_")
+            if objname[0] == "sub":
+                obj.IsSuboperation = True
+                obj.Label = obj.Name.replace(objname[0]+"_", "")
 
         if FeatureBaseGeometry & features:
             self.addBaseProperty(obj)
