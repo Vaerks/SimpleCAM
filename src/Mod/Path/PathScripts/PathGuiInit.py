@@ -50,6 +50,7 @@ def Startup():
         from PathScripts import PathDressupLeadInOut
         from PathScripts import PathDrillingGui
         from PathScripts import PathSuperDrillingGui
+        from PathScripts import PathSuperClearingGui
         from PathScripts import PathEngraveGui
         from PathScripts import PathFixture
         from PathScripts import PathHelixGui

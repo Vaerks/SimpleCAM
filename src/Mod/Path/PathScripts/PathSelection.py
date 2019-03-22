@@ -208,6 +208,10 @@ def adaptiveselect():
     FreeCADGui.Selection.addSelectionGate(ADAPTIVEGate())
     FreeCAD.Console.PrintWarning("Adaptive Select Mode\n")
 
+def superclearingselect():
+    FreeCADGui.Selection.addSelectionGate(ADAPTIVEGate())
+    FreeCAD.Console.PrintWarning("Super Clearing Select Mode\n")
+
 def surfaceselect():
     FreeCADGui.Selection.addSelectionGate(MESHGate())
     FreeCAD.Console.PrintWarning("Surfacing Select Mode\n")
@@ -228,6 +232,7 @@ def select(op):
     opsel['Profile Faces'] = profileselect
     opsel['Surface'] = surfaceselect
     opsel['Adaptive'] = adaptiveselect
+    opsel['SuperClearing'] = superclearingselect
     return opsel[op]
 
 def clear():
