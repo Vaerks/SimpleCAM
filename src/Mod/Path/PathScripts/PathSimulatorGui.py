@@ -436,6 +436,13 @@ class PathSimulation:
 
         return res
 
+    def addOperation(self, form, op):
+        listItem = QtGui.QListWidgetItem(op.ViewObject.Icon, op.Label)
+        listItem.setFlags(listItem.flags() | QtCore.Qt.ItemIsUserCheckable)
+        listItem.setCheckState(QtCore.Qt.CheckState.Checked)
+        self.operations.append(op)
+        form.listOperations.addItem(listItem)
+
     def onJobChange(self):
         form = self.taskForm.form
         j = self.jobs[form.comboJobs.currentIndex()]
@@ -443,11 +450,11 @@ class PathSimulation:
         form.listOperations.clear()
         self.operations = []
         for op in j.Operations.OutList:
-            listItem = QtGui.QListWidgetItem(op.ViewObject.Icon, op.Label)
-            listItem.setFlags(listItem.flags() | QtCore.Qt.ItemIsUserCheckable)
-            listItem.setCheckState(QtCore.Qt.CheckState.Checked)
-            self.operations.append(op)
-            form.listOperations.addItem(listItem)
+            if hasattr(op, "Group"):
+                for subop in op.Group:
+                    self.addOperation(form, subop)
+            else:
+                self.addOperation(form, op)
         if  self.initdone:
           self.SetupSimulation()
 
