@@ -67,6 +67,7 @@ def Startup():
         from PathScripts import PathSetupSheetGui
         from PathScripts import PathSimpleCopy
         from PathScripts import PathSimulatorGui
+        from PathScripts import PathLiveSimulatorGui
         from PathScripts import PathStop
         from PathScripts import PathSurfaceGui
         from PathScripts import PathToolController

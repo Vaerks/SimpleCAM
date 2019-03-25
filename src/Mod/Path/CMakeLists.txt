@@ -109,6 +109,7 @@ SET(PathScripts_SRCS
     PathScripts/PathUtil.py
     PathScripts/PathUtils.py
     PathScripts/PathSimulatorGui.py
+	PathScripts/PathLiveSimulatorGui.py
     PathScripts/PostUtils.py
     PathScripts/PathAdaptiveGui.py
     PathScripts/PathAdaptive.py

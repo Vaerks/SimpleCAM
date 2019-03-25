@@ -57,6 +57,7 @@
         <file>icons/Path-Area-View.svg</file>
         <file>icons/Path-Area-Workplane.svg</file>
         <file>icons/Path-Simulator.svg</file>
+        <file>icons/Path-LiveSimulator.svg</file>
         <file>icons/Path-BFastForward.svg</file>
         <file>icons/Path-BPause.svg</file>
         <file>icons/Path-BPlay.svg</file>
