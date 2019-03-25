@@ -28,7 +28,7 @@ from PySide import QtCore, QtGui
 from PathScripts import PathSuperClearing
 
 from PathScripts import PathAdaptiveGui
-from PathScripts import PathPocketShapeGui
+from PathScripts import PathProfileBaseGui
 
 class TaskPanelOpPage(PathOpGui.TaskPanelPage):
     def initPage(self, obj):
@@ -221,7 +221,7 @@ class TaskPanelOpPage(PathOpGui.TaskPanelPage):
         obj.setEditorMode('Stopped', 2)  # hide this property
 
 
-subCmdResources = [PathAdaptiveGui.Resource, PathPocketShapeGui.Resource]
+subCmdResources = [PathAdaptiveGui.Resource]
 Resource = PathOpGui.CommandResources('SuperClearing',
         PathSuperClearing.Create,
         TaskPanelOpPage,

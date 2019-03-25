@@ -34,7 +34,7 @@ import area
 from pivy import coin
 
 from PathScripts import PathAdaptive
-from PathScripts import PathPocketShape
+from PathScripts import PathProfileBase
 
 __doc__ = "Class and implementation of the Super Clearing path operation."
 
@@ -110,15 +110,15 @@ def Create(name, obj = None):
     proxy = ObjectSuperClearing(superop, name)
 
     adaptive_name = "sub_" + superop.Name + "_adaptive_base"
-    pocket_name = "sub_" + superop.Name + "_pocket_shape"
+    profile_name = "sub_" + superop.Name + "_profile_base"
 
     op_adaptive = FreeCAD.ActiveDocument.addObject("Path::FeaturePython", adaptive_name)
-    op_pocket = FreeCAD.ActiveDocument.addObject("Path::FeaturePython", pocket_name)
+    op_profile = FreeCAD.ActiveDocument.addObject("Path::FeaturePython", profile_name)
 
-    superop.Group = [op_adaptive, op_pocket]
+    superop.Group = [op_adaptive, op_profile]
 
     adaptive = PathAdaptive.PathAdaptive(op_adaptive, adaptive_name)
-    pocket = PathPocketShape.ObjectPocket(op_pocket, pocket_name)
+    pocket = PathProfileBase.ObjectProfile(op_profile, profile_name)
 
     # To select all edges of a hole:
     if len(FreeCADGui.Selection.getSelectionEx()) > 0:
