@@ -9,6 +9,8 @@ import PathSimulator
 import math
 import os
 
+from PathScripts import PathAdaptive
+
 from FreeCAD import Vector, Base
 
 _filePath = os.path.dirname(os.path.abspath(__file__))
@@ -94,6 +96,11 @@ class PathLiveSimulation:
                 self.firstDrill = True
                 self.activeOps.append(self.operations[i])
                 self.numCommands += len(self.operations[i].Path.Commands)
+
+                # If the operations list contains a Adaptive (which is a expensive op to process)
+                # it will adapt the accuracy to provide a faster preview
+                if isinstance(self.operations[i].Proxy, PathAdaptive.PathAdaptive):
+                    self.accuracy = 1.0
 
         self.stock = self.job.Stock.Shape
         if (self.isVoxel):
