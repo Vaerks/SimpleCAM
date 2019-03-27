@@ -1,5 +1,5 @@
 import FreeCAD
-from PathScripts import PathSimulatorGui
+from PathScripts import PathLiveSimulator
 import os
 
 from FreeCAD import Vector, Base
@@ -26,8 +26,26 @@ class CommandPathLiveSimulate:
                         return True
         return False
 
+    def resetSimulation(self):
+        try:
+            FreeCAD.ActiveDocument.removeObject("CutTool")
+        except:
+            print("PathLiveSimulatorGUi: The CutTool object cannot be found.")
+
+        try:
+            FreeCAD.ActiveDocument.removeObject("CutMaterial")
+            FreeCAD.ActiveDocument.removeObject("CutMaterialIn")
+        except:
+            print("PathLiveSimulatorGUi: The CutMaterial object cannot be found.")
+
     def Activated(self):
-        PathSimulatorGui.pathSimulation.Activate()
+        self.resetSimulation()
+        simulation = PathLiveSimulator.PathLiveSimulation()
+        simulation.Activate()
+        simulation.SimFF()  # Show the result without the animation
+        # FreeCAD.ActiveDocument.removeObject("CutTool")
+
+
 
 if FreeCAD.GuiUp:
     # register the FreeCAD command
