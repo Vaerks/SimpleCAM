@@ -48,6 +48,26 @@ else:
     PathLog.setLevel(PathLog.Level.INFO, PathLog.thisModule())
 #FreeCAD.setLogLevel('Path.Area', 0)
 
+def hideObject(objname):
+    try:
+        obj = FreeCAD.ActiveDocument.getObject(objname)
+        obj.ViewObject.hide()
+    except:
+        print("PathUtils: The " + objname + " object cannot be hidden.")
+
+def showObject(objname):
+    try:
+        obj = FreeCAD.ActiveDocument.getObject(objname)
+        obj.ViewObject.show()
+    except:
+        print("PathUtils: The " + objname + " object cannot be shown.")
+
+def deleteObject(objname):
+    try:
+        FreeCAD.ActiveDocument.removeObject(objname)
+    except:
+        print("PathUtils: The "+objname+" object cannot be deleted.")
+
 def selectLoop(selection, subobj):
     sel = selection
     obj = sel.Object

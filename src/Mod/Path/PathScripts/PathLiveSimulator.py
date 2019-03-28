@@ -10,6 +10,7 @@ import math
 import os
 
 from PathScripts import PathAdaptive
+from PathScripts import PathUtils
 
 from FreeCAD import Vector, Base
 
@@ -19,6 +20,21 @@ if FreeCAD.GuiUp:
     import FreeCADGui
     from PySide import QtGui, QtCore
 
+def resetSimulation():
+    PathUtils.deleteObject("CutTool")
+    PathUtils.deleteObject("CutMaterial")
+    PathUtils.deleteObject("CutMaterialIn")
+
+def activateSimulation():
+    resetSimulation()
+    simulation = PathLiveSimulation()
+    simulation.Activate()
+    simulation.SimFF()  # Show the result without the animation
+
+    job = PathUtils.GetJobs("Job")[0]
+    if job.Simulation is False:
+        PathUtils.hideObject("CutMaterial")
+        PathUtils.hideObject("CutMaterialIn")
 
 class CAMSimTaskUi:
     def __init__(self, parent):

@@ -48,6 +48,8 @@ from PySide import QtCore, QtGui
 from contextlib import contextmanager
 from pivy import coin
 
+from PathScripts import PathLiveSimulatorGui
+
 # Qt tanslation handling
 def translate(context, text, disambig=None):
     return QtCore.QCoreApplication.translate(context, text, disambig)
@@ -199,6 +201,10 @@ class ViewProvider:
     def onDelete(self, vobj, arg2=None):
         PathLog.track(vobj.Object.Label, arg2)
         self.obj.Proxy.onDelete(self.obj, arg2)
+
+        # Process the LiveSimulator
+        PathLiveSimulatorGui.recomputeSimulation()
+
         return True
 
     def updateData(self, obj, prop):
@@ -574,6 +580,10 @@ class TaskPanel:
                 FreeCAD.ActiveDocument.removeObject(self.obj.Name)
             FreeCAD.ActiveDocument.commitTransaction()
         self.cleanup(resetEdit)
+
+        # Process the LiveSimulator
+        PathLiveSimulatorGui.recomputeSimulation()
+
         return True
 
     def cleanup(self, resetEdit):
@@ -733,6 +743,9 @@ class TaskPanel:
 
     def operationDelete(self):
         self.objectDelete(self.form.operationsList)
+
+        # Process the LiveSimulator
+        PathLiveSimulatorGui.recomputeSimulation()
 
     def operationMoveUp(self):
         row = self.form.operationsList.currentRow()

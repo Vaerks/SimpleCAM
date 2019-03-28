@@ -1,5 +1,6 @@
 import FreeCAD
 from PathScripts import PathLiveSimulator
+from PathScripts import PathUtils
 import os
 
 from FreeCAD import Vector, Base
@@ -10,7 +11,8 @@ if FreeCAD.GuiUp:
     import FreeCADGui
     from PySide import QtGui, QtCore
 
-IS_SIMULATION_ACTIVE = False
+def recomputeSimulation():
+    PathLiveSimulator.activateSimulation()
 
 class CommandPathLiveSimulate:
 
@@ -27,16 +29,10 @@ class CommandPathLiveSimulate:
                         return True
         return False
 
-    def resetObject(self, obj):
-        try:
-            FreeCAD.ActiveDocument.removeObject(obj)
-        except:
-            print("PathLiveSimulatorGUi: The "+obj+" object cannot be deleted.")
-
     def resetSimulation(self):
-        self.resetObject("CutTool")
-        self.resetObject("CutMaterial")
-        self.resetObject("CutMaterialIn")
+        PathUtils.deleteObject("CutTool")
+        PathUtils.deleteObject("CutMaterial")
+        PathUtils.deleteObject("CutMaterialIn")
 
     def activateSimulation(self):
         simulation = PathLiveSimulator.PathLiveSimulation()
@@ -44,13 +40,16 @@ class CommandPathLiveSimulate:
         simulation.SimFF()  # Show the result without the animation
 
     def Activated(self):
-        global IS_SIMULATION_ACTIVE
-        self.resetSimulation()
-        if IS_SIMULATION_ACTIVE:
-            IS_SIMULATION_ACTIVE = False
+        job = PathUtils.GetJobs("Job")[0]
+        # self.resetSimulation()
+        if job.Simulation:
+            PathUtils.hideObject("CutMaterial")
+            PathUtils.hideObject("CutMaterialIn")
+            job.Simulation = False
         else:
-            self.activateSimulation()
-            IS_SIMULATION_ACTIVE = True
+            PathUtils.showObject("CutMaterial")
+            PathUtils.showObject("CutMaterialIn")
+            job.Simulation = True
 
 
 

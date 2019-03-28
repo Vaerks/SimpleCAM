@@ -34,6 +34,9 @@ import PathScripts.PathSelection as PathSelection
 import PathScripts.PathSetupSheet as PathSetupSheet
 import PathScripts.PathUtil as PathUtil
 import PathScripts.PathUtils as PathUtils
+
+from PathScripts import PathLiveSimulatorGui
+
 import importlib
 
 from PySide import QtCore, QtGui
@@ -175,6 +178,7 @@ class ViewProvider(object):
                 PathUtil.clearExpressionEngine(subobj)
 
         PathUtil.clearExpressionEngine(obj)
+
         return True
 
     def setupContextMenu(self, vobj, menu):
@@ -945,6 +949,9 @@ class TaskPanel(object):
             self.panelGetFields()
         FreeCAD.ActiveDocument.commitTransaction()
         self.cleanup(resetEdit)
+
+        # Process the LiveSimulator
+        PathLiveSimulatorGui.recomputeSimulation()
 
     def reject(self, resetEdit=True):
         '''reject() ... callback invoked when user presses the task panel Cancel button.'''

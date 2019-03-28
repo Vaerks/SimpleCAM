@@ -107,6 +107,11 @@ class ObjectJob:
         obj.addProperty("App::PropertyLink", "Operations", "Base", QtCore.QT_TRANSLATE_NOOP("PathJob", "Compound path of all operations in the order they are processed."))
         obj.addProperty("App::PropertyLink", "ToolControllers", "Base", QtCore.QT_TRANSLATE_NOOP("PathJob", "Collection of tool controllers available for this job."))
 
+        # LiveSimulator
+        obj.addProperty("App::PropertyBool", "Simulation", "LiveSimulator",
+                        QtCore.QT_TRANSLATE_NOOP("PathJob", "Is the Live Simulation on?"))
+        obj.Simulation = False
+
         # Job version control
         obj.addProperty("App::PropertyInteger", "Version", "Path", QtCore.QT_TRANSLATE_NOOP("PathJob", "Version of the selected Job."))
         obj.Version = 1
@@ -233,6 +238,7 @@ class ObjectJob:
         PathUtil.clearExpressionEngine(obj.SetupSheet)
         doc.removeObject(obj.SetupSheet.Name)
         obj.SetupSheet = None
+
         return True
 
     def fixupOperations(self, obj):
