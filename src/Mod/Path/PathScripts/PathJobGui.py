@@ -190,8 +190,10 @@ class ViewProvider:
             # unfortunately this function is called before the object has been fully loaded
             # which means we could be dealing with an old job which doesn't have the new Model
             # yet.
+            self.obj.Model.ViewObject.Visibility = True
             children.append(self.obj.Model)
         if self.obj.Stock:
+            self.obj.Stock.ViewObject.Visibility = True
             children.append(self.obj.Stock)
         if hasattr(self.obj, 'SetupSheet'):
             # when loading a job that didn't have a setup sheet they might not've been created yet
