@@ -42,7 +42,7 @@ class TaskPanelOpPage(PathProfileBaseGui.TaskPanelOpPage):
         See PathProfileBaseGui.py for details.'''
         return PathProfileBaseGui.FeatureSide
 
-Resource = PathOpGui.CommandResources('Profile Faces',
+Resource = PathOpGui.CommandResources('Profile Edges',
         PathProfileEdges.Create,
         TaskPanelOpPage,
         'Path-Profile-Edges',
