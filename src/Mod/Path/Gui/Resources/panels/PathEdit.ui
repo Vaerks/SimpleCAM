@@ -14,7 +14,7 @@
    <string>Job Edit</string>
   </property>
   <property name="currentIndex">
-   <number>0</number>
+   <number>2</number>
   </property>
   <widget class="QWidget" name="tabGeneral">
    <attribute name="title">
@@ -31,8 +31,8 @@
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>458</width>
-         <height>1186</height>
+         <width>454</width>
+         <height>1210</height>
         </rect>
        </property>
        <attribute name="label">
@@ -112,8 +112,8 @@
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>100</width>
-         <height>30</height>
+         <width>98</width>
+         <height>28</height>
         </rect>
        </property>
        <attribute name="label">
@@ -205,8 +205,8 @@
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>458</width>
-         <height>1186</height>
+         <width>454</width>
+         <height>1210</height>
         </rect>
        </property>
        <attribute name="label">
@@ -447,27 +447,27 @@
         <item>
          <widget class="QGroupBox" name="modelSetGroup">
           <property name="title">
-           <string>Set</string>
+           <string>Position</string>
           </property>
           <layout class="QGridLayout" name="gridLayout_5">
            <item row="0" column="0">
-            <widget class="QPushButton" name="modelSetXAxis">
+            <widget class="QPushButton" name="simpleRotationX">
              <property name="text">
-              <string>X-Axis</string>
+              <string>X-Rotation</string>
              </property>
             </widget>
            </item>
            <item row="0" column="1">
-            <widget class="QPushButton" name="modelSetYAxis">
+            <widget class="QPushButton" name="simpleRotationY">
              <property name="text">
-              <string>Y-Axis</string>
+              <string>Y-Rotation</string>
              </property>
             </widget>
            </item>
            <item row="0" column="2">
-            <widget class="QPushButton" name="modelSetZAxis">
+            <widget class="QPushButton" name="simpleRotationZ">
              <property name="text">
-              <string>Z-Axis</string>
+              <string>Z-Rotation</string>
              </property>
             </widget>
            </item>
@@ -662,7 +662,16 @@
            <item row="0" column="1">
             <widget class="QWidget" name="widget_5" native="true">
              <layout class="QVBoxLayout" name="verticalLayout_18">
-              <property name="margin">
+              <property name="leftMargin">
+               <number>0</number>
+              </property>
+              <property name="topMargin">
+               <number>0</number>
+              </property>
+              <property name="rightMargin">
+               <number>0</number>
+              </property>
+              <property name="bottomMargin">
                <number>0</number>
               </property>
               <item>
@@ -760,8 +769,8 @@
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>458</width>
-         <height>1186</height>
+         <width>203</width>
+         <height>229</height>
         </rect>
        </property>
        <attribute name="label">
@@ -924,8 +933,8 @@
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>458</width>
-         <height>1186</height>
+         <width>454</width>
+         <height>1210</height>
         </rect>
        </property>
        <attribute name="label">
@@ -962,8 +971,7 @@
               </property>
               <property name="icon">
                <iconset theme="object-flip-horizontal">
-                <normaloff/>
-               </iconset>
+                <normaloff>.</normaloff>.</iconset>
               </property>
              </column>
              <column>
@@ -972,8 +980,7 @@
               </property>
               <property name="icon">
                <iconset theme="object-flip-vertical">
-                <normaloff/>
-               </iconset>
+                <normaloff>.</normaloff>.</iconset>
               </property>
              </column>
              <column>
@@ -1026,8 +1033,8 @@
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>244</width>
-         <height>145</height>
+         <width>146</width>
+         <height>101</height>
         </rect>
        </property>
        <attribute name="label">
@@ -1142,7 +1149,16 @@
        <item>
         <widget class="QWidget" name="operationMove" native="true">
          <layout class="QVBoxLayout" name="verticalLayout_2">
-          <property name="margin">
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
            <number>0</number>
           </property>
           <item>

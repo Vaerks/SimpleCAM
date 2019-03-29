@@ -847,6 +847,19 @@ class TaskPanel:
 
         self.template.updateUI()
 
+    # A simple rotation feature for one selection
+    def simpleRotation(self, axis, a=90):
+        objects = []
+        for sel in FreeCADGui.Selection.getSelectionEx():
+        # sel = self.obj.Model.Group[0]
+            objsel = sel.Object
+            if objects.__contains__(objsel) is False:
+                p = objsel.Placement
+                loc = p.Base
+                rot = FreeCAD.Rotation(FreeCAD.Vector(axis.x, axis.y, axis.z), a)
+                sel.Object.Placement = FreeCAD.Placement(loc, p.Rotation.multiply(rot))
+                objects.append(objsel)
+
     def modelSetAxis(self, axis):
         def flipSel(sel):
             PathLog.debug("flip")
@@ -859,7 +872,7 @@ class TaskPanel:
             p = sel.Object.Placement
             loc = sel.Object.Placement.Base
             r = axis.cross(n) # rotation axis
-            a = DraftVecUtils.angle(n, axis, r) * 180 / math.pi
+            a = DraftVecUtils.angle(n, axis, r) * 180 / math.pi + 45
             PathLog.debug("oh boy: (%.2f, %.2f, %.2f) -> %.2f" % (r.x, r.y, r.z, a))
             Draft.rotate(sel.Object, a, axis=r)
 
@@ -1041,21 +1054,12 @@ class TaskPanel:
 
         if len(sel) == 1 and len(sel[0].SubObjects) == 1:
             if 'Vertex' == sel[0].SubObjects[0].ShapeType:
-                self.form.modelSetXAxis.setEnabled(False)
-                self.form.modelSetYAxis.setEnabled(False)
-                self.form.modelSetZAxis.setEnabled(False)
                 self.form.setOrigin.setEnabled(True)
                 self.form.moveToOrigin.setEnabled(True)
             else:
-                self.form.modelSetXAxis.setEnabled(True)
-                self.form.modelSetYAxis.setEnabled(True)
-                self.form.modelSetZAxis.setEnabled(True)
                 self.form.setOrigin.setEnabled(False)
                 self.form.moveToOrigin.setEnabled(False)
         else:
-            self.form.modelSetXAxis.setEnabled(False)
-            self.form.modelSetYAxis.setEnabled(False)
-            self.form.modelSetZAxis.setEnabled(False)
             self.form.setOrigin.setEnabled(False)
             self.form.moveToOrigin.setEnabled(False)
 
@@ -1067,16 +1071,16 @@ class TaskPanel:
             self.form.centerInStockXY.setEnabled(True)
 
         if len(sel) > 0:
-            self.form.modelSetX0.setEnabled(True)
-            self.form.modelSetY0.setEnabled(True)
-            self.form.modelSetZ0.setEnabled(True)
+            self.form.simpleRotationX.setEnabled(True)
+            self.form.simpleRotationY.setEnabled(True)
+            self.form.simpleRotationZ.setEnabled(True)
             self.form.modelMoveGroup.setEnabled(True)
             self.form.modelRotateGroup.setEnabled(True)
             self.form.modelRotateCompound.setEnabled(len(sel) > 1)
         else:
-            self.form.modelSetX0.setEnabled(False)
-            self.form.modelSetY0.setEnabled(False)
-            self.form.modelSetZ0.setEnabled(False)
+            self.form.simpleRotationX.setEnabled(False)
+            self.form.simpleRotationY.setEnabled(False)
+            self.form.simpleRotationZ.setEnabled(False)
             self.form.modelMoveGroup.setEnabled(False)
             self.form.modelRotateGroup.setEnabled(False)
 
@@ -1164,9 +1168,10 @@ class TaskPanel:
         self.form.stock.currentIndexChanged.connect(self.updateStockEditor)
         self.form.refreshStock.clicked.connect(self.refreshStock)
 
-        self.form.modelSetXAxis.clicked.connect(lambda: self.modelSetAxis(FreeCAD.Vector(1, 0, 0)))
-        self.form.modelSetYAxis.clicked.connect(lambda: self.modelSetAxis(FreeCAD.Vector(0, 1, 0)))
-        self.form.modelSetZAxis.clicked.connect(lambda: self.modelSetAxis(FreeCAD.Vector(0, 0, 1)))
+        self.form.simpleRotationX.clicked.connect(lambda: self.simpleRotation(FreeCAD.Vector(1, 0, 0)))
+        self.form.simpleRotationY.clicked.connect(lambda: self.simpleRotation(FreeCAD.Vector(0, 1, 0)))
+        self.form.simpleRotationZ.clicked.connect(lambda: self.simpleRotation(FreeCAD.Vector(0, 0, 1)))
+
         self.form.modelSetX0.clicked.connect(lambda: self.modelSet0(FreeCAD.Vector(-1,  0,  0)))
         self.form.modelSetY0.clicked.connect(lambda: self.modelSet0(FreeCAD.Vector( 0, -1,  0)))
         self.form.modelSetZ0.clicked.connect(lambda: self.modelSet0(FreeCAD.Vector( 0,  0, -1)))
