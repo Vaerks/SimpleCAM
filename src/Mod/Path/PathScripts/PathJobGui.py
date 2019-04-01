@@ -48,6 +48,8 @@ from PySide import QtCore, QtGui
 from contextlib import contextmanager
 from pivy import coin
 
+import copy
+
 from PathScripts import PathLiveSimulatorGui
 
 # Qt tanslation handling
@@ -568,6 +570,7 @@ class TaskPanel:
         self.setupOps.accept()
         FreeCAD.ActiveDocument.commitTransaction()
         self.cleanup(resetEdit)
+        PathLiveSimulatorGui.recomputeSimulation()
 
     def reject(self, resetEdit=True):
         PathLog.track()
@@ -851,13 +854,9 @@ class TaskPanel:
     def simpleRotation(self, axis, a=90):
         objects = []
         for sel in FreeCADGui.Selection.getSelectionEx():
-        # sel = self.obj.Model.Group[0]
             objsel = sel.Object
-            if objects.__contains__(objsel) is False:
-                p = objsel.Placement
-                loc = p.Base
-                rot = FreeCAD.Rotation(FreeCAD.Vector(axis.x, axis.y, axis.z), a)
-                sel.Object.Placement = FreeCAD.Placement(loc, p.Rotation.multiply(rot))
+            if objects.__contains__(objsel) is False and objsel.Name != "Stock":
+                Draft.rotate([objsel, self.obj.Stock], a, axis=axis)
                 objects.append(objsel)
 
     def modelSetAxis(self, axis):
