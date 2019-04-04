@@ -26,6 +26,7 @@ import FreeCAD
 import FreeCADGui
 import Part
 import Path
+import Mesh
 import PathScripts
 import PathScripts.PathGeom as PathGeom
 import TechDraw
@@ -47,6 +48,18 @@ if False:
 else:
     PathLog.setLevel(PathLog.Level.INFO, PathLog.thisModule())
 #FreeCAD.setLogLevel('Path.Area', 0)
+
+def convertMeshesToPart(meshes):
+    mesh = Mesh.Mesh()
+
+    for m in meshes:
+        mesh.addMesh(m)
+
+    shape = Part.Shape()
+    shape.makeShapeFromMesh(mesh.Topology, 0.05)  # the second arg is the tolerance for sewing
+    solid = Part.makeSolid(shape)
+    Part.show(solid)
+    return solid
 
 def hideObject(objname):
     try:

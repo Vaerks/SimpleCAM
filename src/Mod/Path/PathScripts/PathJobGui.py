@@ -467,6 +467,44 @@ class StockCreateCylinderEdit(StockEdit):
         self.form.stockCylinderRadius.textChanged.connect(lambda: self.getFields(obj, ['radius']))
         self.form.stockCylinderHeight.textChanged.connect(lambda: self.getFields(obj, ['height']))
 
+class StockFromSimulationEdit(StockEdit):
+    Index = 4
+    StockType = PathStock.StockType.Unknown
+
+    def editorFrame(self):
+        return self.form.stockFromExisting
+
+    def getFields(self, obj):
+        stock = self.form.stockExisting.itemData(self.form.stockExisting.currentIndex())
+        if not (hasattr(obj.Stock, 'Objects') and len(obj.Stock.Objects) == 1 and obj.Stock.Objects[0] == stock):
+            if stock:
+                stock = PathJob.createResourceClone(obj, stock, 'Stock', 'Stock')
+                stock.ViewObject.Visibility = True
+                PathStock.SetupStockObject(stock, PathStock.StockType.Unknown)
+                stock.Proxy.execute(stock)
+                self.setStock(obj, stock)
+
+    def candidates(self, obj):
+        solids = [FreeCAD.ActiveDocument.getObject("Shape")]
+        return solids
+
+    def setFields(self, obj):
+        self.form.stockExisting.clear()
+        stockName = obj.Stock.Label if obj.Stock else None
+        index = -1
+        for i, solid in enumerate(self.candidates(obj)):
+            self.form.stockExisting.addItem(solid.Label, solid)
+            if solid.Label == stockName:
+                index = i
+        self.form.stockExisting.setCurrentIndex(index if index != -1 else 0)
+
+        if not self.IsStock(obj):
+            self.getFields(obj)
+
+    def setupUi(self, obj):
+        self.setFields(obj)
+        self.form.stockExisting.currentIndexChanged.connect(lambda: self.getFields(obj))
+
 class StockFromExistingEdit(StockEdit):
     Index = 3
     StockType = PathStock.StockType.Unknown
@@ -485,14 +523,19 @@ class StockFromExistingEdit(StockEdit):
                 self.setStock(obj, stock)
 
     def candidates(self, obj):
-        solids = [o for o in obj.Document.Objects if PathUtil.isSolid(o)]
+        solids = [o for o in obj.Document.Objects]
         for base in obj.Model.Group:
             if base in solids and PathJob.isResourceClone(obj, base, 'Model'):
                 solids.remove(base)
         if obj.Stock in solids:
             # regardless, what stock is/was, it's not a valid choice
             solids.remove(obj.Stock)
-        return sorted(solids, key=lambda c: c.Label)
+        try:
+            shape = FreeCAD.ActiveDocument.getObject("Shape")
+            solids.remove(shape)
+            solids.insert(0, shape)
+        finally:
+            return solids
 
     def setFields(self, obj):
         self.form.stockExisting.clear()
@@ -549,6 +592,7 @@ class TaskPanel:
 
         self.stockFromBase = None
         self.stockFromExisting = None
+        self.stockFromSimulation = None
         self.stockCreateBox = None
         self.stockCreateCylinder = None
         self.stockEdit = None
@@ -570,6 +614,7 @@ class TaskPanel:
         self.setupOps.accept()
         FreeCAD.ActiveDocument.commitTransaction()
         self.cleanup(resetEdit)
+
         PathLiveSimulatorGui.recomputeSimulation()
 
     def reject(self, resetEdit=True):
@@ -855,7 +900,8 @@ class TaskPanel:
         objects = []
         for sel in FreeCADGui.Selection.getSelectionEx():
             objsel = sel.Object
-            if objects.__contains__(objsel) is False and objsel.Name != "Stock":
+            models = FreeCAD.ActiveDocument.getObject("Model")
+            if objects.__contains__(objsel) is False and models.Group.__contains__(objsel):
                 Draft.rotate([objsel, self.obj.Stock], a, axis=axis)
                 objects.append(objsel)
 
@@ -1000,6 +1046,14 @@ class TaskPanel:
                 self.stockEdit = self.stockFromExisting
                 return True
             return False
+        def setupFromSimulation():
+            PathLog.track(index, force)
+            if force or not self.stockFromSimulation:
+                self.stockFromSimulation = StockFromSimulationEdit(self.obj, self.form, force)
+            if self.stockFromSimulation.candidates(self.obj):
+                self.stockEdit = self.stockFromSimulation
+                return True
+            return False
 
         if index == -1:
             if self.obj.Stock is None or StockFromBaseBoundBoxEdit.IsStock(self.obj):
@@ -1021,6 +1075,10 @@ class TaskPanel:
                 setupCreateCylinderEdit()
             elif index == StockFromExistingEdit.Index:
                 if not setupFromExisting():
+                    setupFromBaseEdit()
+                    index = -1
+            elif index == StockFromSimulationEdit.Index:
+                if not setupFromSimulation():
                     setupFromBaseEdit()
                     index = -1
             else:

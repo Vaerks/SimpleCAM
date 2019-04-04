@@ -1,4 +1,5 @@
 import FreeCAD
+from PathScripts import PathUtils
 
 if FreeCAD.GuiUp:
     import FreeCADGui
@@ -21,7 +22,6 @@ class CommandPathJobSide:
 
     def Activated(self):
         print("Create new working job side")
-
 
 
 if FreeCAD.GuiUp:

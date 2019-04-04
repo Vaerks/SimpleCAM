@@ -20,10 +20,18 @@ if FreeCAD.GuiUp:
     import FreeCADGui
     from PySide import QtGui, QtCore
 
+def createShapeResult():
+    cutMaterialMeshes = [FreeCAD.ActiveDocument.findObjects("Mesh::FeaturePython", "CutMaterial")[0].Mesh,
+                         FreeCAD.ActiveDocument.findObjects("Mesh::FeaturePython", "CutMaterialIn")[0].Mesh]
+
+    shape = PathUtils.convertMeshesToPart(cutMaterialMeshes)
+    PathUtils.hideObject("Shape")
+
 def resetSimulation():
     PathUtils.deleteObject("CutTool")
     PathUtils.deleteObject("CutMaterial")
     PathUtils.deleteObject("CutMaterialIn")
+    PathUtils.deleteObject("Shape")
 
 def activateSimulation():
     resetSimulation()
@@ -66,6 +74,12 @@ class PathLiveSimulation:
         self.simperiod = 20
         self.accuracy = 0.1
         self.resetSimulation = False
+
+        self.simulationList = FreeCAD.ActiveDocument.getObject("Simulation")
+        if self.simulationList is None:
+            self.simulationList = FreeCAD.ActiveDocument.addObject("Path::FeatureCompoundPython", "Simulation")
+            self.simulationList.Group = []
+
 
     def Connect(self, but, sig):
         QtCore.QObject.connect(but, QtCore.SIGNAL("clicked()"), sig)
@@ -173,6 +187,9 @@ class PathLiveSimulation:
         if self.isVoxel:
             self.cutMaterial = FreeCAD.ActiveDocument.addObject("Mesh::FeaturePython", "CutMaterial")
             self.cutMaterialIn = FreeCAD.ActiveDocument.addObject("Mesh::FeaturePython", "CutMaterialIn")
+
+            self.simulationList.Group = [self.cutMaterial, self.cutMaterialIn]
+
             self.cutMaterialIn.ViewObject.Proxy = 0
             self.cutMaterialIn.ViewObject.show()
             self.cutMaterialIn.ViewObject.ShapeColor = (1.0, 0.85, 0.45, 0.0)
@@ -459,6 +476,9 @@ class PathLiveSimulation:
         self.GuiBusy(False)
         self.ViewShape()
         self.resetSimulation = True
+
+        # Create the final Shape for stock
+        createShapeResult()
 
     def SimStop(self):
         self.cutTool.ViewObject.hide()
