@@ -89,14 +89,19 @@ class JobCreate:
                     item.setCheckState(0, QtCore.Qt.CheckState.Checked)
                 else:
                     item.setCheckState(0, QtCore.Qt.CheckState.Unchecked)
-                if PathUtil.isSolid(base):
-                    self.itemsSolid.addChild(item)
-                    if sel:
-                        expandSolids = True
-                else:
-                    self.itemsTwoD.addChild(item)
-                    if sel:
-                        expandTwoDs = True
+
+                try:
+                    if PathUtil.isSolid(base):
+                        self.itemsSolid.addChild(item)
+                        if sel:
+                            expandSolids = True
+                    else:
+                        self.itemsTwoD.addChild(item)
+                        if sel:
+                            expandTwoDs = True
+
+                except:
+                    pass
 
         for j in sorted(PathJob.Instances(), key=lambda x: x.Label):
             if j != job:

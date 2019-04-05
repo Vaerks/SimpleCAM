@@ -1,8 +1,14 @@
 import FreeCAD
-from PathScripts import PathUtils
+import FreeCADGui
+import PathScripts.PathJob as PathJob
+import PathScripts.PathJobDlg as PathJobDlg
+import PathScripts.PathLog as PathLog
+import PathScripts.PathPreferences as PathPreferences
+import PathScripts.PathStock as PathStock
+import PathScripts.PathUtil as PathUtil
+import json
 
 if FreeCAD.GuiUp:
-    import FreeCADGui
     from PySide import QtGui, QtCore
 
 class CommandPathJobSide:
@@ -22,6 +28,23 @@ class CommandPathJobSide:
 
     def Activated(self):
         print("Create new working job side")
+        dialog = PathJobDlg.JobCreate()
+        dialog.setupTemplate()
+        dialog.setupModel()
+        if dialog.exec_() == 1:
+            models = dialog.getModels()
+            if models:
+                self.Execute(models, dialog.getTemplate())
+                FreeCAD.ActiveDocument.recompute()
+
+    @classmethod
+    def Execute(cls, base, template):
+        FreeCADGui.addModule('PathScripts.PathJobGui')
+        if template:
+            template = "'%s'" % template
+        else:
+            template = 'None'
+        FreeCADGui.doCommand('PathScripts.PathJobGui.Create(%s, %s)' % ([o.Name for o in base], template))
 
 
 if FreeCAD.GuiUp:

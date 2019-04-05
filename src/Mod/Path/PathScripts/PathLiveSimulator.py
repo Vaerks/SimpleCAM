@@ -20,29 +20,40 @@ if FreeCAD.GuiUp:
     import FreeCADGui
     from PySide import QtGui, QtCore
 
-def createShapeResult():
-    cutMaterialMeshes = [FreeCAD.ActiveDocument.findObjects("Mesh::FeaturePython", "CutMaterial")[0].Mesh,
-                         FreeCAD.ActiveDocument.findObjects("Mesh::FeaturePython", "CutMaterialIn")[0].Mesh]
+def createShapeResult(job, resultFolder):
+    cutMaterialMeshes = [FreeCAD.ActiveDocument.findObjects("Mesh::FeaturePython", "CutMaterial_"+job.Name)[0].Mesh,
+                         FreeCAD.ActiveDocument.findObjects("Mesh::FeaturePython", "CutMaterialIn_"+job.Name)[0].Mesh]
 
-    shape = PathUtils.convertMeshesToPart(cutMaterialMeshes)
-    PathUtils.hideObject("Shape")
+    shape = PathUtils.convertMeshesToPart(cutMaterialMeshes, "Solid_"+job.Name)
+    solid = FreeCAD.ActiveDocument.getObject("Solid_"+job.Name)
+    resultFolder.Group = [solid]
+    PathUtils.hideObject("Solid_"+job.Name)
 
-def resetSimulation():
-    PathUtils.deleteObject("CutTool")
-    PathUtils.deleteObject("CutMaterial")
-    PathUtils.deleteObject("CutMaterialIn")
-    PathUtils.deleteObject("Shape")
+def resetSimulation(job):
+    PathUtils.deleteObject("CutTool_"+job.Name)
+    PathUtils.deleteObject("CutMaterial_"+job.Name)
+    PathUtils.deleteObject("CutMaterialIn_"+job.Name)
+    PathUtils.deleteObject("Solid_"+job.Name)
 
-def activateSimulation():
-    resetSimulation()
-    simulation = PathLiveSimulation()
-    simulation.Activate()
-    simulation.SimFF()  # Show the result without the animation
+def activateSimulation(obj, jobsim):
+    if jobsim is None:
+        if obj is not None:
+            job = PathUtils.findParentJob(obj)
+        else:
+            job = PathUtils.GetJobs()[0]
 
-    job = PathUtils.GetJobs("Job")[0]
-    if job.Simulation is False:
-        PathUtils.hideObject("CutMaterial")
-        PathUtils.hideObject("CutMaterialIn")
+    else:
+        job = jobsim
+
+    if job is not None:
+        resetSimulation(job)
+        simulation = PathLiveSimulation(job)
+        simulation.Activate()
+        simulation.SimFF()  # Show the result without the animation
+
+        if job.Simulation is False:
+            PathUtils.hideObject("CutMaterial_"+job.Name)
+            PathUtils.hideObject("CutMaterialIn_"+job.Name)
 
 class CAMSimTaskUi:
     def __init__(self, parent):
@@ -64,7 +75,8 @@ def TSError(msg):
 
 
 class PathLiveSimulation:
-    def __init__(self):
+    def __init__(self, job):
+        self.jobsim = job
         self.debug = False
         self.timer = QtCore.QTimer()
         QtCore.QObject.connect(self.timer, QtCore.SIGNAL("timeout()"), self.PerformCut)
@@ -75,10 +87,21 @@ class PathLiveSimulation:
         self.accuracy = 0.1
         self.resetSimulation = False
 
-        self.simulationList = FreeCAD.ActiveDocument.getObject("Simulation")
+        newJobGroupList = []
+        self.simulationList = FreeCAD.ActiveDocument.getObject("Simulation_"+job.Name)
+        self.simulationResult = FreeCAD.ActiveDocument.getObject("Result_" + job.Name)
+
+        #for element in self.job.OutList:
+        #    newJobGroupList.append(element)
+
+        #newJobGroupList.append(self.simulationList)
+        #self.job.OutList = newJobGroupList
+
         if self.simulationList is None:
-            self.simulationList = FreeCAD.ActiveDocument.addObject("Path::FeatureCompoundPython", "Simulation")
-            self.simulationList.Group = []
+            self.simulationResult = FreeCAD.ActiveDocument.addObject("App::DocumentObjectGroup", "Result_" + job.Name)
+            self.simulationResult.Label = "Result"
+            self.simulationList = FreeCAD.ActiveDocument.addObject("App::DocumentObjectGroup", "Simulation_"+job.Name)
+            self.simulationList.Group = [self.simulationResult]
 
 
     def Connect(self, but, sig):
@@ -171,30 +194,29 @@ class PathLiveSimulation:
         self.opCommands =  self.operation.Path.Commands
 
     def SimulateMill(self):
-        self.job = self.jobs[self.taskForm.form.comboJobs.currentIndex()]
         self.busy = False
         # self.timer.start(100)
         self.height = 10
         self.skipStep = False
         self.initialPos = Vector(0, 0, self.job.Stock.Shape.BoundBox.ZMax)
         # Add cut tool
-        self.cutTool = FreeCAD.ActiveDocument.addObject("Part::FeaturePython", "CutTool")
+        self.cutTool = FreeCAD.ActiveDocument.addObject("Part::FeaturePython", "CutTool_"+self.jobsim.Name)
         # self.cutTool.Visibility = False
         self.cutTool.ViewObject.Proxy = 0
         self.cutTool.ViewObject.hide()
 
         # Add cut material
         if self.isVoxel:
-            self.cutMaterial = FreeCAD.ActiveDocument.addObject("Mesh::FeaturePython", "CutMaterial")
-            self.cutMaterialIn = FreeCAD.ActiveDocument.addObject("Mesh::FeaturePython", "CutMaterialIn")
+            self.cutMaterial = FreeCAD.ActiveDocument.addObject("Mesh::FeaturePython", "CutMaterial_"+self.jobsim.Name)
+            self.cutMaterialIn = FreeCAD.ActiveDocument.addObject("Mesh::FeaturePython", "CutMaterialIn_"+self.jobsim.Name)
 
-            self.simulationList.Group = [self.cutMaterial, self.cutMaterialIn]
+            self.simulationList.Group = [self.simulationResult, self.cutTool, self.cutMaterial, self.cutMaterialIn]
 
             self.cutMaterialIn.ViewObject.Proxy = 0
             self.cutMaterialIn.ViewObject.show()
             self.cutMaterialIn.ViewObject.ShapeColor = (1.0, 0.85, 0.45, 0.0)
         else:
-            self.cutMaterial = FreeCAD.ActiveDocument.addObject("Part::FeaturePython", "CutMaterial")
+            self.cutMaterial = FreeCAD.ActiveDocument.addObject("Part::FeaturePython", "CutMaterial_"+self.jobsim.Name)
             self.cutMaterial.Shape = self.job.Stock.Shape
         self.cutMaterial.ViewObject.Proxy = 0
         self.cutMaterial.ViewObject.show()
@@ -437,7 +459,7 @@ class PathLiveSimulation:
 
     def onJobChange(self):
         form = self.taskForm.form
-        j = self.jobs[form.comboJobs.currentIndex()]
+        j = self.jobsim
         self.job = j
         form.listOperations.clear()
         self.operations = []
@@ -478,7 +500,7 @@ class PathLiveSimulation:
         self.resetSimulation = True
 
         # Create the final Shape for stock
-        createShapeResult()
+        createShapeResult(self.jobsim, self.simulationResult)
 
     def SimStop(self):
         self.cutTool.ViewObject.hide()

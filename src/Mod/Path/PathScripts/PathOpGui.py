@@ -951,7 +951,7 @@ class TaskPanel(object):
         self.cleanup(resetEdit)
 
         # Process the LiveSimulator
-        PathLiveSimulatorGui.recomputeSimulation()
+        PathLiveSimulatorGui.recomputeSimulation(self.obj)
 
     def reject(self, resetEdit=True):
         '''reject() ... callback invoked when user presses the task panel Cancel button.'''

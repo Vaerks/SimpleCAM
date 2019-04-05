@@ -11,8 +11,8 @@ if FreeCAD.GuiUp:
     import FreeCADGui
     from PySide import QtGui, QtCore
 
-def recomputeSimulation():
-    PathLiveSimulator.activateSimulation()
+def recomputeSimulation(obj=None, job=None):
+    PathLiveSimulator.activateSimulation(obj, job)
 
 class CommandPathLiveSimulate:
 
@@ -29,28 +29,25 @@ class CommandPathLiveSimulate:
                         return True
         return False
 
-    def resetSimulation(self):
-        PathUtils.deleteObject("CutTool")
-        PathUtils.deleteObject("CutMaterial")
-        PathUtils.deleteObject("CutMaterialIn")
-
     def activateSimulation(self):
         simulation = PathLiveSimulator.PathLiveSimulation()
         simulation.Activate()
         simulation.SimFF()  # Show the result without the animation
 
     def Activated(self):
-        job = PathUtils.GetJobs("Job")[0]
-        # self.resetSimulation()
-        if job.Simulation:
-            PathUtils.hideObject("CutMaterial")
-            PathUtils.hideObject("CutMaterialIn")
-            job.Simulation = False
-        else:
-            PathUtils.showObject("CutMaterial")
-            PathUtils.showObject("CutMaterialIn")
-            job.Simulation = True
+        selections = FreeCADGui.Selection.getSelectionEx()
+        if len(selections) == 1:
+            obj = selections[0].Object
+            job = PathUtils.findParentJob(obj)
 
+            if job.Simulation:
+                PathUtils.hideObject("CutMaterial_"+job.Name)
+                PathUtils.hideObject("CutMaterialIn_"+job.Name)
+                job.Simulation = False
+            else:
+                PathUtils.showObject("CutMaterial_"+job.Name)
+                PathUtils.showObject("CutMaterialIn_"+job.Name)
+                job.Simulation = True
 
 
 if FreeCAD.GuiUp:

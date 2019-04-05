@@ -205,10 +205,6 @@ class ViewProvider:
     def onDelete(self, vobj, arg2=None):
         PathLog.track(vobj.Object.Label, arg2)
         self.obj.Proxy.onDelete(self.obj, arg2)
-
-        # Process the LiveSimulator
-        PathLiveSimulatorGui.recomputeSimulation()
-
         return True
 
     def updateData(self, obj, prop):
@@ -485,7 +481,14 @@ class StockFromSimulationEdit(StockEdit):
                 self.setStock(obj, stock)
 
     def candidates(self, obj):
-        solids = [FreeCAD.ActiveDocument.getObject("Shape")]
+        jobs = PathUtils.GetJobs()
+        solids = []
+
+        for job in jobs:
+            result = FreeCAD.ActiveDocument.getObject("Result_"+job.Name).Group
+            for r in result:
+                solids.append(r)
+
         return solids
 
     def setFields(self, obj):
@@ -615,7 +618,7 @@ class TaskPanel:
         FreeCAD.ActiveDocument.commitTransaction()
         self.cleanup(resetEdit)
 
-        PathLiveSimulatorGui.recomputeSimulation()
+        PathLiveSimulatorGui.recomputeSimulation(job=self.obj)
 
     def reject(self, resetEdit=True):
         PathLog.track()
@@ -630,10 +633,6 @@ class TaskPanel:
                 FreeCAD.ActiveDocument.removeObject(self.obj.Name)
             FreeCAD.ActiveDocument.commitTransaction()
         self.cleanup(resetEdit)
-
-        # Process the LiveSimulator
-        PathLiveSimulatorGui.recomputeSimulation()
-
         return True
 
     def cleanup(self, resetEdit):
@@ -795,7 +794,7 @@ class TaskPanel:
         self.objectDelete(self.form.operationsList)
 
         # Process the LiveSimulator
-        PathLiveSimulatorGui.recomputeSimulation()
+        PathLiveSimulatorGui.recomputeSimulation(self.obj)
 
     def operationMoveUp(self):
         row = self.form.operationsList.currentRow()
@@ -900,9 +899,12 @@ class TaskPanel:
         objects = []
         for sel in FreeCADGui.Selection.getSelectionEx():
             objsel = sel.Object
-            models = FreeCAD.ActiveDocument.getObject("Model")
+            # Verify if the selected object is a model of its job and if the same object is selected twice or more
+            job = PathUtils.findParentJob(objsel)
+            models = job.Model
             if objects.__contains__(objsel) is False and models.Group.__contains__(objsel):
-                Draft.rotate([objsel, self.obj.Stock], a, axis=axis)
+                Draft.rotate([objsel, job.Stock], a, axis=axis)  # Move the associated stock
+                # Can work with a model from another job (not the actual JobEdit)
                 objects.append(objsel)
 
     def modelSetAxis(self, axis):
@@ -1064,6 +1066,8 @@ class TaskPanel:
                 setupCreateCylinderEdit()
             elif StockFromExistingEdit.IsStock(self.obj):
                 setupFromExisting()
+            elif StockFromSimulationEdit.IsStock(self.obj):
+                setupFromSimulation()
             else:
                 PathLog.error(translate('PathJob', "Unsupported stock object %s") % self.obj.Stock.Label)
         else:
