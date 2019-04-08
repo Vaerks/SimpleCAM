@@ -34,6 +34,8 @@ from PathScripts.PathUtils import horizontalFaceLoop
 from PathScripts.PathUtils import addToJob
 from PathScripts.PathUtils import findParentJob
 
+from threading import Thread
+
 if FreeCAD.GuiUp:
     import FreeCADGui
     from PySide import QtCore
@@ -45,6 +47,9 @@ else:
 __title__="FreeCAD Path Commands"
 __author__ = "sliptonic"
 __url__ = "http://www.freecadweb.org"
+
+def selectLoopInBackground(obj, sel):
+    obj.active = obj.formsPartOfALoop(sel.Object, sel.SubObjects[0], sel.SubElementNames)
 
 
 class _CommandSelectLoop:
@@ -71,7 +76,8 @@ class _CommandSelectLoop:
             self.obj = sel.Object
             self.sub = sel.SubElementNames
             if sel.SubObjects:
-                self.active = self.formsPartOfALoop(sel.Object, sel.SubObjects[0], sel.SubElementNames)
+                # self.active = self.formsPartOfALoop(sel.Object, sel.SubObjects[0], sel.SubElementNames)
+                Thread(target=(lambda: selectLoopInBackground(self, sel))).start()
             else:
                 self.active = False
             return self.active
