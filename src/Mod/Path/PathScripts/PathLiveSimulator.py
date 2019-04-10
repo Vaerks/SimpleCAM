@@ -87,6 +87,9 @@ class PathLiveSimulation:
         self.accuracy = 0.1
         self.resetSimulation = False
 
+        self.processTimerMod = -1
+        self.processTimerAccuracy = 0.01
+
         newJobGroupList = []
         self.simulationList = FreeCAD.ActiveDocument.getObject("Simulation_"+job.Name)
         self.simulationResult = FreeCAD.ActiveDocument.getObject("Result_" + job.Name)
@@ -153,7 +156,8 @@ class PathLiveSimulation:
                 # If the operations list contains a Adaptive (which is a expensive op to process)
                 # it will adapt the accuracy to provide a faster preview
                 if isinstance(self.operations[i].Proxy, PathAdaptive.PathAdaptive):
-                    self.accuracy = 1.0
+                    # self.accuracy = 1.0
+                    pass
 
         self.stock = self.job.Stock.Shape
         if (self.isVoxel):
@@ -192,6 +196,10 @@ class PathLiveSimulation:
         # self.cutTool.Placement = FreeCAD.Placement(self.curpos, self.stdrot)
         self.cutTool.Placement = self.curpos
         self.opCommands =  self.operation.Path.Commands
+
+        self.processTimerMod = int(float(len(self.opCommands))*self.processTimerAccuracy)
+        if self.processTimerMod < 1:
+            self.processTimerMod = 1
 
     def SimulateMill(self):
         self.busy = False
@@ -236,6 +244,16 @@ class PathLiveSimulation:
     #     self.skipStep = True
     #     self.PerformCut()
 
+    def updateProcessTimer(self):
+        if self.icmd % self.processTimerMod == 0:
+            loading = int((float(self.icmd+1)/float(len(self.opCommands)))*100)
+            self.jobsim.Label = self.jobsim.Name+" - "\
+                                +self.activeOps[self.ioperation].Name+"("+str(self.ioperation+1)+"/"+str(len(self.activeOps))+")"\
+                                +" "+str(loading)+"%"
+
+        if self.icmd+1 == len(self.opCommands):
+            self.jobsim.Label = self.jobsim.Name
+
     def PerformCutBoolean(self):
         if self.resetSimulation:
             self.resetSimulation = False
@@ -246,6 +264,7 @@ class PathLiveSimulation:
         self.busy = True
 
         cmd = self.operation.Path.Commands[self.icmd]
+
         # for cmd in job.Path.Commands:
         pathSolid = None
 
@@ -305,6 +324,10 @@ class PathLiveSimulation:
         self.busy = True
 
         cmd = self.opCommands[self.icmd]
+
+        # Change the job Label to show the actual operation process in real-time
+        self.updateProcessTimer()
+
         # for cmd in job.Path.Commands:
         if cmd.Name in ['G0', 'G1', 'G2', 'G3']:
             self.curpos = self.voxSim.ApplyCommand(self.curpos, cmd)
