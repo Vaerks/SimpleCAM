@@ -103,6 +103,10 @@ class ViewProvider:
         vobj.setEditorMode('Transparency', mode)
         self.deleteOnReject = True
 
+        if not vobj.Object.ToolControllers.Group:
+            toolmanager = PathToolLibraryManager.EditorPanel(vobj.Object, None)
+            toolmanager.copyTools(True)
+
     def attach(self, vobj):
         self.vobj = vobj
         self.obj = vobj.Object
@@ -186,20 +190,38 @@ class ViewProvider:
     def claimChildren(self):
         PathLog.track()
         children = []
-        children.append(self.obj.ToolControllers)
+        #children.append(self.obj.ToolControllers)
         children.append(self.obj.Operations)
+
+        configurationlist = []
+
         if hasattr(self.obj, 'Model'):
             # unfortunately this function is called before the object has been fully loaded
-            # which means we could be dealing with an old job which doesn't have the new Model
+            #  which means we could be dealing with an old job which doesn't have the new Model
             # yet.
             self.obj.Model.ViewObject.Visibility = True
-            children.append(self.obj.Model)
+            configurationlist.append(self.obj.Model)
+            # children.append(self.obj.Model)
         if self.obj.Stock:
             self.obj.Stock.ViewObject.Visibility = True
-            children.append(self.obj.Stock)
+            configurationlist.append(self.obj.Stock)
+            # children.append(self.obj.Stock)
         if hasattr(self.obj, 'SetupSheet'):
             # when loading a job that didn't have a setup sheet they might not've been created yet
-            children.append(self.obj.SetupSheet)
+            configurationlist.append(self.obj.SetupSheet)
+            # children.append(self.obj.SetupSheet)
+
+        simulation = FreeCAD.ActiveDocument.getObject("Simulation_"+self.obj.Name)
+        saves = FreeCAD.ActiveDocument.getObject("Saves_"+self.obj.Name)
+
+        if simulation is not None and saves is not None:
+            configurationlist.append(simulation)
+            configurationlist.append(saves)
+
+        if hasattr(self.obj, 'Configuration'):
+            self.obj.Configuration.Group = configurationlist
+            children.append(self.obj.Configuration)
+
         return children
 
     def onDelete(self, vobj, arg2=None):
@@ -1186,6 +1208,12 @@ class TaskPanel:
             self.obj.Document.recompute()
             self.template.updateUI()
 
+    def setupToolTip(self, obj, text="", image_path=None):
+        if image_path is not None:
+            obj.setToolTip('<b>{0}</b><br><img src="{1}">'.format(text, image_path))
+        else:
+            obj.setToolTip('<b>{0}</b>'.format(text))
+
     def setupUi(self, activate):
         self.setupGlobal.setupUi()
         self.setupOps.setupUi()
@@ -1228,6 +1256,8 @@ class TaskPanel:
 
         self.form.stock.currentIndexChanged.connect(self.updateStockEditor)
         self.form.refreshStock.clicked.connect(self.refreshStock)
+        self.setupToolTip(self.form.stock, "This is a <u>test</u>",
+                          "C:/Users/peter/Documents/DTU/MHTech/CAD-0.18/src/Mod/Path/PathScripts/test.png")
 
         self.form.simpleRotationX.clicked.connect(lambda: self.simpleRotation(FreeCAD.Vector(1, 0, 0)))
         self.form.simpleRotationY.clicked.connect(lambda: self.simpleRotation(FreeCAD.Vector(0, 1, 0)))

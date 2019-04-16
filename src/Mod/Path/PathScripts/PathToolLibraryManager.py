@@ -536,14 +536,24 @@ class EditorPanel():
         if len(PathUtils.GetJobs()) == 0:
             self.form.btnCopyTools.setEnabled(False)
 
-    def copyTools(self):
-        tools = []
-        model = self.form.ToolsList.model()
-        for i in range(model.rowCount()):
-            item = model.item(i, 0)
-            if item.checkState():
+    def copyTools(self, noGUI=False):
+
+        # Copy all the tools if the operation is asked directly from the code
+        if noGUI:
+            tools = []
+            model = self.form.ToolsList.model()
+            for i in range(model.rowCount()):
                 item = model.index(i, 1)
                 tools.append(item.data())
+        else:
+            tools = []
+            model = self.form.ToolsList.model()
+            for i in range(model.rowCount()):
+                item = model.item(i, 0)
+                if item.checkState():
+                    item = model.index(i, 1)
+                    tools.append(item.data())
+
         if len(tools) == 0:
             return
 

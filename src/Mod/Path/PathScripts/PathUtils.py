@@ -59,7 +59,23 @@ def convertMeshesToPart(meshes, name):
     shape.makeShapeFromMesh(mesh.Topology, 0.05)  # the second arg is the tolerance for sewing
     solid = Part.makeSolid(shape)
     Part.show(solid, name)
-    return solid
+    return
+
+def copyMesh(m, name):
+    deleteObject(name)
+    mesh = Mesh.Mesh()
+    mesh.addMesh(m)
+    Mesh.show(mesh, name)
+    return mesh
+
+def copyMeshes(meshes, name):
+    mesh = Mesh.Mesh()
+
+    for m in meshes:
+        mesh.addMesh(m)
+
+    Mesh.show(mesh, name)
+    return m
 
 def hideObject(objname):
     try:

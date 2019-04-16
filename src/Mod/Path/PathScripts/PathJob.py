@@ -75,6 +75,8 @@ def createResourceClone(obj, orig, name, icon):
         # can't clone panel sheets - they have to be panel sheets
         return orig
 
+    orig.ViewObject.Visibility = False
+
     clone = Draft.clone(orig)
     clone.Label = "%s-%s" % (name, orig.Label)
     clone.addProperty('App::PropertyString', 'PathResource')
@@ -94,7 +96,7 @@ def createModelResourceClone(obj, orig):
 
 class ObjectJob:
 
-    def __init__(self, obj, models, templateFile = None):
+    def __init__(self, obj, models, templateFile = None, tcs = None):
         self.obj = obj
         obj.addProperty("App::PropertyFile", "PostProcessorOutputFile", "Output", QtCore.QT_TRANSLATE_NOOP("PathJob","The NC output file for this project"))
         obj.addProperty("App::PropertyEnumeration", "PostProcessor", "Output", QtCore.QT_TRANSLATE_NOOP("PathJob","Select the Post Processor"))
@@ -131,14 +133,15 @@ class ObjectJob:
         ops = FreeCAD.ActiveDocument.addObject("Path::FeatureCompoundPython", "Operations")
         if ops.ViewObject:
             ops.ViewObject.Proxy = 0
-            ops.ViewObject.Visibility = False
+            ops.ViewObject.Visibility = True
 
         obj.Operations = ops
 
-        tcs = FreeCAD.ActiveDocument.addObject("Path::FeatureCompoundPython", "ToolControllers")
+        if tcs is None:
+            tcs = FreeCAD.ActiveDocument.getObject("ToolControllers")
+        tcs.ViewObject.Visibility = True
 
         obj.ToolControllers = tcs
-        obj.ToolControllers.Group = []
 
         obj.setEditorMode('Operations', 2) # hide
         obj.setEditorMode('Placement', 2)
@@ -183,6 +186,18 @@ class ObjectJob:
             obj.Base = None
             obj.removeProperty('Base')
 
+        if not hasattr(obj, 'Configuration'):
+            obj.addProperty("App::PropertyLink", "Configuration", "Base", QtCore.QT_TRANSLATE_NOOP("PathJob",
+                                                                                                   "Configuration folder."))
+
+            config = FreeCAD.ActiveDocument.addObject("App::DocumentObjectGroup", "Configuration")
+
+            if config.ViewObject:
+                config.ViewObject.Visibility = False
+
+            obj.Configuration = config
+
+
     def removeBase(self, obj, base, removeFromModel):
         if isResourceClone(obj, base, None):
             PathUtil.clearExpressionEngine(base)
@@ -223,6 +238,9 @@ class ObjectJob:
         obj.Model.Group = []
         doc.removeObject(obj.Model.Name)
         obj.Model = None
+
+        obj.Configuration.Group = []
+        doc.removeObject(obj.Configuration)
 
         # Tool controllers don't depend on anything
         PathLog.debug('taking down tool controller')
@@ -292,7 +310,7 @@ class ObjectJob:
     def setFromTemplateFile(self, obj, template):
         '''setFromTemplateFile(obj, template) ... extract the properties from the given template file and assign to receiver.
         This will also create any TCs stored in the template.'''
-        tcs = []
+        tcs = self.obj.ToolControllers.Group
         if template:
             with open(PathUtil.toUnicode(template), 'rb') as fp:
                 attrs = json.load(fp)
@@ -325,8 +343,11 @@ class ObjectJob:
                 obj.ToolControllers.Group = tcs
             else:
                 PathLog.error(translate('PathJob', "Unsupported PathJob template version %s") % attrs.get(JobTemplate.Version))
+
         if not tcs:
-            self.addToolController(PathToolController.Create())
+            # Init all Tools in ToolControllers
+            #self.addToolController(PathToolController.Create())
+            pass
 
     def templateAttrs(self, obj):
         '''templateAttrs(obj) ... answer a dictionary with all properties of the receiver that should be stored in a template file.'''
@@ -427,6 +448,11 @@ def Instances():
 def Create(name, base, templateFile = None):
     '''Create(name, base, templateFile=None) ... creates a new job and all it's resources.
     If a template file is specified the new job is initialized with the values from the template.'''
+
+    tcs = FreeCAD.ActiveDocument.getObject("ToolControllers")
+    if tcs is None:
+        tcs = FreeCAD.ActiveDocument.addObject("Path::FeatureCompoundPython", "ToolControllers")
+
     if str == type(base[0]):
         models = []
         for baseName in base:
@@ -434,6 +460,6 @@ def Create(name, base, templateFile = None):
     else:
         models = base
     obj = FreeCAD.ActiveDocument.addObject("Path::FeaturePython", name)
-    proxy = ObjectJob(obj, models, templateFile)
+    proxy = ObjectJob(obj, models, templateFile, tcs)
     return obj
 
