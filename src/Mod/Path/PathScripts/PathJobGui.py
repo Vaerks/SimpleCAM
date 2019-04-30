@@ -640,8 +640,6 @@ class TaskPanel:
         FreeCAD.ActiveDocument.commitTransaction()
         self.cleanup(resetEdit)
 
-        PathLiveSimulatorGui.recomputeSimulation(job=self.obj)
-
     def reject(self, resetEdit=True):
         PathLog.track()
         self.preCleanup()
@@ -1318,13 +1316,17 @@ class TaskPanel:
     def clearSelection(self, doc):
         self.updateSelection()
 
-def Create(base, template=None):
+def Create(base, template=None, labelname=None):
     '''Create(base, template) ... creates a job instance for the given base object
     using template to configure it.'''
     FreeCADGui.addModule('PathScripts.PathJob')
     FreeCAD.ActiveDocument.openTransaction(translate("Path_Job", "Create Job"))
     try:
         obj = PathJob.Create('Job', base, template)
+
+        if labelname is not None:
+            obj.Label = obj.Name + " ("+labelname+")"
+
         ViewProvider(obj.ViewObject)
         FreeCAD.ActiveDocument.commitTransaction()
         obj.Document.recompute()

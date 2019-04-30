@@ -47,13 +47,18 @@ else:
 class JobCreate:
     DataObject = QtCore.Qt.ItemDataRole.UserRole
 
-    def __init__(self, parent=None, sel=None):
+    def __init__(self, parent=None, sel=None, superJob=None):
+        self.superJob = superJob
         self.dialog = FreeCADGui.PySideUic.loadUi(":/panels/DlgJobCreate.ui")
         self.itemsSolid = QtGui.QTreeWidgetItem([translate('PathJob', 'Solids')])
         self.itemsTwoD  = QtGui.QTreeWidgetItem([translate('PathJob', '2D')])
         self.itemsJob   = QtGui.QTreeWidgetItem([translate('PathJob', 'Jobs')])
         self.dialog.templateGroup.hide()
         self.dialog.modelGroup.hide()
+
+    def getJobName(self):
+        jobname = self.dialog.jobnametext.text
+        return str(jobname)
 
     def setupTitle(self, title):
         self.dialog.setWindowTitle(title)
@@ -166,6 +171,10 @@ class JobCreate:
     def getModels(self):
         '''answer the base models selected for the job'''
         models = []
+
+        if self.superJob is not None and hasattr(self.superJob, "Model"):
+            models = self.superJob.Model.Group
+            return models
 
         for i in range(self.itemsSolid.childCount()):
             if self.itemsSolid.child(i).checkState(0) == QtCore.Qt.CheckState.Checked:

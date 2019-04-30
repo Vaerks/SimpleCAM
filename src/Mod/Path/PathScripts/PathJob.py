@@ -240,7 +240,7 @@ class ObjectJob:
         obj.Model = None
 
         obj.Configuration.Group = []
-        doc.removeObject(obj.Configuration)
+        doc.removeObject(obj.Configuration.Name)
 
         # Tool controllers don't depend on anything
         PathLog.debug('taking down tool controller')

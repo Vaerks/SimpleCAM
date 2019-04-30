@@ -2,6 +2,8 @@ import FreeCAD
 from PathScripts import PathLiveSimulator
 from PathScripts import PathUtils
 import os
+from threading import Thread
+import time
 
 from FreeCAD import Vector, Base
 
@@ -14,6 +16,10 @@ if FreeCAD.GuiUp:
 def recomputeSimulation(obj=None, job=None):
     PathLiveSimulator.activateSimulation(obj, job)
 
+def recomputeResult(job):
+    PathLiveSimulator.createResultStock(job)
+
+
 class CommandPathLiveSimulate:
 
     def GetResources(self):
@@ -24,9 +30,14 @@ class CommandPathLiveSimulate:
 
     def IsActive(self):
         if FreeCAD.ActiveDocument is not None:
-            for o in FreeCAD.ActiveDocument.Objects:
-                if o.Name[:3] == "Job":
+            selection = FreeCADGui.Selection.getSelectionEx()
+
+            if selection is not None:
+                job = PathUtils.findParentJob(selection[0].Object)
+                if job is not None:
+                    if FreeCAD.ActiveDocument.getObject("ResultStock_"+job.Name):
                         return True
+
         return False
 
     def activateSimulation(self):
@@ -41,12 +52,10 @@ class CommandPathLiveSimulate:
             job = PathUtils.findParentJob(obj)
 
             if job.Simulation:
-                PathUtils.hideObject("CutMaterial_"+job.Name)
-                PathUtils.hideObject("CutMaterialIn_"+job.Name)
+                PathUtils.hideObject("ResultStock_"+job.Name)
                 job.Simulation = False
             else:
-                PathUtils.showObject("CutMaterial_"+job.Name)
-                PathUtils.showObject("CutMaterialIn_"+job.Name)
+                PathUtils.showObject("ResultStock_"+job.Name)
                 job.Simulation = True
 
 

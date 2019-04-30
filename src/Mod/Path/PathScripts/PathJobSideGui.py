@@ -27,24 +27,29 @@ class CommandPathJobSide:
         return False
 
     def Activated(self):
+        for o in FreeCAD.ActiveDocument.Objects:
+            if o.Name[:3] == "Job":
+                job = o
+
         print("Create new working job side")
-        dialog = PathJobDlg.JobCreate()
-        dialog.setupTemplate()
-        dialog.setupModel()
+        dialog = PathJobDlg.JobCreate(superJob=job)
+        # dialog.setupTemplate()
+        # dialog.setupModel()
+
         if dialog.exec_() == 1:
             models = dialog.getModels()
             if models:
-                self.Execute(models, dialog.getTemplate())
+                self.Execute(models, dialog.getTemplate(), labelname=dialog.getJobName())
                 FreeCAD.ActiveDocument.recompute()
 
     @classmethod
-    def Execute(cls, base, template):
+    def Execute(cls, base, template, labelname):
         FreeCADGui.addModule('PathScripts.PathJobGui')
         if template:
             template = "'%s'" % template
         else:
             template = 'None'
-        FreeCADGui.doCommand('PathScripts.PathJobGui.Create(%s, %s)' % ([o.Name for o in base], template))
+        FreeCADGui.doCommand('PathScripts.PathJobGui.Create(%s, labelname=%s)' % ([o.Name for o in base], labelname))
 
 
 if FreeCAD.GuiUp:

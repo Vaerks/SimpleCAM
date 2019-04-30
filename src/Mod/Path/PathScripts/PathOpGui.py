@@ -177,7 +177,17 @@ class ViewProvider(object):
                 FreeCAD.ActiveDocument.removeObject(subobj.Name)
                 PathUtil.clearExpressionEngine(subobj)
 
+                if hasattr(subobj, "SimShape"):
+                    PathUtils.deleteObject(obj.SimShape.Name)
+
         PathUtil.clearExpressionEngine(obj)
+
+        # Deletes the associated Simulation shape in the Saves folder (Configuration)
+        if hasattr(obj, "SimShape"):
+            PathUtils.deleteObject(obj.SimShape.Name)
+
+        if obj.IsSuboperation is False:
+            PathLiveSimulatorGui.recomputeResult(PathUtils.findParentJob(obj))
 
         return True
 
@@ -951,7 +961,8 @@ class TaskPanel(object):
         self.cleanup(resetEdit)
 
         # Process the LiveSimulator
-        PathLiveSimulatorGui.recomputeSimulation(self.obj)
+        if self.obj.IsSuboperation is False:
+            PathLiveSimulatorGui.recomputeSimulation(self.obj)
 
     def reject(self, resetEdit=True):
         '''reject() ... callback invoked when user presses the task panel Cancel button.'''

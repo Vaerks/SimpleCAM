@@ -49,6 +49,22 @@ else:
     PathLog.setLevel(PathLog.Level.INFO, PathLog.thisModule())
 #FreeCAD.setLogLevel('Path.Area', 0)
 
+def makeShapeIntersection(shapes, name):
+    if len(shapes) < 1:
+        return None
+    if len(shapes) == 1:
+        newshape = shapes[0]
+    else:
+        shape = shapes.pop(0)
+
+        for s in shapes:
+            shape = shape.common(s)
+
+        newshape = shape
+
+    Part.show(newshape, name)
+    return newshape
+
 def convertMeshesToPart(meshes, name):
     mesh = Mesh.Mesh()
 
@@ -59,7 +75,7 @@ def convertMeshesToPart(meshes, name):
     shape.makeShapeFromMesh(mesh.Topology, 0.05)  # the second arg is the tolerance for sewing
     solid = Part.makeSolid(shape)
     Part.show(solid, name)
-    return
+    return mesh
 
 def copyMesh(m, name):
     deleteObject(name)
