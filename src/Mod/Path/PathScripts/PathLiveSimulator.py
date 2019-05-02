@@ -376,39 +376,42 @@ class PathLiveSimulation:
             return
         self.busy = True
 
-        cmd = self.opCommands[self.icmd]
+        if self.icmd<len(self.opCommands):
+            cmd = self.opCommands[self.icmd]
 
-        # Change the job Label to show the actual operation process in real-time
-        self.updateProcessTimer()
+            # Change the job Label to show the actual operation process in real-time
+            if self.icmd < len(self.opCommands):
+                self.updateProcessTimer()
 
-        # for cmd in job.Path.Commands:
-        if cmd.Name in ['G0', 'G1', 'G2', 'G3']:
-            self.curpos = self.voxSim.ApplyCommand(self.curpos, cmd)
-            if not self.disableAnim:
-                self.cutTool.Placement = self.curpos  # FreeCAD.Placement(self.curpos, self.stdrot)
-                (self.cutMaterial.Mesh, self.cutMaterialIn.Mesh) = self.voxSim.GetResultMesh()
-        if cmd.Name in ['G81', 'G82', 'G83']:
-            extendcommands = []
-            if self.firstDrill:
-                extendcommands.append(Path.Command('G0', {"X": 0.0, "Y": 0.0, "Z": cmd.r}))
-                self.firstDrill = False
-            extendcommands.append(Path.Command('G0', {"X": cmd.x, "Y": cmd.y, "Z": cmd.r}))
-            extendcommands.append(Path.Command('G1', {"X": cmd.x, "Y": cmd.y, "Z": cmd.z}))
-            extendcommands.append(Path.Command('G1', {"X": cmd.x, "Y": cmd.y, "Z": cmd.r}))
-            for ecmd in extendcommands:
-                self.curpos = self.voxSim.ApplyCommand(self.curpos, ecmd)
+            # for cmd in job.Path.Commands:
+            if cmd.Name in ['G0', 'G1', 'G2', 'G3']:
+                self.curpos = self.voxSim.ApplyCommand(self.curpos, cmd)
                 if not self.disableAnim:
                     self.cutTool.Placement = self.curpos  # FreeCAD.Placement(self.curpos, self.stdrot)
                     (self.cutMaterial.Mesh, self.cutMaterialIn.Mesh) = self.voxSim.GetResultMesh()
+            if cmd.Name in ['G81', 'G82', 'G83']:
+                extendcommands = []
+                if self.firstDrill:
+                    extendcommands.append(Path.Command('G0', {"X": 0.0, "Y": 0.0, "Z": cmd.r}))
+                    self.firstDrill = False
+                extendcommands.append(Path.Command('G0', {"X": cmd.x, "Y": cmd.y, "Z": cmd.r}))
+                extendcommands.append(Path.Command('G1', {"X": cmd.x, "Y": cmd.y, "Z": cmd.z}))
+                extendcommands.append(Path.Command('G1', {"X": cmd.x, "Y": cmd.y, "Z": cmd.r}))
+                for ecmd in extendcommands:
+                    self.curpos = self.voxSim.ApplyCommand(self.curpos, ecmd)
+                    if not self.disableAnim:
+                        self.cutTool.Placement = self.curpos  # FreeCAD.Placement(self.curpos, self.stdrot)
+                        (self.cutMaterial.Mesh, self.cutMaterialIn.Mesh) = self.voxSim.GetResultMesh()
 
-        if isinstance(self.op.Proxy, PathAdaptive.PathAdaptive):
-            self.icmd += 3
-            self.iprogress += 3
-        else:
-            self.icmd += 1
-            self.iprogress += 1
+            if isinstance(self.op.Proxy, PathAdaptive.PathAdaptive):
+                self.icmd += 3
+                self.iprogress += 3
+            else:
+                self.icmd += 1
+                self.iprogress += 1
 
-        self.UpdateProgress()
+            self.UpdateProgress()
+
         if self.icmd >= len(self.opCommands):
             # self.cutMaterial.Shape = self.stock.removeSplitter()
             self.ioperation += 1
@@ -564,7 +567,8 @@ class PathLiveSimulation:
 
     def onAccuracyBarChange(self):
         form = self.taskForm.form
-        self.accuracy = 1.1 - 0.1 * form.sliderAccuracy.value()
+        if hasattr(form.sliderAccuracy, "value"):
+            self.accuracy = 1.1 - 0.1 * form.sliderAccuracy.value()
         form.labelAccuracy.setText(str(self.accuracy) + "%")
 
     def GuiBusy(self, isBusy):
