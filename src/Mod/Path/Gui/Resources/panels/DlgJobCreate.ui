@@ -17,7 +17,7 @@
    <item>
     <widget class="QWidget" name="widget_4" native="true">
      <layout class="QGridLayout" name="gridLayout_2">
-      <item row="2" column="0">
+      <item row="1" column="0">
        <widget class="QGroupBox" name="templateGroup">
         <property name="enabled">
          <bool>true</bool>
@@ -39,7 +39,7 @@
         </layout>
        </widget>
       </item>
-      <item row="3" column="0">
+      <item row="2" column="0">
        <widget class="QGroupBox" name="modelGroup">
         <property name="title">
          <string>Model</string>
@@ -73,54 +73,6 @@
           </widget>
          </item>
         </layout>
-       </widget>
-      </item>
-      <item row="0" column="0">
-       <widget class="QFrame" name="frame">
-        <property name="minimumSize">
-         <size>
-          <width>0</width>
-          <height>40</height>
-         </size>
-        </property>
-        <property name="baseSize">
-         <size>
-          <width>1000</width>
-          <height>500</height>
-         </size>
-        </property>
-        <property name="frameShape">
-         <enum>QFrame::StyledPanel</enum>
-        </property>
-        <property name="frameShadow">
-         <enum>QFrame::Raised</enum>
-        </property>
-        <widget class="QLineEdit" name="jobnametext">
-         <property name="geometry">
-          <rect>
-           <x>10</x>
-           <y>20</y>
-           <width>350</width>
-           <height>19</height>
-          </rect>
-         </property>
-         <property name="text">
-          <string>Job</string>
-         </property>
-        </widget>
-        <widget class="QLabel" name="label">
-         <property name="geometry">
-          <rect>
-           <x>10</x>
-           <y>0</y>
-           <width>350</width>
-           <height>10</height>
-          </rect>
-         </property>
-         <property name="text">
-          <string>Job name</string>
-         </property>
-        </widget>
        </widget>
       </item>
      </layout>

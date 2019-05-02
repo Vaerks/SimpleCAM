@@ -200,6 +200,14 @@ class ViewProvider:
             #  which means we could be dealing with an old job which doesn't have the new Model
             # yet.
             self.obj.Model.ViewObject.Visibility = True
+            if hasattr(self.obj.Model.Group[0], "XAngle") is False:
+                self.obj.Model.Group[0].addProperty("App::PropertyInteger", "XAngle", "Rotation")
+                self.obj.Model.Group[0].addProperty("App::PropertyInteger", "YAngle", "Rotation")
+                self.obj.Model.Group[0].addProperty("App::PropertyInteger", "ZAngle", "Rotation")
+                self.obj.Model.Group[0].XAngle = 0
+                self.obj.Model.Group[0].YAngle = 0
+                self.obj.Model.Group[0].ZAngle = 0
+
             configurationlist.append(self.obj.Model)
             # children.append(self.obj.Model)
         if self.obj.Stock:
@@ -243,7 +251,7 @@ class ViewProvider:
         if base.ViewObject:
             orig = PathUtil.getPublicObject(obj.Proxy.baseObject(obj, base))
             self.baseVisibility[base.Name] = (base, base.ViewObject.Visibility, orig, orig.ViewObject.Visibility)
-            orig.ViewObject.Visibility = False
+            # orig.ViewObject.Visibility = False
             base.ViewObject.Visibility = True
 
     def forgetBaseVisibility(self, obj, base):
@@ -300,7 +308,12 @@ class StockEdit(object):
             else:
                 widget.hide()
         if select:
-            self.form.stock.setCurrentIndex(self.Index)
+            if hasattr(obj, "IsJobSide"):
+                if obj.IsJobSide:
+                    self.form.stock.setCurrentIndex(4)
+                else:
+                    self.form.stock.setCurrentIndex(self.Index)
+
         editor = self.editorFrame()
         showHide(self.form.stockFromExisting, editor)
         showHide(self.form.stockFromBase, editor)
@@ -376,6 +389,8 @@ class StockFromBaseBoundBoxEdit(StockEdit):
         self.setLengthField(self.form.stockExtYpos, obj.Stock.ExtYpos)
         self.setLengthField(self.form.stockExtZneg, obj.Stock.ExtZneg)
         self.setLengthField(self.form.stockExtZpos, obj.Stock.ExtZpos)
+
+
 
     def setupUi(self, obj):
         PathLog.track()
@@ -507,9 +522,10 @@ class StockFromSimulationEdit(StockEdit):
         solids = []
 
         for job in jobs:
-            result = FreeCAD.ActiveDocument.getObject("Result_"+job.Name).Group
-            for r in result:
-                solids.append(r)
+            result = FreeCAD.ActiveDocument.getObject("Result_"+job.Name)
+            if result is not None:
+                for r in result.Group:
+                    solids.append(r)
 
         return solids
 
@@ -625,6 +641,8 @@ class TaskPanel:
         self.setupGlobal = PathSetupSheetGui.GlobalEditor(self.obj.SetupSheet, self.form)
         self.setupOps = PathSetupSheetGui.OpsDefaultEditor(self.obj.SetupSheet, self.form)
 
+        self.updateStockEditor(self.form.stock.currentIndex(), True)
+
     def preCleanup(self):
         PathLog.track()
         FreeCADGui.Selection.removeObserver(self)
@@ -651,6 +669,8 @@ class TaskPanel:
             FreeCAD.ActiveDocument.openTransaction(translate("Path_Job", "Uncreate Job"))
             if self.obj.ViewObject.Proxy.onDelete(self.obj.ViewObject, None):
                 FreeCAD.ActiveDocument.removeObject(self.obj.Name)
+
+
             FreeCAD.ActiveDocument.commitTransaction()
         self.cleanup(resetEdit)
         return True
@@ -784,6 +804,12 @@ class TaskPanel:
         self.stockEdit.setFields(self.obj)
         self.setupGlobal.setFields()
         self.setupOps.setFields()
+
+        # For Angle rotation
+        model = self.obj.Model.Group[0]
+        self.form.x_rotatAngle.setText(str(model.XAngle))
+        self.form.y_rotatAngle.setText(str(model.YAngle))
+        self.form.z_rotatAngle.setText(str(model.ZAngle))
 
     def setPostProcessorOutputFile(self):
         filename = QtGui.QFileDialog.getSaveFileName(self.form, translate("Path_Job", "Select Output File"), None, translate("Path_Job", "All Files (*.*)"))
@@ -1141,8 +1167,11 @@ class TaskPanel:
                 self.form.setOrigin.setEnabled(False)
                 self.form.moveToOrigin.setEnabled(False)
         else:
-            self.form.setOrigin.setEnabled(False)
-            self.form.moveToOrigin.setEnabled(False)
+            try:
+                self.form.setOrigin.setEnabled(False)
+                self.form.moveToOrigin.setEnabled(False)
+            except:
+                pass
 
         if len(sel) == 0 or self.obj.Stock in [s.Object for s in sel]:
             self.form.centerInStock.setEnabled(False)
@@ -1212,6 +1241,23 @@ class TaskPanel:
         else:
             obj.setToolTip('<b>{0}</b>'.format(text))
 
+    def updateAxisRotation(self, model, stock, angle, newangle, axis):
+        try:
+            newangle = int(newangle)
+        except:
+            newangle = 0
+
+        a = newangle-angle
+
+        Draft.rotate([model, stock], a, axis=axis)
+
+        if axis == FreeCAD.Vector(1, 0, 0):
+            model.XAngle = newangle
+        elif axis == FreeCAD.Vector(0, 1, 0):
+            model.YAngle = newangle
+        elif axis == FreeCAD.Vector(0, 0, 1):
+            model.ZAngle = newangle
+
     def setupUi(self, activate):
         self.setupGlobal.setupUi()
         self.setupOps.setupUi()
@@ -1260,6 +1306,13 @@ class TaskPanel:
         self.form.simpleRotationX.clicked.connect(lambda: self.simpleRotation(FreeCAD.Vector(1, 0, 0)))
         self.form.simpleRotationY.clicked.connect(lambda: self.simpleRotation(FreeCAD.Vector(0, 1, 0)))
         self.form.simpleRotationZ.clicked.connect(lambda: self.simpleRotation(FreeCAD.Vector(0, 0, 1)))
+
+        # Rotation Angle textboxes
+        model = self.obj.Model.Group[0]
+        stock = self.obj.Stock
+        self.form.x_rotatAngle.textChanged.connect(lambda: self.updateAxisRotation(model, stock, model.XAngle, self.form.x_rotatAngle.text(), FreeCAD.Vector(1, 0, 0)))
+        self.form.y_rotatAngle.textChanged.connect(lambda: self.updateAxisRotation(model, stock, model.YAngle, self.form.y_rotatAngle.text(), FreeCAD.Vector(0, 1, 0)))
+        self.form.z_rotatAngle.textChanged.connect(lambda: self.updateAxisRotation(model, stock, model.ZAngle, self.form.z_rotatAngle.text(), FreeCAD.Vector(0, 0, 1)))
 
         self.form.modelSetX0.clicked.connect(lambda: self.modelSet0(FreeCAD.Vector(-1,  0,  0)))
         self.form.modelSetY0.clicked.connect(lambda: self.modelSet0(FreeCAD.Vector( 0, -1,  0)))
@@ -1316,16 +1369,16 @@ class TaskPanel:
     def clearSelection(self, doc):
         self.updateSelection()
 
-def Create(base, template=None, labelname=None):
+def Create(base, template=None, jobside=False):
     '''Create(base, template) ... creates a job instance for the given base object
     using template to configure it.'''
     FreeCADGui.addModule('PathScripts.PathJob')
     FreeCAD.ActiveDocument.openTransaction(translate("Path_Job", "Create Job"))
     try:
-        obj = PathJob.Create('Job', base, template)
+        obj = PathJob.Create("Job", base, template)
 
-        if labelname is not None:
-            obj.Label = obj.Name + " ("+labelname+")"
+        obj.addProperty("App::PropertyBool", "IsJobSide", "Job Side")
+        obj.IsJobSide = jobside
 
         ViewProvider(obj.ViewObject)
         FreeCAD.ActiveDocument.commitTransaction()

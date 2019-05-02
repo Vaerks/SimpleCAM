@@ -14,6 +14,8 @@ from PathScripts import PathUtils
 
 from FreeCAD import Vector, Base
 
+import threading
+
 _filePath = os.path.dirname(os.path.abspath(__file__))
 
 if FreeCAD.GuiUp:
@@ -25,9 +27,9 @@ def resetSimulation(job, opname):
     PathUtils.deleteObject("CutMaterial_"+job.Name+"_"+str(opname))
     PathUtils.deleteObject("CutMaterialIn_"+job.Name+"_"+str(opname))
 
-def createResultStock(job):
-    resultname = "ResultStock_"+job.Name
-    shapes = FreeCAD.ActiveDocument.getObject("Saves_"+job.Name).Group
+def generateResultStock(job):
+    resultname = "ResultStock_" + job.Name
+    shapes = FreeCAD.ActiveDocument.getObject("Saves_" + job.Name).Group
 
     shapeslist = []
     for shape in shapes:
@@ -44,11 +46,20 @@ def createResultStock(job):
     result.ViewObject.ShapeColor = (1.0, 0.0, 0.0, 0.0)
 
     if result is not None:
-        FreeCAD.ActiveDocument.getObject("Result_"+job.Name).Group = [result]
+        FreeCAD.ActiveDocument.getObject("Result_" + job.Name).Group = [result]
 
         if job.Simulation is False:
             result.ViewObject.hide()
 
+def createResultStock(job):
+    threads = threading.enumerate()
+    for thread in threads:
+        if thread.getName() == "StockThread":
+            thread.join()
+
+    stockthread = threading.Thread(target=(lambda: generateResultStock(job)))
+    stockthread.setName("StockThread")
+    stockthread.start()
 
 def activateSimulation(obj, jobsim):
     if jobsim is None:
@@ -342,8 +353,7 @@ class PathLiveSimulation:
                     print("invalid cut at cmd #{}".format(self.icmd))
         if not self.disableAnim:
             self.cutTool.Placement = FreeCAD.Placement(self.curpos, self.stdrot)
-        self.icmd += 1
-        self.iprogress += 1
+
         self.UpdateProgress()
         if self.icmd >= len(self.operation.Path.Commands):
             # self.cutMaterial.Shape = self.stock.removeSplitter()
@@ -390,8 +400,14 @@ class PathLiveSimulation:
                 if not self.disableAnim:
                     self.cutTool.Placement = self.curpos  # FreeCAD.Placement(self.curpos, self.stdrot)
                     (self.cutMaterial.Mesh, self.cutMaterialIn.Mesh) = self.voxSim.GetResultMesh()
-        self.icmd += 1
-        self.iprogress += 1
+
+        if isinstance(self.op.Proxy, PathAdaptive.PathAdaptive):
+            self.icmd += 3
+            self.iprogress += 3
+        else:
+            self.icmd += 1
+            self.iprogress += 1
+
         self.UpdateProgress()
         if self.icmd >= len(self.opCommands):
             # self.cutMaterial.Shape = self.stock.removeSplitter()
