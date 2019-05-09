@@ -186,6 +186,13 @@ class ObjectJob:
             obj.Base = None
             obj.removeProperty('Base')
 
+        modelRotationClone = FreeCAD.ActiveDocument.getObject("ModelRotation_" + self.obj.Name)
+
+        if modelRotationClone is None:
+            from PathScripts import PathUtils
+            modelRotationClone = PathUtils.createBoxShape("ModelRotation_" + self.obj.Name)
+            modelRotationClone.ViewObject.Visibility = False
+
         if not hasattr(obj, 'Configuration'):
             obj.addProperty("App::PropertyLink", "Configuration", "Base", QtCore.QT_TRANSLATE_NOOP("PathJob",
                                                                                                    "Configuration folder."))

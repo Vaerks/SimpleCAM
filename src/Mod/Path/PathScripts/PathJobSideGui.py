@@ -11,6 +11,21 @@ import json
 if FreeCAD.GuiUp:
     from PySide import QtGui, QtCore
 
+class ModelClone:
+    class ViewProvideer:
+
+        def __init__(self, vobj):
+            vobj.Proxy = self
+            # self.job = job
+
+        def setEdit(self, vobj=None, mode=0):
+            print("ModelClone is edited.")
+            return True
+
+        def accept(self):
+            print("Clone accepted")
+
+
 class CommandPathJobSide:
 
     def GetResources(self):

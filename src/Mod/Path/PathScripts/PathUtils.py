@@ -49,6 +49,16 @@ else:
     PathLog.setLevel(PathLog.Level.INFO, PathLog.thisModule())
 #FreeCAD.setLogLevel('Path.Area', 0)
 
+def createBoxShape(name):
+    mesh = Mesh.createBox()
+    convertMeshesToPart([mesh], name)
+    return FreeCAD.ActiveDocument.getObject(name)
+
+def copyShape(shape, name):
+    newshape = shape.copy()
+    Part.show(newshape, name)
+    return FreeCAD.ActiveDocument.getObject(name)
+
 def makeShapeIntersection(shapes, name):
     if len(shapes) < 1:
         return None

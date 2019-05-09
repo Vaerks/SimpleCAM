@@ -49,6 +49,7 @@ from contextlib import contextmanager
 from pivy import coin
 
 import copy
+import math
 
 from PathScripts import PathLiveSimulatorGui
 
@@ -89,6 +90,43 @@ def selectionEx():
                 FreeCADGui.Selection.addSelection(s.Object, s.SubElementNames)
             else:
                 FreeCADGui.Selection.addSelection(s.Object)
+
+def getAngle(model, index):
+    placement = model.Placement
+
+    angles={
+        "x": placement.Rotation.Axis[0] * (placement.Rotation.Angle * 180 / math.pi),
+        "y": placement.Rotation.Axis[1] * (placement.Rotation.Angle * 180 / math.pi),
+        "z": placement.Rotation.Axis[2] * (placement.Rotation.Angle * 180 / math.pi)
+    }
+
+    try:
+        angle = angles[index]
+        return angle
+
+    except:
+        return index
+
+def updateAxisRotation(obj, model, stock, angle, newangle, axis):
+    modelRotationClone = FreeCAD.ActiveDocument.getObject("ModelRotation_" + obj.Name)
+    angle = getAngle(modelRotationClone, angle)
+
+    if modelRotationClone is None:
+        return
+    try:
+        newangle = int(newangle)
+    except:
+        newangle = 0
+
+    a = newangle-angle
+    print("Angle: "+str(newangle)+" and "+str(angle))
+
+    if stock is not None:
+        Draft.rotate([stock], a, axis=axis)
+
+    if model is not None:
+        Draft.rotate([model], a, axis=axis)
+        modelRotationClone.Placement.Rotation = model.Placement.Rotation
 
 
 class ViewProvider:
@@ -175,7 +213,8 @@ class ViewProvider:
     def editObject(self, obj):
         if obj:
             if obj in self.obj.Model.Group:
-                return self.openTaskPanel('Model')
+                return
+                #return self.openTaskPanel('Model')
             if obj == self.obj.Stock:
                 return self.openTaskPanel('Stock')
             PathLog.info("Expected a specific object to edit - %s not recognized" % obj.Label)
@@ -221,10 +260,14 @@ class ViewProvider:
 
         simulation = FreeCAD.ActiveDocument.getObject("Simulation_"+self.obj.Name)
         saves = FreeCAD.ActiveDocument.getObject("Saves_"+self.obj.Name)
+        modelRotationClone = FreeCAD.ActiveDocument.getObject("ModelRotation_"+self.obj.Name)
 
         if simulation is not None and saves is not None:
             configurationlist.append(simulation)
             configurationlist.append(saves)
+
+        if modelRotationClone is not None:
+            configurationlist.append(modelRotationClone)
 
         if hasattr(self.obj, 'Configuration'):
             self.obj.Configuration.Group = configurationlist
@@ -246,6 +289,18 @@ class ViewProvider:
                     base.ViewObject.Proxy.onEdit(_OpenCloseResourceEditor)
         if prop == 'Stock' and self.obj.Stock and self.obj.Stock.ViewObject and self.obj.Stock.ViewObject.Proxy:
             self.obj.Stock.ViewObject.Proxy.onEdit(_OpenCloseResourceEditor)
+
+        modelRotationClone = FreeCAD.ActiveDocument.getObject("ModelRotation_" + self.obj.Name)
+
+        if modelRotationClone is not None:
+            newangle = modelRotationClone.Placement.Rotation.Angle * 180 / math.pi
+            axis = modelRotationClone.Placement.Rotation.Axis
+            angle = self.obj.Model.Group[0].Placement.Rotation.Angle * 180 / math.pi
+            self.obj.Model.Group[0].Placement = modelRotationClone.Placement
+            modelRotationClone.ViewObject.Visibility = False
+
+            if self.obj.Stock is not None:
+                updateAxisRotation(obj, None, self.obj.Stock, angle=angle, newangle=newangle, axis=axis)
 
     def rememberBaseVisibility(self, obj, base):
         if base.ViewObject:
@@ -807,9 +862,14 @@ class TaskPanel:
 
         # For Angle rotation
         model = self.obj.Model.Group[0]
-        self.form.x_rotatAngle.setText(str(model.XAngle))
-        self.form.y_rotatAngle.setText(str(model.YAngle))
-        self.form.z_rotatAngle.setText(str(model.ZAngle))
+        placement = model.Placement
+
+        x_angle = int(placement.Rotation.Axis[0]*(placement.Rotation.Angle*180/math.pi))
+        y_angle = int(placement.Rotation.Axis[1]*(placement.Rotation.Angle*180/math.pi))
+        z_angle = int(placement.Rotation.Axis[2]*(placement.Rotation.Angle*180/math.pi))
+        self.form.x_rotatAngle.setText(str(x_angle))
+        self.form.y_rotatAngle.setText(str(y_angle))
+        self.form.z_rotatAngle.setText(str(z_angle))
 
     def setPostProcessorOutputFile(self):
         filename = QtGui.QFileDialog.getSaveFileName(self.form, translate("Path_Job", "Select Output File"), None, translate("Path_Job", "All Files (*.*)"))
@@ -1241,23 +1301,6 @@ class TaskPanel:
         else:
             obj.setToolTip('<b>{0}</b>'.format(text))
 
-    def updateAxisRotation(self, model, stock, angle, newangle, axis):
-        try:
-            newangle = int(newangle)
-        except:
-            newangle = 0
-
-        a = newangle-angle
-
-        Draft.rotate([model, stock], a, axis=axis)
-
-        if axis == FreeCAD.Vector(1, 0, 0):
-            model.XAngle = newangle
-        elif axis == FreeCAD.Vector(0, 1, 0):
-            model.YAngle = newangle
-        elif axis == FreeCAD.Vector(0, 0, 1):
-            model.ZAngle = newangle
-
     def setupUi(self, activate):
         self.setupGlobal.setupUi()
         self.setupOps.setupUi()
@@ -1267,6 +1310,8 @@ class TaskPanel:
         # Info
         self.form.jobLabel.editingFinished.connect(self.getFields)
         self.form.jobModelEdit.clicked.connect(self.jobModelEdit)
+
+        self.form.visual_rotation_edit.clicked.connect(lambda: FreeCADGui.ActiveDocument.setEdit("ModelRotation_"+self.obj.Name, 0))
 
         # Post Processor
         self.form.postProcessor.currentIndexChanged.connect(self.getFields)
@@ -1310,9 +1355,10 @@ class TaskPanel:
         # Rotation Angle textboxes
         model = self.obj.Model.Group[0]
         stock = self.obj.Stock
-        self.form.x_rotatAngle.textChanged.connect(lambda: self.updateAxisRotation(model, stock, model.XAngle, self.form.x_rotatAngle.text(), FreeCAD.Vector(1, 0, 0)))
-        self.form.y_rotatAngle.textChanged.connect(lambda: self.updateAxisRotation(model, stock, model.YAngle, self.form.y_rotatAngle.text(), FreeCAD.Vector(0, 1, 0)))
-        self.form.z_rotatAngle.textChanged.connect(lambda: self.updateAxisRotation(model, stock, model.ZAngle, self.form.z_rotatAngle.text(), FreeCAD.Vector(0, 0, 1)))
+
+        self.form.x_rotatAngle.textChanged.connect(lambda: updateAxisRotation(self.obj, model, stock, "x", self.form.x_rotatAngle.text(), FreeCAD.Vector(1, 0, 0)))
+        self.form.y_rotatAngle.textChanged.connect(lambda: updateAxisRotation(self.obj, model, stock, "y", self.form.y_rotatAngle.text(), FreeCAD.Vector(0, 1, 0)))
+        self.form.z_rotatAngle.textChanged.connect(lambda: updateAxisRotation(self.obj, model, stock, "z", self.form.z_rotatAngle.text(), FreeCAD.Vector(0, 0, 1)))
 
         self.form.modelSetX0.clicked.connect(lambda: self.modelSet0(FreeCAD.Vector(-1,  0,  0)))
         self.form.modelSetY0.clicked.connect(lambda: self.modelSet0(FreeCAD.Vector( 0, -1,  0)))
