@@ -49,6 +49,14 @@ else:
     PathLog.setLevel(PathLog.Level.INFO, PathLog.thisModule())
 #FreeCAD.setLogLevel('Path.Area', 0)
 
+def getJobs():
+    objects = FreeCAD.ActiveDocument.Objects
+    list = []
+    for obj in objects:
+        if hasattr(obj, "IsJobSide"):
+            list.append(obj)
+    return list
+
 def createBoxShape(name):
     mesh = Mesh.createBox()
     convertMeshesToPart([mesh], name)

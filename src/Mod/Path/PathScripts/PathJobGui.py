@@ -119,7 +119,7 @@ def updateAxisRotation(obj, model, stock, angle, newangle, axis):
         newangle = 0
 
     a = newangle-angle
-    print("Angle: "+str(newangle)+" and "+str(angle))
+    # print("Angle: "+str(newangle)+" and "+str(angle))
 
     if stock is not None:
         Draft.rotate([stock], a, axis=axis)
@@ -299,6 +299,7 @@ class ViewProvider:
             self.obj.Model.Group[0].Placement = modelRotationClone.Placement
             modelRotationClone.ViewObject.Visibility = False
 
+            # Todo: Add an angle and axis check to optimize the code calls
             if self.obj.Stock is not None:
                 updateAxisRotation(obj, None, self.obj.Stock, angle=angle, newangle=newangle, axis=axis)
 
@@ -1423,6 +1424,8 @@ def Create(base, template=None, jobside=False):
     try:
         obj = PathJob.Create("Job", base, template)
 
+        obj.addProperty("App::PropertyBool", "IsActive", "Job Side")
+        obj.IsActive = True
         obj.addProperty("App::PropertyBool", "IsJobSide", "Job Side")
         obj.IsJobSide = jobside
 

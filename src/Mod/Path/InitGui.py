@@ -80,7 +80,7 @@ class PathWorkbench (Workbench):
         prepcmdlist = ["Path_Fixture", "Path_Comment", "Path_Stop", "Path_Custom"]
         twodopcmdlist = ["Path_Contour", "Path_Profile_Faces", "Path_Profile_Edges", "Path_Pocket_Shape", "Path_Drilling", "Path_MillFace", "Path_Helix", "Path_Adaptive"]
         superoperationslist = ["Path_SuperDrilling", "Path_SuperClearing", "Path_LiveSimulator"]
-        multisidejoblist = ["Path_JobSide"]
+        multisidejoblist = ["Path_JobSide", "Path_JobSideHideShow"]
         threedopcmdlist = ["Path_Pocket_3D"]
         engravecmdlist = ["Path_Engrave", "Path_Deburr"]
         modcmdlist = ["Path_OperationCopy", "Path_Array", "Path_SimpleCopy" ]

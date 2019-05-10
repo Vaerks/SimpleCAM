@@ -68,6 +68,7 @@ SET(PathScripts_SRCS
     PathScripts/PathJobDlg.py
     PathScripts/PathJobGui.py
 	PathScripts/PathJobSideGui.py
+	PathScripts/PathJobSideHideShow.py
     PathScripts/PathLog.py
     PathScripts/PathMillFace.py
     PathScripts/PathMillFaceGui.py
