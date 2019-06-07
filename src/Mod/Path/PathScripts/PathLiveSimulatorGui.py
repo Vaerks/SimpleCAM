@@ -13,11 +13,15 @@ if FreeCAD.GuiUp:
     import FreeCADGui
     from PySide import QtGui, QtCore
 
+LIVE_SIMULATION = False
+
 def recomputeSimulation(obj=None, job=None):
-    PathLiveSimulator.activateSimulation(obj, job)
+    if LIVE_SIMULATION:
+        PathLiveSimulator.activateSimulation(obj, job)
 
 def recomputeResult(job):
-    PathLiveSimulator.createResultStock(job)
+    if LIVE_SIMULATION:
+        PathLiveSimulator.createResultStock(job)
 
 
 class CommandPathLiveSimulate:

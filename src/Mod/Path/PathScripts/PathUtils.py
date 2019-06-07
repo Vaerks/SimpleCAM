@@ -42,6 +42,10 @@ from PathScripts import PathLog
 from PySide import QtCore
 from PySide import QtGui
 
+import math
+
+import PathMathUtils
+
 if False:
     PathLog.setLevel(PathLog.Level.DEBUG, PathLog.thisModule())
     PathLog.trackModule(PathLog.thisModule())
@@ -49,11 +53,23 @@ else:
     PathLog.setLevel(PathLog.Level.INFO, PathLog.thisModule())
 #FreeCAD.setLogLevel('Path.Area', 0)
 
+def toEuler(x, y, z, angle):
+    return PathMathUtils.axangle2euler((x, y, z), angle, axes='rxyz')
+
+def toAxisAngle(x, y , z):
+    return PathMathUtils.euler2axangle(x, y, z, axes='rxyz')
+
+def radianToDegree(rad):
+    return int(math.floor(rad * 180/math.pi))
+
+def degreeToRadian(degree):
+    return degree * math.pi/180
+
 def getJobs():
     objects = FreeCAD.ActiveDocument.Objects
     list = []
     for obj in objects:
-        if hasattr(obj, "IsJobSide"):
+        if hasattr(obj, "IsActive"):
             list.append(obj)
     return list
 
@@ -68,6 +84,9 @@ def copyShape(shape, name):
     return FreeCAD.ActiveDocument.getObject(name)
 
 def makeShapeIntersection(shapes, name):
+    ''' Common Shape Intersection
+            Add Shapes together using the common function in
+    '''
     if len(shapes) < 1:
         return None
     if len(shapes) == 1:
@@ -84,15 +103,18 @@ def makeShapeIntersection(shapes, name):
     return newshape
 
 def convertMeshesToPart(meshes, name):
-    mesh = Mesh.Mesh()
+    ''' Solid conversion
+            Simply create an empty Mesh, add the meshes to it before making a solid using Part.
+    '''
+    mesh = Mesh.Mesh()  # Create an empty mesh
 
     for m in meshes:
-        mesh.addMesh(m)
+        mesh.addMesh(m)  # Add all the meshes to it
 
-    shape = Part.Shape()
-    shape.makeShapeFromMesh(mesh.Topology, 0.05)  # the second arg is the tolerance for sewing
+    shape = Part.Shape()  # Create an empty Shape before making the solid from the mesh
+    shape.makeShapeFromMesh(mesh.Topology, 0.05)  # The second arg is the tolerance for sewing
     solid = Part.makeSolid(shape)
-    Part.show(solid, name)
+    Part.show(solid, name)  # Add the new solid to the document
     return mesh
 
 def copyMesh(m, name):
@@ -577,26 +599,18 @@ def filterToolControllers(tools, type):
 
     return result
 
-
-def getSuggestedTool(tools, holediameter):
-    # suggestedtoolslist = filter(lambda x: 0.0 < x.Tool.Diameter < holediameter, tools)
-    for tool in tools:
-        if tool.Tool.Diameter > float(holediameter) or tool.Tool.Diameter <= 0.0:
-            tools.remove(tool)
-
-    return max(tools, key=lambda x: x.Tool.Diameter)
-
-
 def getAllSuggestedTools(tools, holediameter):
     if holediameter <= 0.0:
         return []
 
-    suggestedtool = getSuggestedTool(tools, holediameter)
-    if tools.__contains__(suggestedtool):
-        tools.remove(suggestedtool)
-        tools.insert(0, suggestedtool)
+    # Filter the list to only have Tool Controllers with a tool diameter between the hole diameter and 0
+    suggestedtools = list(filter(lambda tc: float(holediameter) > tc.Tool.Diameter > 0, tools))
+    if len(suggestedtools) > 1:
+        # Remove the most suitable Tool Controller to insert it at the first position of the list
+        suggestedtools.insert(0, suggestedtools.pop(
+            suggestedtools.index(max(suggestedtools, key=lambda tc: tc.Tool.Diameter))))
 
-    return tools
+    return suggestedtools
 
 
 def getToolControllerByName(obj, name):

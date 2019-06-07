@@ -68,7 +68,18 @@ class ObjectHelix(PathCircularHoleBase.ObjectOp):
         output += "G0 Z" + fmt(zsafe)
 
         for hole in holes:
-            output += self.helix_cut(obj, hole['x'], hole['y'], hole['r'] / 2, 0.0, (float(obj.StepOver.Value)/50.0) * self.radius)
+            result = self.helix_cut(obj, hole['x'], hole['y'], hole['r'] / 2, 0.0, (float(obj.StepOver.Value)/50.0) * self.radius)
+            output += result[0]
+
+            # If an error ia detected, stop the process
+            if result[1] == "ERROR":
+                obj.Valid = False
+                obj.ViewObject.Visibility = False
+                obj.Active = obj.IsSubOperation
+                return
+
+        obj.Valid = True
+
         PathLog.debug(output)
 
     def helix_cut(self, obj, x0, y0, r_out, r_in, dr):
@@ -147,36 +158,42 @@ class ObjectHelix(PathCircularHoleBase.ObjectOp):
         elif r_in > 0 and r_out - r_in < 2*self.radius:
             msg = "r_out - r_in = {0} is < tool diameter of {1}".format(r_out - r_in, 2*self.radius)
         elif r_in == 0.0 and not r_out > self.radius/2.:
-            msg = "Cannot drill a hole of diameter {0} with a tool of diameter {1}".format(2 * r_out, 2*self.radius)
+            msg = "Cannot helix a hole of diameter {0} with a tool of diameter {1}".format(2 * r_out, 2*self.radius)
         elif obj.StartSide not in ["Inside", "Outside"]:
             msg = "Invalid value for parameter 'obj.StartSide'"
 
+        try:
+            if r_in > 0:
+                out += "(annulus mode)\n"
+                r_out = r_out - self.radius
+                r_in = r_in + self.radius
+                if abs((r_out - r_in) / dr) < 1e-5:
+                    radii = [(r_out + r_in)/2]
+                else:
+                    nr = max(int(ceil((r_out - r_in)/dr)), 2)
+                    radii = linspace(r_out, r_in, nr)
+            elif r_out <= 2 * dr:
+                out += "(single helix mode)\n"
+                radii = [r_out - self.radius]
+                assert(radii[0] > 0)
+            else:
+                out += "(full hole mode)\n"
+                r_out = r_out - self.radius
+                r_in = dr/2
+
+                nr = max(1 + int(ceil((r_out - r_in)/dr)), 2)
+                radii = linspace(r_out, r_in, nr)
+                assert(all(radii > 0))
+
+        except AssertionError as e:
+            msg = "Cannot helix a hole of diameter {0} with a tool of diameter {1}".format(2 * r_out, 2 * self.radius)
+
         if msg:
             out += "(ERROR: Hole at {0}:".format((x0, y0, obj.StartDepth.Value)) + msg + ")\n"
-            PathLog.error("PathHelix: Hole at {0}:".format((x0, y0, obj.StartDepth.Value)) + msg + "\n")
-            return out
-
-        if r_in > 0:
-            out += "(annulus mode)\n"
-            r_out = r_out - self.radius
-            r_in = r_in + self.radius
-            if abs((r_out - r_in) / dr) < 1e-5:
-                radii = [(r_out + r_in)/2]
-            else:
-                nr = max(int(ceil((r_out - r_in)/dr)), 2)
-                radii = linspace(r_out, r_in, nr)
-        elif r_out <= 2 * dr:
-            out += "(single helix mode)\n"
-            radii = [r_out - self.radius]
-            assert(radii[0] > 0)
-        else:
-            out += "(full hole mode)\n"
-            r_out = r_out - self.radius
-            r_in = dr/2
-
-            nr = max(1 + int(ceil((r_out - r_in)/dr)), 2)
-            radii = linspace(r_out, r_in, nr)
-            assert(all(radii > 0))
+            error_message = "PathHelix: Hole at {0}:".format((x0, y0, obj.StartDepth.Value)) + msg + "\n"
+            # PathLog.error(error_message)
+            PathLog.dialogError(error_message)
+            return out, "ERROR"
 
         if obj.StartSide == "Inside":
             radii = radii[::-1]
@@ -185,7 +202,7 @@ class ObjectHelix(PathCircularHoleBase.ObjectOp):
             out += "(radius {0})\n".format(r)
             out += helix_cut_r(r)
 
-        return out
+        return out, "SUCCESS"
 
     def opSetDefaultValues(self, obj, job):
         obj.Direction = "CW"

@@ -117,22 +117,29 @@ class ObjectOp(object):
     def __init__(self, obj, name):
         PathLog.track()
 
+        obj.addProperty("App::PropertyBool", "Valid", "Simulation",
+                        QtCore.QT_TRANSLATE_NOOP("PathOp", "Valid or invalid operation"))
+        obj.addProperty("App::PropertyBool", "Visible", "Simulation",
+                        QtCore.QT_TRANSLATE_NOOP("PathOp", "Visible operation"))
+        obj.Valid = True
+        obj.Visible = True
+
         obj.addProperty("App::PropertyBool", "Active", "Path", QtCore.QT_TRANSLATE_NOOP("PathOp", "Make False, to prevent operation from generating code"))
         obj.addProperty("App::PropertyString", "Comment", "Path", QtCore.QT_TRANSLATE_NOOP("PathOp", "An optional comment for this Operation"))
         obj.addProperty("App::PropertyString", "UserLabel", "Path", QtCore.QT_TRANSLATE_NOOP("PathOp", "User Assigned Label"))
 
-        # Sub-operation property is used to know when an operation is created from a SuperOperation
-        obj.addProperty("App::PropertyBool", "IsSuboperation", "Misc",
+        # Sub-operation property is used to know when an operation is created from a Super Operation
+        obj.addProperty("App::PropertyBool", "IsSubOperation", "SuperOperation",
                         QtCore.QT_TRANSLATE_NOOP("PathOp", "Check to know if the operation is a sub-operation."))
 
-        features = self.opFeatures(obj)
-
-        # Checking to know if the obj is a sub-operation or not
+        # Check if the obj is a sub-operation or not
         if hasattr(obj, "Name"):
             objname = obj.Name.split("_")
             if objname[0] == "sub":
-                obj.IsSuboperation = True
+                obj.IsSubOperation = True
                 obj.Label = obj.Name.replace(objname[0]+"_", "")
+
+        features = self.opFeatures(obj)
 
         if FeatureBaseGeometry & features:
             self.addBaseProperty(obj)
@@ -307,7 +314,9 @@ class ObjectOp(object):
                 return None
             obj.OpToolDiameter = obj.ToolController.Tool.Diameter
 
-        if FeatureDepths & features and obj.IsSuboperation is False:
+        # If the operation is a sub-operation, some of its properties have to be unlocked (without an expression)
+        #   to be edited by the Super Operation if needed.
+        if FeatureDepths & features and obj.IsSubOperation is False:
             if self.applyExpression(obj, 'StartDepth', job.SetupSheet.StartDepthExpression):
                 obj.OpStartDepth = 1.0
             else:
@@ -319,11 +328,11 @@ class ObjectOp(object):
         else:
             obj.StartDepth = 1.0
 
-        if FeatureStepDown & features and obj.IsSuboperation is False:
+        if FeatureStepDown & features and obj.IsSubOperation is False:
             if not self.applyExpression(obj, 'StepDown', job.SetupSheet.StepDownExpression):
                 obj.StepDown = '1 mm'
 
-        if FeatureHeights & features and obj.IsSuboperation is False:
+        if FeatureHeights & features and obj.IsSubOperation is False:
             if job.SetupSheet.SafeHeightExpression:
                 if not self.applyExpression(obj, 'SafeHeight', job.SetupSheet.SafeHeightExpression):
                     obj.SafeHeight = '3 mm'
@@ -460,7 +469,7 @@ class ObjectOp(object):
         if FeatureTool & self.opFeatures(obj):
             tc = obj.ToolController
             if tc is None or tc.ToolNumber == 0:
-                FreeCAD.Console.PrintError("No Tool Controller is selected. We need a tool to build a Path.")
+                FreeCAD.Console.PrintError("No Tool Controller is selected. We need a tool to build a Path. "+obj.Name+"\n")
                 return
             else:
                 self.vertFeed = tc.VertFeed.Value

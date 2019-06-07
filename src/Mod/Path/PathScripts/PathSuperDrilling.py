@@ -66,6 +66,8 @@ class ObjectSuperDrilling(PathDrilling.ObjectDrilling):
 
     def initCircularHoleOperation(self, obj):
         '''initCircularHoleOperation(obj) ... add drilling specific properties to obj.'''
+
+        # Default Drilling properties:
         obj.addProperty("App::PropertyLength", "PeckDepth", "Drill", QtCore.QT_TRANSLATE_NOOP("App::Property", "Incremental Drill depth before retracting to clear chips"))
         obj.addProperty("App::PropertyBool", "PeckEnabled", "Drill", QtCore.QT_TRANSLATE_NOOP("App::Property", "Enable pecking"))
         obj.addProperty("App::PropertyFloat", "DwellTime", "Drill", QtCore.QT_TRANSLATE_NOOP("App::Property", "The time to dwell between peck cycles"))
@@ -73,31 +75,33 @@ class ObjectSuperDrilling(PathDrilling.ObjectDrilling):
         obj.addProperty("App::PropertyBool", "AddTipLength", "Drill", QtCore.QT_TRANSLATE_NOOP("App::Property", "Calculate the tip length and subtract from final depth"))
         obj.addProperty("App::PropertyEnumeration", "ReturnLevel", "Drill", QtCore.QT_TRANSLATE_NOOP("App::Property", "Controls how tool retracts Default=G98"))
 
-        obj.addProperty("App::PropertyInteger", "TestProperty", "XXX",
-                        QtCore.QT_TRANSLATE_NOOP("App::Property", "Just a test")) # Test Property
-
-        ################################################################################################
-        # Super Operations properties:
-        # Link property: Each sub-operation needs be linked to the Super Operation in order to allow it
-        # to edit those correctly if needed by the user from the GUI
-        obj.addProperty("App::PropertyLink", "SuperDrillingOperation", "SuperOperation",
-                        QtCore.QT_TRANSLATE_NOOP("App:Property", "Sub-operations attribute."))
-
-        obj.addProperty("App::PropertyBool", "DrillingAutoSuggest", "SuperOperation",
-                        QtCore.QT_TRANSLATE_NOOP("App:Property", "Drilling tool auto suggestion"))
-        obj.addProperty("App::PropertyBool", "HoleMillingAutoSuggest", "SuperOperation",
-                        QtCore.QT_TRANSLATE_NOOP("App:Property", "Hole Milling tool auto suggestion"))
-        obj.addProperty("App::PropertyBool", "ThreadMillingAutoSuggest", "SuperOperation",
-                        QtCore.QT_TRANSLATE_NOOP("App:Property", "Thread Milling tool auto suggestion"))
-        ################################################################################################
-
         obj.ReturnLevel = ['G98', 'G99']  # this is the direction that the Contour runs
 
         obj.addProperty("App::PropertyDistance", "RetractHeight", "Drill", QtCore.QT_TRANSLATE_NOOP("App::Property", "The height where feed starts and height during retract tool when path is finished"))
 
+        ################################################################################################
+        # Super Operations properties:
+        # SuperOperationType: This property is not used yet but can be used in the future to know what type of
+        #   Super Operation is done.
+        #
+        # AutoSuggest: These properties are used to know if the user wants the program to auto-selects a Tool Controller
+        #   with the most suitable Tool Suggestion. They can be disabled in the edition GUI of the SuperDrilling.
+        obj.addProperty("App::PropertyString", "SuperOperationType", "SuperOperation",
+                        QtCore.QT_TRANSLATE_NOOP("App:Property", "Super Operation Type"))
+
+        obj.addProperty("App::PropertyBool", "DrillingAutoSuggest", "SuperDrilling",
+                        QtCore.QT_TRANSLATE_NOOP("App:Property", "Drilling tool auto suggestion"))
+        obj.addProperty("App::PropertyBool", "HoleMillingAutoSuggest", "SuperDrilling",
+                        QtCore.QT_TRANSLATE_NOOP("App:Property", "Hole Milling tool auto suggestion"))
+        obj.addProperty("App::PropertyBool", "ThreadMillingAutoSuggest", "SuperDrilling",
+                        QtCore.QT_TRANSLATE_NOOP("App:Property", "Thread Milling tool auto suggestion"))
+
+        # Init
+        obj.SuperOperationType = "SuperDrilling"
         obj.DrillingAutoSuggest = True
         obj.HoleMillingAutoSuggest = True
         obj.ThreadMillingAutoSuggest = True
+        ################################################################################################
 
     def circularHoleExecute(self, obj, holes):
         '''circularHoleExecute(obj, holes) ... generate drill operation for each hole in holes.'''
@@ -140,6 +144,49 @@ class ObjectSuperDrilling(PathDrilling.ObjectDrilling):
     def opSetDefaultValues(self, obj, job):
         '''opSetDefaultValues(obj) ... set default value for RetractHeight'''
         obj.RetractHeight = 10
+
+    def updateSubOperations(self, obj):
+        """ Update the sub-operations properties with the Super Operation data. """
+        if obj.TypeId == "Path::FeatureCompoundPython":
+            for subobj in obj.Group:
+                try:
+                    suboperationname = subobj.Name.split("_")
+                    suboperationtype = suboperationname[2]
+                    suboperationlocation = suboperationname[3]
+                except:
+                    suboperationtype = "unknown"
+                    suboperationlocation = "unknown"
+
+                subobj.SafeHeight = obj.SafeHeight
+                subobj.ClearanceHeight = obj.ClearanceHeight
+
+                if hasattr(subobj, "StepOver"):
+                    subobj.StepOver = 50
+
+                if hasattr(subobj, 'Locations'):
+                    subobj.Locations = obj.Locations
+
+                if hasattr(subobj, 'Base'):
+                    subobj.Base = obj.Base
+
+                if hasattr(subobj, "StepDown") and subobj.ToolController is not None:
+                    subobj.StepDown = str((subobj.ToolController.Tool.Diameter * 0.2)) + " mm"
+
+                if suboperationtype == 'drill' \
+                        or suboperationtype == 'holemill' \
+                        or suboperationtype == 'gevind' \
+                        or suboperationtype == "helix":
+
+                    subobj.StartDepth = obj.OpStartDepth
+
+                    # The Quantity properties seem to have a specific way to edit them with strings,
+                    # that is why we need to parse it to integer first and then to string again
+                    if suboperationlocation == 'center':
+                        intDepth = int(str(obj.OpStartDepth).split(" ")[0])
+                        newFinalDepth = str(intDepth-1)+' mm'
+                        subobj.FinalDepth = newFinalDepth
+                    else:
+                        subobj.FinalDepth = obj.OpFinalDepth
 
 
 def Create(name):

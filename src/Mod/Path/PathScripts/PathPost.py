@@ -85,7 +85,7 @@ class DlgSelectPostProcessor:
 
 class CommandPathPost:
 
-    def resolveFileName(self, job):
+    def resolveFileName(self, job, name):
         path = PathPreferences.defaultOutputFile()
         if job.PostProcessorOutputFile:
             path = job.PostProcessorOutputFile
@@ -136,12 +136,20 @@ class CommandPathPost:
             #        n = n + 1
             #    filename = "%s%03d%s" % (fn, n, ext)
 
-        if openDialog:
+        # In case of multiple jobs (multi-sides), if a project name is already given by the saving dialog (first job),
+        #  it has to re-use the name without asking the user again.
+        if openDialog and name is None:
             foo = QtGui.QFileDialog.getSaveFileName(QtGui.QApplication.activeWindow(), "Output File", filename)
             if foo:
                 filename = foo[0]
             else:
                 filename = None
+
+        elif name is not None:
+            filename = name
+
+        path = filename
+        filename = filename + "_" + job.Label
 
         if policy == 'Append Unique ID on conflict':
             fn, ext = os.path.splitext(filename)
@@ -150,7 +158,7 @@ class CommandPathPost:
 
         job.Version = job.Version + 1
 
-        return filename
+        return filename, path
 
     def resolvePostProcessor(self, job):
         if hasattr(job, "PostProcessor"):
@@ -170,6 +178,7 @@ class CommandPathPost:
                 'ToolTip': QtCore.QT_TRANSLATE_NOOP("Path_Post", "Post Process the selected Job")}
 
     def IsActive(self):
+        """
         if FreeCAD.ActiveDocument is not None:
             if FreeCADGui.Selection.getCompleteSelection():
                 for o in FreeCAD.ActiveDocument.Objects:
@@ -177,8 +186,13 @@ class CommandPathPost:
                         return True
 
         return False
+        """
+        if len(PathUtils.getJobs()) > 0:
+            return True
+        else:
+            return False
 
-    def exportObjectsWith(self, objs, job, needFilename = True):
+    def exportObjectsWith(self, objs, job, needFilename = True, name=None):
         PathLog.track()
         # check if the user has a project and has set the default post and
         # output filename
@@ -188,10 +202,12 @@ class CommandPathPost:
         elif hasattr(job, "PostProcessor") and job.PostProcessor:
             postArgs = ''
 
+        path = None
+
         postname = self.resolvePostProcessor(job)
         filename = '-'
         if postname and needFilename:
-            filename = self.resolveFileName(job)
+            filename, path = self.resolveFileName(job, name)
 
         subobjs = []
 
@@ -206,9 +222,9 @@ class CommandPathPost:
             processor = PostProcessor.load(postname)
             objs = objs + subobjs
             gcode = processor.export(objs, filename, postArgs)
-            return (False, gcode)
+            return (False, gcode, path)
         else:
-            return (True, '')
+            return (True, '', path)
 
     def Activated(self):
         PathLog.track()
@@ -221,6 +237,8 @@ class CommandPathPost:
         # If there's only one job in a document, post it.
         # If a user has selected a subobject of a job, post the job.
         # If multiple jobs and can't guess, ask them.
+
+        """
 
         selected = FreeCADGui.Selection.getSelectionEx()
         if len(selected) > 1:
@@ -256,31 +274,50 @@ class CommandPathPost:
                 jobname = targetlist[0]
             job = FreeCAD.ActiveDocument.getObject(jobname)
 
-        PathLog.debug("about to postprocess job: {}".format(job.Name))
+        """
+        actualjob = None
+        from PathScripts import PathJobSideHideShow
+        cmd = PathJobSideHideShow.CommandPathJobSideHideShow()
 
-        # Build up an ordered list of operations and tool changes.
-        # Then post-the ordered list
-        postlist = []
-        currTool = None
-        for obj in job.Operations.Group:
-            PathLog.debug("obj: {}".format(obj.Name))
-            tc = PathUtil.toolControllerForOp(obj)
-            if tc is not None:
-                if tc.ToolNumber != currTool:
-                    postlist.append(tc)
-                    currTool = tc.ToolNumber
-            postlist.append(obj)
+        jobs = PathUtils.getJobs()
+        path = None
+        for job in jobs:
+            PathLog.debug("about to postprocess job: {}".format(job.Name))
 
-        fail = True
-        rc = ''
-        (fail, rc) = self.exportObjectsWith(postlist, job)
+            if job.IsActive:
+                actualjob = job
 
-        if fail:
-            FreeCAD.ActiveDocument.abortTransaction()
-        else:
-            FreeCAD.ActiveDocument.commitTransaction()
-        FreeCAD.ActiveDocument.recompute()
+            else:
+                cmd.toggleJob(job, True)
 
+            # Build up an ordered list of operations and tool changes.
+            # Then post-the ordered list
+            postlist = []
+            currTool = None
+            for obj in job.Operations.Group:
+                PathLog.debug("obj: {}".format(obj.Name))
+                tc = PathUtil.toolControllerForOp(obj)
+                if tc is not None:
+                    if tc.ToolNumber != currTool:
+                        postlist.append(tc)
+                        currTool = tc.ToolNumber
+                postlist.append(obj)
+
+            fail = True
+            rc = ''
+
+            print(postlist)
+
+            (fail, rc, path) = self.exportObjectsWith(postlist, job, name=path)
+
+            if fail:
+                FreeCAD.ActiveDocument.abortTransaction()
+            else:
+                FreeCAD.ActiveDocument.commitTransaction()
+            FreeCAD.ActiveDocument.recompute()
+
+        if actualjob is not None:
+            cmd.showJob(actualjob)
 
 if FreeCAD.GuiUp:
     # register the FreeCAD command

@@ -121,6 +121,10 @@ def warning(msg):
 def error(msg):
     """(message)"""
     return _log(Level.ERROR, _caller(), msg)
+# Display a error message in a dialog box
+def dialogError(msg):
+    from PySide import QtGui
+    QtGui.QMessageBox.critical(QtGui.QWidget(), "Error", msg)
 
 def trackAllModules(boolean):
     """(boolean) - if True all modules will be tracked, otherwise tracking is up to the module setting."""

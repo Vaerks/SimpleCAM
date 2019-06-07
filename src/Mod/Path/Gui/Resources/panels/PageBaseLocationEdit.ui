@@ -34,16 +34,6 @@
    <item>
     <widget class="QWidget" name="addRemoveEdit" native="true">
      <layout class="QGridLayout" name="gridLayout">
-      <item row="0" column="2">
-       <widget class="QPushButton" name="removeLocation">
-        <property name="toolTip">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Remove selected location from the list. The operation is no longer applied to them.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-        </property>
-        <property name="text">
-         <string>Remove</string>
-        </property>
-       </widget>
-      </item>
       <item row="0" column="3">
        <widget class="QPushButton" name="editLocation">
         <property name="toolTip">
@@ -64,7 +54,17 @@
         </property>
        </widget>
       </item>
-      <item row="1" column="1" colspan="3">
+      <item row="0" column="2">
+       <widget class="QPushButton" name="removeLocation">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Remove selected location from the list. The operation is no longer applied to them.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
+        <property name="text">
+         <string>Remove</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1" colspan="3">
        <widget class="QLabel" name="label">
         <property name="text">
          <string>All locations will be processed using the same operation properties.</string>

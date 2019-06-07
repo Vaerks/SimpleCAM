@@ -455,87 +455,87 @@
            <string>Rotation</string>
           </property>
           <layout class="QGridLayout" name="gridLayout_5">
-           <item row="9" column="1">
-            <widget class="QPushButton" name="simpleRotationY">
-             <property name="text">
-              <string>Y-Rotate</string>
-             </property>
-            </widget>
-           </item>
-           <item row="9" column="0">
+           <item row="11" column="0">
             <widget class="QPushButton" name="simpleRotationX">
              <property name="text">
               <string>X-Rotate</string>
              </property>
             </widget>
            </item>
-           <item row="10" column="1">
-            <widget class="QPushButton" name="modelSetY0">
+           <item row="11" column="1">
+            <widget class="QPushButton" name="simpleRotationY">
              <property name="text">
-              <string>Y=0</string>
+              <string>Y-Rotate</string>
              </property>
             </widget>
            </item>
-           <item row="10" column="0">
+           <item row="12" column="0">
             <widget class="QPushButton" name="modelSetX0">
              <property name="text">
               <string>X=0</string>
              </property>
             </widget>
            </item>
-           <item row="5" column="2">
+           <item row="7" column="2">
             <widget class="QLineEdit" name="z_rotatAngle">
              <property name="text">
               <string>0</string>
              </property>
             </widget>
            </item>
-           <item row="5" column="1">
+           <item row="12" column="1">
+            <widget class="QPushButton" name="modelSetY0">
+             <property name="text">
+              <string>Y=0</string>
+             </property>
+            </widget>
+           </item>
+           <item row="7" column="1">
             <widget class="QLineEdit" name="y_rotatAngle">
              <property name="text">
               <string>0</string>
              </property>
             </widget>
            </item>
-           <item row="9" column="2">
+           <item row="11" column="2">
             <widget class="QPushButton" name="simpleRotationZ">
              <property name="text">
               <string>Z-Rotate</string>
              </property>
             </widget>
            </item>
-           <item row="10" column="2">
-            <widget class="QPushButton" name="modelSetZ0">
+           <item row="2" column="0">
+            <widget class="QLabel" name="label">
              <property name="text">
-              <string>Z=0</string>
+              <string>X-Axis Angle</string>
              </property>
             </widget>
            </item>
-           <item row="5" column="0">
-            <widget class="QLineEdit" name="x_rotatAngle">
-             <property name="text">
-              <string>0</string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="1">
-            <widget class="QLabel" name="label_2">
-             <property name="text">
-              <string>Y-Axis Angle</string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="2">
+           <item row="2" column="2">
             <widget class="QLabel" name="label_5">
              <property name="text">
               <string>Z-Axis Angle</string>
              </property>
             </widget>
            </item>
-           <item row="1" column="0">
-            <widget class="QLabel" name="label">
+           <item row="12" column="2">
+            <widget class="QPushButton" name="modelSetZ0">
              <property name="text">
-              <string>X-Axis Angle</string>
+              <string>Z=0</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="1">
+            <widget class="QLabel" name="label_2">
+             <property name="text">
+              <string>Y-Axis Angle</string>
+             </property>
+            </widget>
+           </item>
+           <item row="7" column="0">
+            <widget class="QLineEdit" name="x_rotatAngle">
+             <property name="text">
+              <string>0</string>
              </property>
             </widget>
            </item>
@@ -543,6 +543,13 @@
             <widget class="QPushButton" name="visual_rotation_edit">
              <property name="text">
               <string>Visual rotation edit</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1">
+            <widget class="QPushButton" name="init_rotation">
+             <property name="text">
+              <string>Init rotation</string>
              </property>
             </widget>
            </item>

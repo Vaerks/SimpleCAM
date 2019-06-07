@@ -190,7 +190,7 @@ class ObjectJob:
 
         if modelRotationClone is None:
             from PathScripts import PathUtils
-            modelRotationClone = PathUtils.createBoxShape("ModelRotation_" + self.obj.Name)
+            modelRotationClone = PathUtils.copyShape(self.obj.Model.Group[0].Shape, "ModelRotation_" + self.obj.Name)
             modelRotationClone.ViewObject.Visibility = False
 
         if not hasattr(obj, 'Configuration'):
@@ -249,15 +249,7 @@ class ObjectJob:
         obj.Configuration.Group = []
         doc.removeObject(obj.Configuration.Name)
 
-        # Tool controllers don't depend on anything
-        PathLog.debug('taking down tool controller')
-        while obj.ToolControllers.Group:
-            tc = obj.ToolControllers.Group[0]
-            PathUtil.clearExpressionEngine(tc)
-            doc.removeObject(tc.Name)
-        obj.ToolControllers.Group = []
-        doc.removeObject(obj.ToolControllers.Name)
-        obj.ToolControllers = None
+        doc.removeObject("ModelRotation_" + self.obj.Name)
 
         # SetupSheet
         PathUtil.clearExpressionEngine(obj.SetupSheet)

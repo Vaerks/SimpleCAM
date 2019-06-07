@@ -186,7 +186,8 @@ class ViewProvider(object):
         if hasattr(obj, "SimShape"):
             PathUtils.deleteObject(obj.SimShape.Name)
 
-        if obj.IsSuboperation is False:
+        # When an operation is deleted, the simulation result has to be recomputed
+        if obj.IsSubOperation is False:
             PathLiveSimulatorGui.recomputeResult(PathUtils.findParentJob(obj))
 
         return True
@@ -357,6 +358,8 @@ class TaskPanelPage(object):
         '''setupToolController(obj, combo) ... helper function to setup obj's ToolController in the given combo box.'''
         controllers = suggestedTools
         labels = [c.Label for c in controllers]
+        if len(labels) < 1:
+            labels = ["No suitable tool found"]
         combo.blockSignals(True)
         combo.clear()
         combo.addItems(labels)
@@ -380,35 +383,6 @@ class TaskPanelBaseGeometryPage(TaskPanelPage):
     '''Page controller for the base geometry.'''
     DataObject = QtCore.Qt.ItemDataRole.UserRole
     DataObjectSub = QtCore.Qt.ItemDataRole.UserRole + 1
-
-    def checkHoleDiameter(self, obj):
-
-        if obj.TypeId != "Path::FeatureCompoundPython":
-            return
-
-        self.form.warning_label.setText(
-            "")
-        n = 0
-        holediameter = 0
-        for i, (base, subs) in enumerate(obj.Base):
-            for sub in subs:
-                if n > 0 and holediameter != obj.Proxy.holeDiameter(obj, base, sub):
-                    #w = QtGui.QWidget()
-                    #QtGui.QMessageBox.critical(w, "Warning",
-                    #                           "Super Drilling Operation can not support different hole diameters.")
-                    self.form.warning_label.setText(
-                        "Error: Super Drilling Operation can not support different hole diameters.")
-                else:
-                    holediameter = obj.Proxy.holeDiameter(obj, base, sub)
-
-                if holediameter >= 8.0:
-                    #w = QtGui.QWidget()
-                    #QtGui.QMessageBox.critical(w, "Warning",
-                    #                           "A hole diameter can not exceed 8 mm. Tip: Use Super Helix instead.")
-                    self.form.warning_label.setText(
-                        "Error: A hole diameter can not exceed 8 mm. Tip: Use Super Helix Operation instead.")
-
-                n = n + 1
 
     def getForm(self):
         return FreeCADGui.PySideUic.loadUi(":/panels/PageBaseGeometryEdit.ui")
@@ -480,6 +454,7 @@ class TaskPanelBaseGeometryPage(TaskPanelPage):
 
         for sub in sel.SubElementNames:
             self.obj.Proxy.addBase(self.obj, sel.Object, sub)
+
         return True
 
     def addBaseGeometry(self, selection):
@@ -737,49 +712,8 @@ class TaskPanelDepthsPage(TaskPanelPage):
         if self.haveFinishDepth():
             self.finishDepth.updateProperty()
 
-        # For sub-operations properties
-        # The Super Operation has to parse some of its properties to its associated sub-operations
-        # TODO: Make it more flexible to accept many types of Super Operations (Actually Super Drilling)
-        if obj.TypeId == "Path::FeatureCompoundPython":
-            for subobj in obj.Group:
-                try:
-                    suboperationname = subobj.Name.split("_")
-                    suboperationtype = suboperationname[2]
-                    suboperationlocation = suboperationname[3]
-                except:
-                    suboperationtype = "unknown"
-                    suboperationlocation = "unknown"
-
-                subobj.SafeHeight = obj.SafeHeight
-                subobj.ClearanceHeight = obj.ClearanceHeight
-
-                if hasattr(subobj, "StepOver"):
-                    subobj.StepOver = 50
-
-                if hasattr(subobj, 'Locations'):
-                    subobj.Locations = obj.Locations
-
-                if hasattr(subobj, 'Base'):
-                    subobj.Base = obj.Base
-
-                if hasattr(subobj, "StepDown") and subobj.ToolController is not None:
-                    subobj.StepDown = str((subobj.ToolController.Tool.Diameter * 0.2)) + " mm"
-
-                if suboperationtype == 'drill' \
-                        or suboperationtype == 'holemill' \
-                        or suboperationtype == 'gevind' \
-                        or suboperationtype == "helix":
-
-                    subobj.StartDepth = obj.OpStartDepth
-
-                    # The Quantity properties seem to have a specific way to edit them with strings,
-                    # that is why we need to parse it to integer first and then to string again
-                    if suboperationlocation == 'center':
-                        intDepth = int(str(obj.OpStartDepth).split(" ")[0])
-                        newFinalDepth = str(intDepth-1)+' mm'
-                        subobj.FinalDepth = newFinalDepth
-                    else:
-                        subobj.FinalDepth = obj.OpFinalDepth
+        if hasattr(obj, "SuperOperationType") and obj.Proxy:
+            obj.Proxy.updateSubOperations(obj)
 
     def setFields(self, obj):
         if self.haveStartDepth():
@@ -865,7 +799,7 @@ class TaskPanel(object):
 
         # Checks if the obj is a sub-operation which cannot be canceled after being created by the Super Operation
         if obj.Proxy:
-            if obj.IsSuboperation:
+            if obj.IsSubOperation:
                 self.deleteOnReject = False
 
         self.featurePages = []
@@ -954,15 +888,37 @@ class TaskPanel(object):
 
     def accept(self, resetEdit=True):
         '''accept() ... callback invoked when user presses the task panel OK button.'''
+
+        # Super Operations checks:
+        if hasattr(self.obj, "SuperOperationType"):
+            if self.obj.SuperOperationType == "SuperDrilling":  # For Super Drilling
+                # If the operation is a Super Drilling, the holes have to verified until the user can accept the changes
+                # - The hole diameter shall not exceed 8mm
+                # - The different holes shall have the same diameter
+                #
+                # The "ok" button ca not be pressed if the conditions are not passed.
+                from PathScripts import PathSuperDrillingGui
+                if PathSuperDrillingGui.checkHolesBase(self.obj) is False:
+                    return
+
         self.preCleanup()
         if self.isDirty:
             self.panelGetFields()
+
         FreeCAD.ActiveDocument.commitTransaction()
         self.cleanup(resetEdit)
 
         # Process the LiveSimulator
-        if self.obj.IsSuboperation is False:
-            PathLiveSimulatorGui.recomputeSimulation(self.obj)
+        # The sub-operations shall be computed when the Super Operation is being computed in the Live Simulation
+        #   when the changes have been accepted.
+        if self.obj.IsSubOperation is False or self.obj.TypeId == "Path::FeatureCompoundPython":
+            self.obj.Valid = True
+            if self.obj.Active:
+                PathLiveSimulatorGui.recomputeSimulation(self.obj)
+            else:
+                self.obj.Active = True
+                self.obj.ViewObject.Visibility = True
+
 
     def reject(self, resetEdit=True):
         '''reject() ... callback invoked when user presses the task panel Cancel button.'''
@@ -1115,10 +1071,10 @@ def Create(res, subRes=None):
 
         # Add ViewProviders for SubOperations
         if obj.TypeId == "Path::FeatureCompoundPython":
-            # assert(len(obj.Group) == len(subRes))
+            assert(len(obj.Group) == len(subRes))
             for i in range(len(subRes)):
                 subobj = obj.Group[i]
-                subobj.IsSuboperation = True
+                subobj.IsSubOperation = True
                 if subobj.Proxy:
                     ViewProvider(subobj.ViewObject, subRes[i])
 

@@ -13,20 +13,6 @@ import PathUtils
 if FreeCAD.GuiUp:
     from PySide import QtGui, QtCore
 
-class ModelClone:
-    class ViewProvideer:
-
-        def __init__(self, vobj):
-            vobj.Proxy = self
-            # self.job = job
-
-        def setEdit(self, vobj=None, mode=0):
-            print("ModelClone is edited.")
-            return True
-
-        def accept(self):
-            print("Clone accepted")
-
 
 class CommandPathJobSideHideShow:
 
@@ -37,6 +23,7 @@ class CommandPathJobSideHideShow:
                 'ToolTip': QtCore.QT_TRANSLATE_NOOP("Path_JobSideHideShow", "Hide or Show a Job Side")}
 
     def IsActive(self):
+        # The Job hide/show button shall only be active if the user selects a job or an object from a job
         if FreeCAD.ActiveDocument is not None:
             if FreeCADGui.Selection.getCompleteSelection():
                 for o in FreeCADGui.Selection.getCompleteSelection():
@@ -45,57 +32,61 @@ class CommandPathJobSideHideShow:
 
         return False
 
-    def getModels(self, job):
-        if job is not None and hasattr(job, "Model"):
-            models = job.Model.Group
-            return models
-
     def Activated(self):
-        print("Hide Show activated")
         if FreeCAD.ActiveDocument is not None:
             if FreeCADGui.Selection.getCompleteSelection():
                 for o in FreeCADGui.Selection.getCompleteSelection():
                     if hasattr(o, "Active"):
+                        # If the object has the attribute "Active", it is an operation
+                        # and the visibility shall be toggled
                         o.Active = not o.Active
                         o.ViewObject.Visibility = o.Active
 
-                        # For Super Operations
+                        # For Super Operations, toggle visibility of all the sub-operations as well
                         if o.TypeId == "Path::FeatureCompoundPython":
                             for subop in o.Group:
-                                subop.Active = o.Active
-                                subop.ViewObject.Visibility = o.Active
+                                if subop.Visible:  # A sub-operation is not "Visible" if it has been disabled
+                                    # from the Super Operation GUI, in this case, the visibility must always be disabled
+                                    subop.Active = o.Active
+                                    subop.ViewObject.Visibility = o.Active
 
                         FreeCAD.ActiveDocument.recompute()
                         return
 
-                    elif hasattr(o, "IsActive"):
+                    elif hasattr(o, "IsActive"):  # This means that the object is a job
                         job = o
                         break
 
-                    else:
+                    else:  # Another type of object in the job (Stock/Model for instance)
                         job = PathUtils.findParentJob(o)
                         break
 
-                self.toggleJob(job, True)
+                self.showJob(job)
 
-                for j in PathUtils.getJobs():
-                    if j is not job:
-                        self.toggleJob(j, False)
+    def showJob(self, job):
+        # The function shall show one job and hide the others by turning their visibility to off
+        self.toggleJob(job, True)
 
-                FreeCAD.ActiveDocument.recompute()
+        for j in PathUtils.getJobs():
+            if j is not job:
+                self.toggleJob(j, False)
 
     def toggleJob(self, job, visible):
         operations = job.Operations.OutList
         job.IsActive = visible
 
+        # Disable/enable all the operations of the job
         for op in operations:
             op.Active = job.IsActive
             op.ViewObject.Visibility = job.IsActive
 
+            # For Super Operations, don't forget the sub-operations
             if op.TypeId == "Path::FeatureCompoundPython":
                 for subop in op.Group:
-                    subop.Active = job.IsActive
-                    subop.ViewObject.Visibility = job.IsActive
+                    if subop.Visible:  # A sub-operation is not "Visible" if it has been disabled
+                        # from the Super Operation GUI, in this case, the visibility must always be disabled
+                        subop.Active = job.IsActive
+                        subop.ViewObject.Visibility = job.IsActive
 
         job.ViewObject.Visibility = job.IsActive
         job.Stock.ViewObject.Visibility = job.IsActive
@@ -103,21 +94,10 @@ class CommandPathJobSideHideShow:
         for model in job.Model.Group:
             model.ViewObject.Visibility = job.IsActive
 
-    @classmethod
-    def Execute(cls, base, template=None):
-        from PathScripts import PathJobGui
-        FreeCADGui.addModule('PathScripts.PathJobGui')
-        if template:
-            template = "'%s'" % template
-        else:
-            template = 'None'
+        FreeCAD.ActiveDocument.recompute()
 
-        models = [o.Name for o in base]
-        PathJobGui.Create(models, jobside=False)
-        # FreeCADGui.doCommand('PathScripts.PathJobGui.Create(%s)' % ([o.Name for o in base]))
 
 if FreeCAD.GuiUp:
     # register the FreeCAD command
-    # PathJobSideHideShow
     FreeCADGui.addCommand('Path_JobSideHideShow', CommandPathJobSideHideShow())
     FreeCAD.Console.PrintLog("Loading PathJobSideHideShow... done\n")

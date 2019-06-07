@@ -62,9 +62,13 @@ def createResultStock(job):
     stockthread.start()
 
 def activateSimulation(obj, jobsim):
+
     if jobsim is None:
         if obj is not None:
             job = PathUtils.findParentJob(obj)
+
+            if obj.Valid is False:
+                return
         else:
             job = PathUtils.GetJobs()[0]
 
@@ -75,6 +79,13 @@ def activateSimulation(obj, jobsim):
         # Process the new operation
         print("PathLiveSimulator: Operation " + str(obj.Name) + " will be processed.")
         resetSimulation(job, obj.Name)
+
+        if obj.TypeId == "Path::FeatureCompoundPython":
+            # Check if an active operation in the Super Operation is invalid
+            # if so, nothing shall happen
+            for op in obj.Group:
+                if op.Active is True and op.Valid is False:
+                    return
         simulation = PathLiveSimulation(job, obj)
         simulation.Activate()
         simulation.SimFF()  # Show the result without the animation
@@ -192,7 +203,15 @@ class PathLiveSimulation:
                 self.firstDrill = True
 
                 if self.op.TypeId == "Path::FeatureCompoundPython":
-                    self.activeOps = self.op.Group
+                    for op in self.op.Group:
+                        if op.Active is True:
+                            self.activeOps.append(op)
+                    #self.activeOps = self.op.Group
+
+                    # Some issues can occur with Super Operations when many sub operations are executed in the same
+                    # simulation. One way to fix that is to define a Primary Operation which is the one that has to be
+                    # shown in the simulation. The other sub operations exist but are not live simulated.
+                    self.activeOps = [self.op.Group[1], self.op.Group[2]]
                 else:
                     self.activeOps = [self.op]
 

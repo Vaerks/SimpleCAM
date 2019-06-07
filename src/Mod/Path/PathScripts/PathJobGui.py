@@ -107,28 +107,6 @@ def getAngle(model, index):
     except:
         return index
 
-def updateAxisRotation(obj, model, stock, angle, newangle, axis):
-    modelRotationClone = FreeCAD.ActiveDocument.getObject("ModelRotation_" + obj.Name)
-    angle = getAngle(modelRotationClone, angle)
-
-    if modelRotationClone is None:
-        return
-    try:
-        newangle = int(newangle)
-    except:
-        newangle = 0
-
-    a = newangle-angle
-    # print("Angle: "+str(newangle)+" and "+str(angle))
-
-    if stock is not None:
-        Draft.rotate([stock], a, axis=axis)
-
-    if model is not None:
-        Draft.rotate([model], a, axis=axis)
-        modelRotationClone.Placement.Rotation = model.Placement.Rotation
-
-
 class ViewProvider:
 
     def __init__(self, vobj):
@@ -229,7 +207,6 @@ class ViewProvider:
     def claimChildren(self):
         PathLog.track()
         children = []
-        #children.append(self.obj.ToolControllers)
         children.append(self.obj.Operations)
 
         configurationlist = []
@@ -238,25 +215,14 @@ class ViewProvider:
             # unfortunately this function is called before the object has been fully loaded
             #  which means we could be dealing with an old job which doesn't have the new Model
             # yet.
-            self.obj.Model.ViewObject.Visibility = True
-            if hasattr(self.obj.Model.Group[0], "XAngle") is False:
-                self.obj.Model.Group[0].addProperty("App::PropertyInteger", "XAngle", "Rotation")
-                self.obj.Model.Group[0].addProperty("App::PropertyInteger", "YAngle", "Rotation")
-                self.obj.Model.Group[0].addProperty("App::PropertyInteger", "ZAngle", "Rotation")
-                self.obj.Model.Group[0].XAngle = 0
-                self.obj.Model.Group[0].YAngle = 0
-                self.obj.Model.Group[0].ZAngle = 0
-
-            configurationlist.append(self.obj.Model)
-            # children.append(self.obj.Model)
+            if self.obj.Model is not None:
+                self.obj.Model.ViewObject.Visibility = True
+                configurationlist.append(self.obj.Model)
         if self.obj.Stock:
-            self.obj.Stock.ViewObject.Visibility = True
             configurationlist.append(self.obj.Stock)
-            # children.append(self.obj.Stock)
         if hasattr(self.obj, 'SetupSheet'):
             # when loading a job that didn't have a setup sheet they might not've been created yet
             configurationlist.append(self.obj.SetupSheet)
-            # children.append(self.obj.SetupSheet)
 
         simulation = FreeCAD.ActiveDocument.getObject("Simulation_"+self.obj.Name)
         saves = FreeCAD.ActiveDocument.getObject("Saves_"+self.obj.Name)
@@ -270,8 +236,9 @@ class ViewProvider:
             configurationlist.append(modelRotationClone)
 
         if hasattr(self.obj, 'Configuration'):
-            self.obj.Configuration.Group = configurationlist
-            children.append(self.obj.Configuration)
+            if self.obj.Configuration is not None:
+                self.obj.Configuration.Group = configurationlist
+                children.append(self.obj.Configuration)
 
         return children
 
@@ -290,18 +257,15 @@ class ViewProvider:
         if prop == 'Stock' and self.obj.Stock and self.obj.Stock.ViewObject and self.obj.Stock.ViewObject.Proxy:
             self.obj.Stock.ViewObject.Proxy.onEdit(_OpenCloseResourceEditor)
 
+        # Update the model position using the model rotation clone
         modelRotationClone = FreeCAD.ActiveDocument.getObject("ModelRotation_" + self.obj.Name)
 
         if modelRotationClone is not None:
-            newangle = modelRotationClone.Placement.Rotation.Angle * 180 / math.pi
-            axis = modelRotationClone.Placement.Rotation.Axis
-            angle = self.obj.Model.Group[0].Placement.Rotation.Angle * 180 / math.pi
-            self.obj.Model.Group[0].Placement = modelRotationClone.Placement
-            modelRotationClone.ViewObject.Visibility = False
-
-            # Todo: Add an angle and axis check to optimize the code calls
-            if self.obj.Stock is not None:
-                updateAxisRotation(obj, None, self.obj.Stock, angle=angle, newangle=newangle, axis=axis)
+            if modelRotationClone.ViewObject.Visibility:
+                self.obj.Model.Group[0].Placement = modelRotationClone.Placement
+                modelRotationClone.ViewObject.Visibility = False
+                self.obj.Model.Group[0].ViewObject.Visibility = True
+                FreeCADGui.ActiveDocument.setEdit(obj.Name, 0)
 
     def rememberBaseVisibility(self, obj, base):
         if base.ViewObject:
@@ -726,7 +690,6 @@ class TaskPanel:
             if self.obj.ViewObject.Proxy.onDelete(self.obj.ViewObject, None):
                 FreeCAD.ActiveDocument.removeObject(self.obj.Name)
 
-
             FreeCAD.ActiveDocument.commitTransaction()
         self.cleanup(resetEdit)
         return True
@@ -865,9 +828,15 @@ class TaskPanel:
         model = self.obj.Model.Group[0]
         placement = model.Placement
 
-        x_angle = int(placement.Rotation.Axis[0]*(placement.Rotation.Angle*180/math.pi))
-        y_angle = int(placement.Rotation.Axis[1]*(placement.Rotation.Angle*180/math.pi))
-        z_angle = int(placement.Rotation.Axis[2]*(placement.Rotation.Angle*180/math.pi))
+        angles = PathUtils.toEuler(placement.Rotation.Axis[0],
+                                   placement.Rotation.Axis[1],
+                                   placement.Rotation.Axis[2],
+                                   placement.Rotation.Angle)
+
+        x_angle = PathUtils.radianToDegree(angles[0])
+        y_angle = PathUtils.radianToDegree(angles[1])
+        z_angle = PathUtils.radianToDegree(angles[2])
+
         self.form.x_rotatAngle.setText(str(x_angle))
         self.form.y_rotatAngle.setText(str(y_angle))
         self.form.z_rotatAngle.setText(str(z_angle))
@@ -1302,6 +1271,65 @@ class TaskPanel:
         else:
             obj.setToolTip('<b>{0}</b>'.format(text))
 
+    def initRotationModel(self, job):
+        # Function used to initiate the position of the job model
+        rotmodel = FreeCAD.ActiveDocument.getObject("ModelRotation_"+job.Name)
+
+        if rotmodel is not None:
+            model = job.Model.Group[0]
+
+            rotmodel.Placement.Rotation.Angle = 0
+            rotmodel.Placement.Rotation.Axis = FreeCAD.Vector(0, 0, 0)
+            model.Placement.Rotation = rotmodel.Placement.Rotation
+
+            self.form.x_rotatAngle.setText("0")
+            self.form.y_rotatAngle.setText("0")
+            self.form.z_rotatAngle.setText("0")
+
+    def visualRotationSetEdit(self):
+        name = "ModelRotation_" + self.obj.Name
+        model = FreeCAD.ActiveDocument.getObject(name)
+        if model is not None:
+            # Make the model rotation clone visible and hide the real model to start the edition
+            FreeCADGui.ActiveDocument.setEdit(name, 1)
+            model.ViewObject.Visibility = True
+            self.obj.Model.Group[0].ViewObject.Visibility = False
+
+    def updateModelAxisRotation(self, x, y, z):
+        # Make sure the user input is a correct integer and if not, it is always equal to 0
+        def textToValue(text):
+            try:
+                value = int(text)
+            except:
+                value = 0
+            return value
+
+        x = textToValue(x)
+        y = textToValue(y)
+        z = textToValue(z)
+
+        # Retrieve the job model and its rotation clone
+        model = self.obj.Model.Group[0]
+        modelRotationClone = FreeCAD.ActiveDocument.getObject("ModelRotation_" + self.obj.Name)
+
+        # The function toAxisAngle returns an array of x y z values and an angle
+        axangle = PathUtils.toAxisAngle(
+            PathUtils.degreeToRadian(x),
+            PathUtils.degreeToRadian(y),
+            PathUtils.degreeToRadian(z))
+
+        array = axangle[0]
+        angle = axangle[1]
+
+        # Create a new FreeCAD Vector from the converted angle and update the model position
+        model.Placement.Rotation.Axis = FreeCAD.Vector(array[0], array[1], array[2])
+        model.Placement.Rotation.Angle = angle
+
+        if modelRotationClone is not None:
+            modelRotationClone.Placement.Rotation = model.Placement.Rotation
+
+        self.refreshStock()
+
     def setupUi(self, activate):
         self.setupGlobal.setupUi()
         self.setupOps.setupUi()
@@ -1312,7 +1340,8 @@ class TaskPanel:
         self.form.jobLabel.editingFinished.connect(self.getFields)
         self.form.jobModelEdit.clicked.connect(self.jobModelEdit)
 
-        self.form.visual_rotation_edit.clicked.connect(lambda: FreeCADGui.ActiveDocument.setEdit("ModelRotation_"+self.obj.Name, 0))
+        self.form.visual_rotation_edit.clicked.connect(lambda: self.visualRotationSetEdit())
+        self.form.init_rotation.clicked.connect(lambda: self.initRotationModel(self.obj))
 
         # Post Processor
         self.form.postProcessor.currentIndexChanged.connect(self.getFields)
@@ -1357,9 +1386,22 @@ class TaskPanel:
         model = self.obj.Model.Group[0]
         stock = self.obj.Stock
 
-        self.form.x_rotatAngle.textChanged.connect(lambda: updateAxisRotation(self.obj, model, stock, "x", self.form.x_rotatAngle.text(), FreeCAD.Vector(1, 0, 0)))
-        self.form.y_rotatAngle.textChanged.connect(lambda: updateAxisRotation(self.obj, model, stock, "y", self.form.y_rotatAngle.text(), FreeCAD.Vector(0, 1, 0)))
-        self.form.z_rotatAngle.textChanged.connect(lambda: updateAxisRotation(self.obj, model, stock, "z", self.form.z_rotatAngle.text(), FreeCAD.Vector(0, 0, 1)))
+        self.form.x_rotatAngle.textChanged.connect(
+            lambda: self.updateModelAxisRotation(
+                                            self.form.x_rotatAngle.text(),
+                                            self.form.y_rotatAngle.text(),
+                                            self.form.z_rotatAngle.text()))
+
+        self.form.y_rotatAngle.textChanged.connect(
+            lambda: self.updateModelAxisRotation(
+                                            self.form.x_rotatAngle.text(),
+                                            self.form.y_rotatAngle.text(),
+                                            self.form.z_rotatAngle.text()))
+        self.form.z_rotatAngle.textChanged.connect(
+            lambda: self.updateModelAxisRotation(
+                                            self.form.x_rotatAngle.text(),
+                                            self.form.y_rotatAngle.text(),
+                                            self.form.z_rotatAngle.text()))
 
         self.form.modelSetX0.clicked.connect(lambda: self.modelSet0(FreeCAD.Vector(-1,  0,  0)))
         self.form.modelSetY0.clicked.connect(lambda: self.modelSet0(FreeCAD.Vector( 0, -1,  0)))
@@ -1416,18 +1458,20 @@ class TaskPanel:
     def clearSelection(self, doc):
         self.updateSelection()
 
-def Create(base, template=None, jobside=False):
+def Create(base, template=None):
     '''Create(base, template) ... creates a job instance for the given base object
     using template to configure it.'''
     FreeCADGui.addModule('PathScripts.PathJob')
     FreeCAD.ActiveDocument.openTransaction(translate("Path_Job", "Create Job"))
     try:
+        from PathScripts import PathJobSideHideShow
         obj = PathJob.Create("Job", base, template)
 
         obj.addProperty("App::PropertyBool", "IsActive", "Job Side")
         obj.IsActive = True
-        obj.addProperty("App::PropertyBool", "IsJobSide", "Job Side")
-        obj.IsJobSide = jobside
+
+        cmd = PathJobSideHideShow.CommandPathJobSideHideShow()
+        cmd.showJob(obj)
 
         ViewProvider(obj.ViewObject)
         FreeCAD.ActiveDocument.commitTransaction()

@@ -53,6 +53,34 @@ else:
     PathLog.setLevel(PathLog.Level.NOTICE, PathLog.thisModule())
 
 
+def checkHolesBase(obj):
+    """ Function used to make sure the holes selected to be the base of the operation have the same hole diameter and
+        are under 8mm. """
+    if obj.TypeId != "Path::FeatureCompoundPython":
+        return
+    n = 0
+    holediameter = 0
+    for i, (base, subs) in enumerate(obj.Base):
+        for sub in subs:
+            if n > 0 and holediameter != obj.Proxy.holeDiameter(obj, base, sub):
+                w = QtGui.QWidget()
+                QtGui.QMessageBox.critical(w, "Warning",
+                                               "Super Drilling Operation can not support different hole diameters.")
+                return False
+            else:
+                holediameter = obj.Proxy.holeDiameter(obj, base, sub)
+
+            if holediameter >= 8.0:
+                w = QtGui.QWidget()
+                QtGui.QMessageBox.critical(w, "Warning",
+                                               "A hole diameter can not exceed 8 mm. Tip: Use Super Helix instead.")
+                return False
+
+            n = n + 1
+
+        return True
+
+
 class TaskPanelOpPage(PathCircularHoleBaseGui.TaskPanelOpPage):
     '''Controller for the drilling operation's page'''
 
@@ -77,10 +105,15 @@ class TaskPanelOpPage(PathCircularHoleBaseGui.TaskPanelOpPage):
         if obj.AddTipLength != self.form.useTipLength.isChecked():
             obj.AddTipLength = self.form.useTipLength.isChecked()
 
-        # For sub-operations parameter:
+        # Sub-operations properties
+        # Enable/disable the Helix (Hole Milling) operation if needed
         if obj.Group[2].Active != self.form.basehelix_active.isChecked():
             obj.Group[2].Active = self.form.basehelix_active.isChecked()
+            obj.Group[2].ViewObject.Visibility = self.form.basehelix_active.isChecked()
+            obj.Group[2].Visible = self.form.basehelix_active.isChecked()
+            obj.Group[2].Valid = True
 
+        # Update the Super Drilling Auto-Suggest properties for each sub-operation
         if obj.DrillingAutoSuggest != self.form.basedrill_autosuggest.isChecked():
             obj.DrillingAutoSuggest = self.form.basedrill_autosuggest.isChecked()
         if obj.HoleMillingAutoSuggest != self.form.basehelix_autosuggest.isChecked():
@@ -88,6 +121,7 @@ class TaskPanelOpPage(PathCircularHoleBaseGui.TaskPanelOpPage):
         if obj.ThreadMillingAutoSuggest != self.form.thread_autosuggest.isChecked():
             obj.ThreadMillingAutoSuggest = self.form.thread_autosuggest.isChecked()
 
+        # Apply the selected Tool Controller to the sub-operations.
         for subobj in obj.Group:
             name = subobj.Name.split("_")
             opname = name[2]
@@ -101,6 +135,10 @@ class TaskPanelOpPage(PathCircularHoleBaseGui.TaskPanelOpPage):
 
         self.setSuggestedToolFields()
 
+    def updateOpField(self, op, checkbox):
+        ''' Check the checkbox with the operation is active and valid '''
+        if op.Active and op.Valid:
+            checkbox.setCheckState(QtCore.Qt.Checked)
 
     def setFields(self, obj):
         '''setFields(obj) ... update UI with obj properties' values'''
@@ -125,11 +163,9 @@ class TaskPanelOpPage(PathCircularHoleBaseGui.TaskPanelOpPage):
         else:
             self.form.useTipLength.setCheckState(QtCore.Qt.Unchecked)
 
-        # For sub-operations parameter
-        if obj.Group[2].Active:
-            self.form.basehelix_active.setCheckState(QtCore.Qt.Checked)
-        else:
-            self.form.basehelix_active.setCheckState(QtCore.Qt.UnChecked)
+        # For sub-operations:
+        # Enable/disable Tool Auto-Suggest and operation visibility
+        self.updateOpField(obj.Group[2], self.form.basehelix_active)
 
         if obj.DrillingAutoSuggest:
             self.form.basedrill_autosuggest.toggle()
@@ -152,10 +188,33 @@ class TaskPanelOpPage(PathCircularHoleBaseGui.TaskPanelOpPage):
         obj = self.obj
         holediameter = self.getHoleDiameter(obj)
 
+        self.form.missing_tool_info.hide()
+
         for subobj in obj.Group:
-            self.updateSuggestedTool(subobj, holediameter)
+            if not self.updateSuggestedTool(subobj, holediameter):
+                self.form.missing_tool_info.show()
 
     def updateSuggestedTool(self, subobj, holediameter):
+        """
+        Description:
+            Update the Tool Suggestions for the specified sub-operation.
+
+        Details:
+            1) Drill, Hole Milling and Thread Milling tools can be defined manually by disabling the auto-suggest
+            from the GUI.
+
+            - If disabled, the manually defined tool for the sub-operation must be at the first position
+            of the combobox list.
+
+            - If enabled, getAllSuggestedTools from PathUtils must be called alone.
+
+            - self.setupSuggestedToolController is used at the end of the iterations to update the combobox with
+            the new tools list.
+
+            2) The other sub-operations such as Center Drill and Chamfering can only apply for one tool.
+        """
+
+        nomissingtool = True
         name = subobj.Name.split("_")
         opname = name[2]
         oplocation = name[3]
@@ -163,19 +222,26 @@ class TaskPanelOpPage(PathCircularHoleBaseGui.TaskPanelOpPage):
         tc = PathUtils.getToolControllers(subobj)
 
         if opname == "drill" and oplocation == "center":
+            # It can be only one tool type CenterDrill for now.
             subobj.ToolController = PathUtils.filterToolControllers(tc, "CenterDrill")[0]
 
         elif opname == "chamfering":
+            # It can be only one tool type ChamferMill for now.
             subobj.ToolController = PathUtils.filterToolControllers(tc, "ChamferMill")[0]
 
         elif opname == "drill" and oplocation == "base":
             toolslist = PathUtils.getAllSuggestedTools(
                                               PathUtils.filterToolControllers(tc, "Drill"), holediameter)
 
+            nomissingtool = len(toolslist) > 0  # Simple check if the Tool Suggestion has found at least one tool
+
+            # If Tool Suggestions for the Drill operation are disabled from the GUI,
+            # select the actual operation tool and show it as the first element in the combobox
             if self.form.basedrill_autosuggest.isChecked() is False \
                     and toolslist.__contains__(subobj.ToolController):
-                toolslist.remove(subobj.ToolController)
-                toolslist.insert(0, subobj.ToolController)
+
+                # Remove the sub-operation Tool Controller to insert it at the first position of the list
+                toolslist.insert(0, toolslist.pop(toolslist.index(subobj.ToolController)))
 
             self.setupSuggestedToolController(subobj, self.form.basedrill_tool, toolslist)
 
@@ -183,12 +249,19 @@ class TaskPanelOpPage(PathCircularHoleBaseGui.TaskPanelOpPage):
             toolslist = PathUtils.getAllSuggestedTools(
                 PathUtils.filterToolControllers(tc, "EndMill"), holediameter)
 
+            nomissingtool = len(toolslist) > 0  # Simple check if the Tool Suggestion has found at least one tool
+
+            # If Tool Suggestions for the Helix (Hole Milling) operation are disabled from the GUI,
+            # select the actual operation tool and show it as the first element in the combobox
             if self.form.basehelix_autosuggest.isChecked() is False \
                     and toolslist.__contains__(subobj.ToolController):
-                toolslist.remove(subobj.ToolController)
-                toolslist.insert(0, subobj.ToolController)
+
+                # Remove the sub-operation Tool Controller to insert it at the first position of the list
+                toolslist.insert(0, toolslist.pop(toolslist.index(subobj.ToolController)))
 
             self.setupSuggestedToolController(subobj, self.form.basehelix_tool, toolslist)
+
+        return nomissingtool  # The check is returned to make sure each sub-operation has a valid tool
 
 
     def getSignalsForUpdate(self, obj):
@@ -210,6 +283,8 @@ class TaskPanelOpPage(PathCircularHoleBaseGui.TaskPanelOpPage):
         self.form.basedrill_autosuggest.clicked.connect(self.suggestionsChangeState)
         self.form.basehelix_autosuggest.clicked.connect(self.suggestionsChangeState)
         self.form.thread_autosuggest.clicked.connect(self.suggestionsChangeState)
+
+        self.updateOpField(obj.Group[2], self.form.basehelix_active)
 
         return signals
 
