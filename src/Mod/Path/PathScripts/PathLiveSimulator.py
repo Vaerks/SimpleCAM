@@ -28,6 +28,7 @@ def resetSimulation(job, opname):
     PathUtils.deleteObject("CutMaterialIn_"+job.Name+"_"+str(opname))
 
 def generateResultStock(job):
+    # Create the simulation result using shapes common intersection.
     resultname = "ResultStock_" + job.Name
     shapes = FreeCAD.ActiveDocument.getObject("Saves_" + job.Name).Group
 
@@ -41,17 +42,22 @@ def generateResultStock(job):
 
     result = FreeCAD.ActiveDocument.getObject(resultname)
 
+    # Custom appearance
     result.ViewObject.Transparency = 70
     result.ViewObject.Selectable = False
     result.ViewObject.ShapeColor = (1.0, 0.0, 0.0, 0.0)
 
     if result is not None:
+        # Put the result shape in the Result folder in Configuration.
         FreeCAD.ActiveDocument.getObject("Result_" + job.Name).Group = [result]
 
         if job.Simulation is False:
             result.ViewObject.hide()
 
 def createResultStock(job):
+    ''' Test function to try to create a simulation result from the Shapes using a new thread
+    but Part will always use the Main Thread with the function Shape.common
+    '''
     threads = threading.enumerate()
     for thread in threads:
         if thread.getName() == "StockThread":
@@ -62,11 +68,11 @@ def createResultStock(job):
     stockthread.start()
 
 def activateSimulation(obj, jobsim):
-
+    # Retrieve the parent job if an operation is given as the obj variable.
     if jobsim is None:
         if obj is not None:
             job = PathUtils.findParentJob(obj)
-
+            # If the operation is invalid, the Live Simulation shall not process it.
             if obj.Valid is False:
                 return
         else:
@@ -82,13 +88,13 @@ def activateSimulation(obj, jobsim):
 
         if obj.TypeId == "Path::FeatureCompoundPython":
             # Check if an active operation in the Super Operation is invalid
-            # if so, nothing shall happen
+            # if so, nothing shall happen.
             for op in obj.Group:
                 if op.Active is True and op.Valid is False:
                     return
         simulation = PathLiveSimulation(job, obj)
-        simulation.Activate()
-        simulation.SimFF()  # Show the result without the animation
+        simulation.Activate()  # Launch FreeCAD simulation as usual for one operation.
+        simulation.SimFF()  # Show the result without the cutting animation.
 
 class CAMSimTaskUi:
     def __init__(self, parent):
@@ -210,7 +216,7 @@ class PathLiveSimulation:
 
                     # Some issues can occur with Super Operations when many sub operations are executed in the same
                     # simulation. One way to fix that is to define a Primary Operation which is the one that has to be
-                    # shown in the simulation. The other sub operations exist but are not live simulated.
+                    # shown in the simulation. The other sub-operations exist but are not live simulated.
                     self.activeOps = [self.op.Group[1], self.op.Group[2]]
                 else:
                     self.activeOps = [self.op]
@@ -219,6 +225,7 @@ class PathLiveSimulation:
 
                 # If the processed operation is an Adaptive (which is a expensive op to process)
                 # it will adapt the accuracy to provide a faster simulation
+                # Test code, can be removed.
                 if isinstance(self.operations[i].Proxy, PathAdaptive.PathAdaptive):
                     pass
                     #self.accuracy = 1.0
@@ -265,7 +272,8 @@ class PathLiveSimulation:
         self.cutTool.Placement = self.curpos
         self.opCommands =  self.operation.Path.Commands
 
-        self.processTimerMod = int(float(len(self.opCommands))*self.processTimerAccuracy)
+        self.processTimerMod = int(float(len(self.opCommands))*self.processTimerAccuracy)  # can be used to define
+        # the update progress time, it is calculated using the number of iterations and the accuracy of the simulation.
         if self.processTimerMod < 1:
             self.processTimerMod = 1
 
@@ -318,6 +326,9 @@ class PathLiveSimulation:
     #     self.PerformCut()
 
     def updateProcessTimer(self):
+        # Show the progress of an operation simulation process.
+        # The progress is not updated for each iteration, the attribute "processTimerMod"
+        #   can be used to define the update progress time with modulo.
         if self.icmd % self.processTimerMod == 0:
             loading = int((float(self.icmd+1)/float(len(self.opCommands)))*100)
             self.jobsim.Label = self.jobsim.Name+" - "\

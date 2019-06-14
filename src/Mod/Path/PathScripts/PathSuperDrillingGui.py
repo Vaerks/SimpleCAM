@@ -54,14 +54,18 @@ else:
 
 
 def checkHolesBase(obj):
-    """ Function used to make sure the holes selected to be the base of the operation have the same hole diameter and
-        are under 8mm. """
+    ''' Check holes
+            Function used to make sure the holes selected to be the base of the operation have the same hole diameter and
+            are under 8mm.
+    '''
     if obj.TypeId != "Path::FeatureCompoundPython":
         return
     n = 0
     holediameter = 0
     for i, (base, subs) in enumerate(obj.Base):
-        for sub in subs:
+        for sub in subs:  # For each base (Added edges)
+            # The code uses the first base to find the hole diameter and if one of the other bases has a different
+            # hole diameter or is >= 8mm, the warning dialog pops up and the checks end.
             if n > 0 and holediameter != obj.Proxy.holeDiameter(obj, base, sub):
                 w = QtGui.QWidget()
                 QtGui.QMessageBox.critical(w, "Warning",

@@ -126,15 +126,6 @@ class CommandPathPost:
         if os.path.isfile(filename) and not openDialog:
             if policy == 'Open File Dialog on conflict':
                 openDialog = True
-            #elif policy == 'Append Unique ID on conflict':
-            #    fn, ext = os.path.splitext(filename)
-            #    nr = fn[-3:]
-            #    n = 1
-            #    if nr.isdigit():
-            #        n = int(nr)
-            #    while os.path.isfile("%s%03d%s" % (fn, n, ext)):
-            #        n = n + 1
-            #    filename = "%s%03d%s" % (fn, n, ext)
 
         # In case of multiple jobs (multi-sides), if a project name is already given by the saving dialog (first job),
         #  it has to re-use the name without asking the user again.
@@ -151,6 +142,7 @@ class CommandPathPost:
         path = filename
         filename = filename + "_" + job.Label
 
+        # Apply version number in the filename
         if policy == 'Append Unique ID on conflict':
             fn, ext = os.path.splitext(filename)
             n = job.Version
@@ -232,49 +224,6 @@ class CommandPathPost:
             translate("Path_Post", "Post Process the Selected path(s)"))
         FreeCADGui.addModule("PathScripts.PathPost")
 
-        # Attempt to figure out what the user wants to post-process
-        # If a job is selected, post that.
-        # If there's only one job in a document, post it.
-        # If a user has selected a subobject of a job, post the job.
-        # If multiple jobs and can't guess, ask them.
-
-        """
-
-        selected = FreeCADGui.Selection.getSelectionEx()
-        if len(selected) > 1:
-            FreeCAD.Console.PrintError("Please select a single job or other path object\n")
-            return
-        elif len(selected) == 1:
-            sel = selected[0].Object
-            if sel.Name[:3] == "Job":
-                job = sel
-            elif hasattr(sel, "Path"):
-                try:
-                    job = PathUtils.findParentJob(sel)
-                except:
-                    job = None
-            else:
-                job = None
-        if job is None:
-            targetlist = []
-            for o in FreeCAD.ActiveDocument.Objects:
-                if hasattr(o, "Proxy"):
-                    if isinstance(o.Proxy, PathJob.ObjectJob):
-                        targetlist.append(o.Label)
-            PathLog.debug("Possible post objects: {}".format(targetlist))
-            if len(targetlist) > 1:
-                form = FreeCADGui.PySideUic.loadUi(":/panels/DlgJobChooser.ui")
-                form.cboProject.addItems(targetlist)
-                r = form.exec_()
-                if r is False:
-                    return
-                else:
-                    jobname = form.cboProject.currentText()
-            else:
-                jobname = targetlist[0]
-            job = FreeCAD.ActiveDocument.getObject(jobname)
-
-        """
         actualjob = None
         from PathScripts import PathJobSideHideShow
         cmd = PathJobSideHideShow.CommandPathJobSideHideShow()
@@ -284,9 +233,11 @@ class CommandPathPost:
         for job in jobs:
             PathLog.debug("about to postprocess job: {}".format(job.Name))
 
+            # If the job is active, it means that this job has to be shown again after the post process.
             if job.IsActive:
                 actualjob = job
-
+            # If not, it means it is a hidden job that has to be set active for the process and then
+            #   inactive again to hide it.
             else:
                 cmd.toggleJob(job, True)
 
@@ -308,6 +259,7 @@ class CommandPathPost:
 
             print(postlist)
 
+            # Path is re-use to give all the files the same location.
             (fail, rc, path) = self.exportObjectsWith(postlist, job, name=path)
 
             if fail:

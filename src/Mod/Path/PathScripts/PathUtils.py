@@ -79,20 +79,24 @@ def createBoxShape(name):
     return FreeCAD.ActiveDocument.getObject(name)
 
 def copyShape(shape, name):
+    ''' Copy Shape
+            Create a Shape from an existing one
+    '''
     newshape = shape.copy()
     Part.show(newshape, name)
     return FreeCAD.ActiveDocument.getObject(name)
 
 def makeShapeIntersection(shapes, name):
     ''' Common Shape Intersection
-            Add Shapes together using the common function in
+            Add Shapes together using the common function in Part Shape module
     '''
     if len(shapes) < 1:
         return None
     if len(shapes) == 1:
         newshape = shapes[0]
     else:
-        shape = shapes.pop(0)
+        shape = shapes.pop(0)  # The first shape is used to put the shapes together
+        #  so it has to be removed from the list
 
         for s in shapes:
             shape = shape.common(s)
@@ -118,13 +122,19 @@ def convertMeshesToPart(meshes, name):
     return mesh
 
 def copyMesh(m, name):
-    deleteObject(name)
+    ''' Copy Mesh [Test function]
+            Create an empty Mesh and add a Mesh to it
+    '''
+    deleteObject(name)  # Overwrite the object
     mesh = Mesh.Mesh()
     mesh.addMesh(m)
     Mesh.show(mesh, name)
     return mesh
 
 def copyMeshes(meshes, name):
+    ''' Copy Meshes [Test function]
+            Create an empty Mesh and add Meshes to it
+    '''
     mesh = Mesh.Mesh()
 
     for m in meshes:
@@ -154,6 +164,7 @@ def deleteObject(objname):
         print("PathUtils: The "+objname+" object cannot be deleted.")
 
 def selectLoop(selection, subobj):
+    """ Default FreeCAD function moved """
     sel = selection
     obj = sel.Object
     edge1 = subobj
@@ -174,6 +185,7 @@ def selectLoop(selection, subobj):
                     FreeCADGui.Selection.addSelection(obj, "Edge"+str(elist.index(e)+1))
 
 def selectAreaLoop(selection, subobj):
+    """ Test function """
     sel = selection
     obj = sel.Object
     edge1 = subobj
@@ -193,10 +205,16 @@ def selectAreaLoop(selection, subobj):
                     FreeCADGui.Selection.addSelection(obj, "Edge"+str(elist.index(e)+1))
 
 def selectAllLoops(selection):
+    ''' Select Loops
+            Complete loop selection for many edges
+    '''
     for subobj in selection.SubObjects:
         selectLoop(selection, subobj)
 
 def selectAllAreaLoops(selection):
+    ''' Select Loops in an Area [Test function]
+            A test function to try to implement Select Loops for Adaptive Operations
+    '''
     for subobj in selection.SubObjects:
         selectAreaLoop(selection, subobj)
 

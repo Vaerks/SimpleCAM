@@ -712,8 +712,8 @@ class TaskPanelDepthsPage(TaskPanelPage):
         if self.haveFinishDepth():
             self.finishDepth.updateProperty()
 
-        if hasattr(obj, "SuperOperationType") and obj.Proxy:
-            obj.Proxy.updateSubOperations(obj)
+        if hasattr(obj, "SuperOperationType") and obj.Proxy:  # If the operation is a Super Operation
+            obj.Proxy.updateSubOperations(obj)  # Updating Sub-Operations properties
 
     def setFields(self, obj):
         if self.haveStartDepth():
