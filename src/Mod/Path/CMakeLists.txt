@@ -47,6 +47,7 @@ SET(PathScripts_SRCS
     PathScripts/PathDrilling.py
     PathScripts/PathDrillingGui.py
     PathScripts/PathMathUtils.py
+    PathScripts/PathSuperOperation.py
     PathScripts/PathSuperDrilling.py
     PathScripts/PathSuperDrillingGui.py
     PathScripts/PathSuperClearing.py

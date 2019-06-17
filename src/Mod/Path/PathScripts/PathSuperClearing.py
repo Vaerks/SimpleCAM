@@ -36,10 +36,12 @@ from pivy import coin
 from PathScripts import PathAdaptive
 from PathScripts import PathProfileBase
 
+import PathScripts.PathSuperOperation as PathSuperOperation
+
 __doc__ = "Class and implementation of the Super Clearing path operation."
 
 
-class ObjectSuperClearing(PathOp.ObjectOp):
+class ObjectSuperClearing(PathSuperOperation.ObjectSuperOp):
     def opFeatures(self, obj):
         '''opFeatures(obj) ... returns the OR'ed list of features used and supported by the operation.
         The default implementation returns "FeatureTool | FeatureDeptsh | FeatureHeights | FeatureStartPoint"
@@ -49,6 +51,9 @@ class ObjectSuperClearing(PathOp.ObjectOp):
     def initOperation(self, obj):
         '''initOperation(obj) ... implement to create additional properties.
         Should be overwritten by subclasses.'''
+
+        obj = self.initSuperOperation(obj, "SuperClearing")  # SuperOperation init function
+
         obj.addProperty("App::PropertyEnumeration", "Side", "Adaptive", "Side of selected faces that tool should cut")
         obj.Side = ['Outside', 'Inside']  # side of profile that cutter is on in relation to direction of profile
 
@@ -101,6 +106,10 @@ class ObjectSuperClearing(PathOp.ObjectOp):
     def opExecute(self, obj):
         pass
 
+    def updateSubOperations(self, obj):
+        for subobj in obj.Group:
+            if hasattr(subobj, 'Base'):
+                subobj.Base = obj.Base
 
 
 def Create(name, obj = None):
@@ -113,12 +122,16 @@ def Create(name, obj = None):
     profile_name = "sub_" + superop.Name + "_profile_base"
 
     op_adaptive = FreeCAD.ActiveDocument.addObject("Path::FeaturePython", adaptive_name)
-    op_profile = FreeCAD.ActiveDocument.addObject("Path::FeaturePython", profile_name)
+    # op_profile = FreeCAD.ActiveDocument.addObject("Path::FeaturePython", profile_name)
 
-    superop.Group = [op_adaptive, op_profile]
+    # The Profile Base operation can not be created because ProfileBaseGui has no Resource attribute
+    # which is needed in PathSuperClearingGui.
+    # TODO: Use another operation for SuperClearing.
+
+    superop.Group = [op_adaptive]
 
     adaptive = PathAdaptive.PathAdaptive(op_adaptive, adaptive_name)
-    pocket = PathProfileBase.ObjectProfile(op_profile, profile_name)
+    # pocket = PathProfileBase.ObjectProfile(op_profile, profile_name)
 
     # To select all edges of a hole:
     if len(FreeCADGui.Selection.getSelectionEx()) > 0:

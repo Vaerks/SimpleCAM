@@ -28,12 +28,12 @@ import ArchPanel
 import FreeCAD
 import FreeCADGui
 import Path
-import PathScripts.PathCircularHoleBase as PathCircularHoleBase
 import PathScripts.PathLog as PathLog
 import PathScripts.PathOp as PathOp
 import PathScripts.PathUtils as PathUtils
 
 # Imports for Sub-operations creation
+import PathScripts.PathSuperOperation as PathSuperOperation
 import PathScripts.PathDrilling as PathDrilling
 import PathScripts.PathHelix as PathHelix
 
@@ -57,7 +57,7 @@ def translate(context, text, disambig=None):
     return QtCore.QCoreApplication.translate(context, text, disambig)
 
 
-class ObjectSuperDrilling(PathDrilling.ObjectDrilling):
+class ObjectSuperDrilling(PathSuperOperation.ObjectSuperCircularHoleBase):
     '''Proxy object for Drilling operation.'''
 
     def circularHoleFeatures(self, obj):
@@ -66,6 +66,8 @@ class ObjectSuperDrilling(PathDrilling.ObjectDrilling):
 
     def initCircularHoleOperation(self, obj):
         '''initCircularHoleOperation(obj) ... add drilling specific properties to obj.'''
+
+        obj = self.initSuperOperation(obj, "SuperDrilling")  # SuperOperation init function
 
         # Default Drilling properties:
         obj.addProperty("App::PropertyLength", "PeckDepth", "Drill", QtCore.QT_TRANSLATE_NOOP("App::Property", "Incremental Drill depth before retracting to clear chips"))
@@ -81,14 +83,9 @@ class ObjectSuperDrilling(PathDrilling.ObjectDrilling):
 
         ################################################################################################
         # Super Operations properties:
-        # SuperOperationType: This property is not used yet but can be used in the future to know what type of
-        #   Super Operation is done.
         #
         # AutoSuggest: These properties are used to know if the user wants the program to auto-selects a Tool Controller
         #   with the most suitable Tool Suggestion. They can be disabled in the edition GUI of the SuperDrilling.
-        obj.addProperty("App::PropertyString", "SuperOperationType", "SuperOperation",
-                        QtCore.QT_TRANSLATE_NOOP("App:Property", "Super Operation Type"))
-
         obj.addProperty("App::PropertyBool", "DrillingAutoSuggest", "SuperDrilling",
                         QtCore.QT_TRANSLATE_NOOP("App:Property", "Drilling tool auto suggestion"))
         obj.addProperty("App::PropertyBool", "HoleMillingAutoSuggest", "SuperDrilling",
@@ -97,7 +94,6 @@ class ObjectSuperDrilling(PathDrilling.ObjectDrilling):
                         QtCore.QT_TRANSLATE_NOOP("App:Property", "Thread Milling tool auto suggestion"))
 
         # Init
-        obj.SuperOperationType = "SuperDrilling"
         obj.DrillingAutoSuggest = True
         obj.HoleMillingAutoSuggest = True
         obj.ThreadMillingAutoSuggest = True
@@ -146,7 +142,8 @@ class ObjectSuperDrilling(PathDrilling.ObjectDrilling):
         obj.RetractHeight = 10
 
     def updateSubOperations(self, obj):
-        """ Update the sub-operations properties with the Super Operation data. """
+        """ SuperOperation overwritten method
+            Update the sub-operations properties with the Super Operation data. """
         if obj.TypeId == "Path::FeatureCompoundPython":
             for subobj in obj.Group:
                 try:
