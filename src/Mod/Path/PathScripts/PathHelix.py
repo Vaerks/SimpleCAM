@@ -67,18 +67,22 @@ class ObjectHelix(PathCircularHoleBase.ObjectOp):
         output = ''
         output += "G0 Z" + fmt(zsafe)
 
+        usedholes = []
+
         for hole in holes:
-            result = self.helix_cut(obj, hole['x'], hole['y'], hole['r'] / 2, 0.0, (float(obj.StepOver.Value)/50.0) * self.radius)
-            output += result[0]
+            if hole not in usedholes:
+                usedholes.append(hole)
+                result = self.helix_cut(obj, hole['x'], hole['y'], hole['r'] / 2, 0.0, (float(obj.StepOver.Value)/50.0) * self.radius)
+                output += result[0]
 
-            # If an error ia detected, stop the process
-            if result[1] == "ERROR":
-                obj.Valid = False
-                obj.ViewObject.Visibility = False
-                obj.Active = obj.IsSubOperation
-                return
+                # If an error ia detected, stop the process
+                if result[1] == "ERROR":
+                    obj.Valid = False
+                    obj.ViewObject.Visibility = False
+                    obj.Active = obj.IsSubOperation
+                    return
 
-        obj.Valid = True
+            obj.Valid = True
 
         PathLog.debug(output)
 

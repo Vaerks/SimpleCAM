@@ -395,7 +395,7 @@ class PathSimulation:
         h = tool.CuttingEdgeHeight
         if h <= 0.0:  # set default if user fails to avoid freeze
             h = 1.0
-            PathLog.error("SET Tool Length")
+            PathLog.warning("SET Tool Length (CuttingEdgeHeight not defined)")
         # common to all tools
         vTR = Vector(xp + yf, yp - xf, zp + h)
         vTC = Vector(xp, yp, zp + h)
