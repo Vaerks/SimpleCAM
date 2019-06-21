@@ -314,8 +314,7 @@ class ObjectOp(object):
                 return None
             obj.OpToolDiameter = obj.ToolController.Tool.Diameter
 
-        # If the operation is a sub-operation, some of its properties have to be unlocked (without an expression)
-        #   to be edited by the Super Operation if needed.
+        # If the operation is a sub-operation, the properties have already be updated by its Super Operation.
         if FeatureDepths & features and obj.IsSubOperation is False:
             if self.applyExpression(obj, 'StartDepth', job.SetupSheet.StartDepthExpression):
                 obj.OpStartDepth = 1.0

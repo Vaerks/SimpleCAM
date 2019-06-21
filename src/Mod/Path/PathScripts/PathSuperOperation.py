@@ -15,10 +15,15 @@ class ObjectSuperOp(PathOp.ObjectOp):
                         QtCore.QT_TRANSLATE_NOOP("App:Property", "Super Operation Type"))
 
         obj.SuperOperationType = superOpType
+
         return obj
 
     def updateSubOperations(self, obj):
         """ Sub-classes overwritten method used to update the sub-operations during a change. """
+        pass
+
+    def initSubOperations(self, obj):
+        """ Sub-classes overwritten method used to init the sub-operations properties. """
         pass
 
 
@@ -35,4 +40,8 @@ class ObjectSuperCircularHoleBase(PathCircularHoleBase.ObjectOp):
 
     def updateSubOperations(self, obj):
         """ Sub-classes overwritten method used to update the sub-operations during a change. """
+        pass
+
+    def initSubOperations(self, obj):
+        """ Sub-classes overwritten method used to init the sub-operations properties. """
         pass

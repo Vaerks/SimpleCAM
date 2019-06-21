@@ -185,6 +185,9 @@ class ObjectSuperDrilling(PathSuperOperation.ObjectSuperCircularHoleBase):
                     else:
                         subobj.FinalDepth = obj.OpFinalDepth
 
+    def initSubOperations(self, obj):
+        pass
+
 
 def Create(name):
     superop = FreeCAD.ActiveDocument.addObject("Path::FeatureCompoundPython", name)
@@ -207,6 +210,8 @@ def Create(name):
     drill1 = PathDrilling.ObjectDrilling(op_drill1, drill1_name)
     drill2 = PathDrilling.ObjectDrilling(op_drill2, drill2_name)
     helix1 = PathHelix.ObjectHelix(op_helix1, helix1_name)
+
+    proxy.initSubOperations(superop)
 
     # To select all edges of a hole:
     if len(FreeCADGui.Selection.getSelectionEx()) > 0:

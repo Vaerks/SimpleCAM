@@ -111,6 +111,32 @@ class ObjectSuperClearing(PathSuperOperation.ObjectSuperOp):
             if hasattr(subobj, 'Base'):
                 subobj.Base = obj.Base
 
+    def initSubOperations(self, obj):
+        job = PathUtils.findParentJob(obj)
+
+        for subobj in obj.Group:
+            if hasattr(subobj, 'Base'):
+                subobj.Base = obj.Base
+
+            if self.applyExpression(subobj, 'StartDepth', job.SetupSheet.StartDepthExpression):
+                subobj.OpStartDepth = 1.0
+            else:
+                subobj.StartDepth = 1.0
+            if self.applyExpression(obj, 'FinalDepth', job.SetupSheet.FinalDepthExpression):
+                subobj.OpFinalDepth = 0.0
+            else:
+                subobj.FinalDepth = 0.0
+
+            if not self.applyExpression(subobj, 'StepDown', job.SetupSheet.StepDownExpression):
+                subobj.StepDown = '1 mm'
+
+            if job.SetupSheet.SafeHeightExpression:
+                if not self.applyExpression(subobj, 'SafeHeight', job.SetupSheet.SafeHeightExpression):
+                    subobj.SafeHeight = '3 mm'
+            if job.SetupSheet.ClearanceHeightExpression:
+                if not self.applyExpression(subobj, 'ClearanceHeight', job.SetupSheet.ClearanceHeightExpression):
+                    subobj.ClearanceHeight = '5 mm'
+
 
 def Create(name, obj = None):
     '''Create(name) ... Creates and returns a Adaptive operation.'''
@@ -132,6 +158,8 @@ def Create(name, obj = None):
 
     adaptive = PathAdaptive.PathAdaptive(op_adaptive, adaptive_name)
     # pocket = PathProfileBase.ObjectProfile(op_profile, profile_name)
+
+    proxy.initSubOperations(superop)
 
     # To select all edges of a hole:
     if len(FreeCADGui.Selection.getSelectionEx()) > 0:
