@@ -73,9 +73,9 @@ def getJobs():
             list.append(obj)
     return list
 
-def createBoxShape(name):
-    mesh = Mesh.createBox()
-    convertMeshesToPart([mesh], name)
+def createBoxShape(name, x, y, z):
+    box = Part.makeBox(x, y, z)
+    Part.show(box, name)
     return FreeCAD.ActiveDocument.getObject(name)
 
 def copyShape(shape, name):

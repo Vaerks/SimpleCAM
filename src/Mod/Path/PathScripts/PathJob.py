@@ -161,6 +161,16 @@ class ObjectJob:
         if obj.Stock.ViewObject:
             obj.Stock.ViewObject.Visibility = False
 
+        # Fixture
+        obj.addProperty("App::PropertyLink", "Fixture", "Base",
+                            QtCore.QT_TRANSLATE_NOOP("PathJob", "Solid object for fixture."))
+
+        if not obj.Fixture:
+            from PathScripts import PathUtils
+            obj.Fixture = PathUtils.createBoxShape("Fixture", 200, 300, 20)
+            obj.Fixture.Placement = obj.Stock.Placement
+            obj.Fixture.Placement.Base.z = obj.Fixture.Placement.Base.z-20  # Z axis calibration
+
     def setupSetupSheet(self, obj):
         if not hasattr(obj, 'SetupSheet'):
             obj.addProperty('App::PropertyLink', 'SetupSheet', 'Base', QtCore.QT_TRANSLATE_NOOP('PathJob', 'SetupSheet holding the settings for this job'))
