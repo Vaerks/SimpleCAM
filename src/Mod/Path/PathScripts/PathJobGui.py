@@ -235,6 +235,10 @@ class ViewProvider:
         if modelRotationClone is not None:
             configurationlist.append(modelRotationClone)
 
+        if hasattr(self.obj, 'Fixture'):
+            if self.obj.Fixture is not None:
+                configurationlist.append(self.obj.Fixture)
+
         if hasattr(self.obj, 'Configuration'):
             if self.obj.Configuration is not None:
                 self.obj.Configuration.Group = configurationlist

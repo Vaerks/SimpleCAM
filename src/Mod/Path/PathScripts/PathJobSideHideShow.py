@@ -90,6 +90,7 @@ class CommandPathJobSideHideShow:
 
         job.ViewObject.Visibility = job.IsActive
         job.Stock.ViewObject.Visibility = job.IsActive
+        job.Fixture.ViewObject.Visibility = job.IsActive
 
         for model in job.Model.Group:
             model.ViewObject.Visibility = job.IsActive

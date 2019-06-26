@@ -24,7 +24,7 @@
 
 import ArchPanel
 import Draft
-import FreeCAD
+import FreeCAD, ImportGui
 import PathScripts.PathIconViewProvider as PathIconViewProvider
 import PathScripts.PathLog as PathLog
 import PathScripts.PathPreferences as PathPreferences
@@ -167,9 +167,17 @@ class ObjectJob:
 
         if not obj.Fixture:
             from PathScripts import PathUtils
-            obj.Fixture = PathUtils.createBoxShape("Fixture", 200, 300, 20)
-            obj.Fixture.Placement = obj.Stock.Placement
-            obj.Fixture.Placement.Base.z = obj.Fixture.Placement.Base.z-20  # Z axis calibration
+            path = "C:\Users\peter\Documents\DTU\MHTech\saved files\Fixture model\\Fixture.step"
+            document = FreeCAD.ActiveDocument
+            current_instances = set(document.findObjects())
+            ImportGui.insert(path, document.Name)
+            fixture = set(document.findObjects()) - current_instances
+
+            obj.Fixture = fixture.pop()
+            obj.Fixture.Label = "Fixture_"+obj.Name
+            obj.Fixture.Placement.Rotation.Angle = PathUtils.degreeToRadian(240)
+            obj.Fixture.Placement.Rotation.Axis = FreeCAD.Vector(-0.58, 0.58, 0.58)
+            obj.Fixture.Placement.Base = FreeCAD.Vector(-10, -10, -35)
 
     def setupSetupSheet(self, obj):
         if not hasattr(obj, 'SetupSheet'):

@@ -73,6 +73,10 @@ def getJobs():
             list.append(obj)
     return list
 
+def insertSTPShape(path):
+    shape = Part.Shape()
+    shape.read(path)
+
 def createBoxShape(name, x, y, z):
     box = Part.makeBox(x, y, z)
     Part.show(box, name)
