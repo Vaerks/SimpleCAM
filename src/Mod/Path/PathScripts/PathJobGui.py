@@ -40,6 +40,7 @@ import PathScripts.PathToolController as PathToolController
 import PathScripts.PathToolLibraryManager as PathToolLibraryManager
 import PathScripts.PathUtil as PathUtil
 import PathScripts.PathUtils as PathUtils
+
 import math
 import sys
 import traceback
@@ -47,6 +48,8 @@ import traceback
 from PySide import QtCore, QtGui
 from contextlib import contextmanager
 from pivy import coin
+
+import os
 
 import copy
 import math
@@ -692,10 +695,21 @@ class TaskPanel:
             PathLog.info("Uncreate Job")
             FreeCAD.ActiveDocument.openTransaction(translate("Path_Job", "Uncreate Job"))
             if self.obj.ViewObject.Proxy.onDelete(self.obj.ViewObject, None):
+                FreeCAD.ActiveDocument.removeObject(self.obj.Fixture.Name)
                 FreeCAD.ActiveDocument.removeObject(self.obj.Name)
 
             FreeCAD.ActiveDocument.commitTransaction()
         self.cleanup(resetEdit)
+
+        # Show the first job if the new job side is canceled
+        #   -> Not used because it creates a cyclic dependency
+        #from PathScripts import PathJobSideHideShow
+        #cmd = PathJobSideHideShow.CommandPathJobSideHideShow()
+        #jobs = PathUtils.getJobs()
+
+        #if len(jobs) > 0:
+        #    cmd.showJob(PathUtils.getJobs()[0])
+
         return True
 
     def cleanup(self, resetEdit):
@@ -844,6 +858,18 @@ class TaskPanel:
         self.form.x_rotatAngle.setText(str(x_angle))
         self.form.y_rotatAngle.setText(str(y_angle))
         self.form.z_rotatAngle.setText(str(z_angle))
+
+        # Adding the step files to the fixture combobox
+        path = self.obj.FixturePath
+        files_list = [self.obj.FixtureFileName]
+
+        for r, d, files in os.walk(path):
+            for file in files:
+                if '.step' in file and file != self.obj.FixtureFileName:
+                    files_list.append(file.__str__())
+
+        self.form.fixture_list.clear()
+        self.form.fixture_list.addItems(files_list)
 
     def setPostProcessorOutputFile(self):
         filename = QtGui.QFileDialog.getSaveFileName(self.form, translate("Path_Job", "Select Output File"), None, translate("Path_Job", "All Files (*.*)"))
@@ -1175,6 +1201,13 @@ class TaskPanel:
     def refreshStock(self):
         self.updateStockEditor(self.form.stock.currentIndex(), True)
 
+    def fixtureApply(self):
+        new_fixture = self.form.fixture_list.currentText()
+        self.obj.FixtureFileName = new_fixture
+
+        PathUtils.deleteObject(self.obj.Fixture.Name)
+        self.obj.Proxy.changeFixture(self.obj, self.obj.FixturePath, filename=new_fixture)
+
     def alignCenterInStock(self):
         bbs = self.obj.Stock.Shape.BoundBox
         for sel in FreeCADGui.Selection.getSelectionEx():
@@ -1379,6 +1412,11 @@ class TaskPanel:
 
         self.form.stock.currentIndexChanged.connect(self.updateStockEditor)
         self.form.refreshStock.clicked.connect(self.refreshStock)
+
+        # Fixture
+        self.form.fixture_apply.clicked.connect(self.fixtureApply)
+
+        # ToolTip
         self.setupToolTip(self.form.stock, "This is a <u>test</u>",
                           "C:/Users/peter/Documents/DTU/MHTech/CAD-0.18/src/Mod/Path/PathScripts/test.png")
 
@@ -1469,6 +1507,7 @@ def Create(base, template=None):
     FreeCAD.ActiveDocument.openTransaction(translate("Path_Job", "Create Job"))
     try:
         from PathScripts import PathJobSideHideShow
+
         obj = PathJob.Create("Job", base, template)
 
         obj.addProperty("App::PropertyBool", "IsActive", "Job Side")

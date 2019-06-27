@@ -161,23 +161,38 @@ class ObjectJob:
         if obj.Stock.ViewObject:
             obj.Stock.ViewObject.Visibility = False
 
-        # Fixture
-        obj.addProperty("App::PropertyLink", "Fixture", "Base",
+        # Fixture feature properties:
+        obj.addProperty("App::PropertyLink", "Fixture", "Fixture",
                             QtCore.QT_TRANSLATE_NOOP("PathJob", "Solid object for fixture."))
 
         if not obj.Fixture:
-            from PathScripts import PathUtils
-            path = "C:\Users\peter\Documents\DTU\MHTech\saved files\Fixture model\\Fixture.step"
-            document = FreeCAD.ActiveDocument
-            current_instances = set(document.findObjects())
-            ImportGui.insert(path, document.Name)
-            fixture = set(document.findObjects()) - current_instances
+            import os
+            path = os.getcwd() + "/fixtures"
 
-            obj.Fixture = fixture.pop()
-            obj.Fixture.Label = "Fixture_"+obj.Name
-            obj.Fixture.Placement.Rotation.Angle = PathUtils.degreeToRadian(240)
-            obj.Fixture.Placement.Rotation.Axis = FreeCAD.Vector(-0.58, 0.58, 0.58)
-            obj.Fixture.Placement.Base = FreeCAD.Vector(-10, -10, -35)
+            obj.addProperty("App::PropertyString", "FixtureFileName", "Fixture", QtCore.QT_TRANSLATE_NOOP("PathJob",
+                                                                                                    "Fixture file name"))
+            obj.addProperty("App::PropertyString", "FixturePath", "Fixture", QtCore.QT_TRANSLATE_NOOP("PathJob",
+                                                                                                          "Fixture file path"))
+            self.changeFixture(obj, path)
+
+    def changeFixture(self, obj, path, filename="Default_Fixture.step"):
+        from PathScripts import PathUtils
+
+        document = FreeCAD.ActiveDocument
+        current_instances = set(document.findObjects())
+        ImportGui.insert(path + "/" + filename, document.Name)  # Step file import
+        fixture = set(document.findObjects()) - current_instances  # Get the new element in the document which is the
+        #                                                            fixture set
+
+        obj.Fixture = fixture.pop()  # Extract the fixture element from the set
+        obj.Fixture.Label = "Fixture_" + obj.Name
+        obj.Fixture.Placement.Rotation.Angle = PathUtils.degreeToRadian(240)  # Default orientation of a fixture
+        obj.Fixture.Placement.Rotation.Axis = FreeCAD.Vector(-0.58, 0.58, 0.58)
+        obj.Fixture.Placement.Base = obj.Stock.Placement.Base
+        obj.Fixture.Placement.Base.z = -35  # Default thickness of a fixture
+
+        obj.FixtureFileName = filename
+        obj.FixturePath = path
 
     def setupSetupSheet(self, obj):
         if not hasattr(obj, 'SetupSheet'):
@@ -268,6 +283,9 @@ class ObjectJob:
         doc.removeObject(obj.Configuration.Name)
 
         doc.removeObject("ModelRotation_" + self.obj.Name)
+
+        if obj.Fixture is not None:
+            doc.removeObject(obj.Fixture.Name)
 
         # SetupSheet
         PathUtil.clearExpressionEngine(obj.SetupSheet)
